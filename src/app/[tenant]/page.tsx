@@ -130,8 +130,8 @@ export default async function TenantHome({ params }: TenantHomeProps) {
                   1. Pick Your Perfect Date!
                 </h3>
                 <p className="text-gray-600 font-playful text-lg leading-relaxed">
-                  Choose when you want to party and we'll show you what's
-                  available! 🗓️
+                  Choose when you want to party and we&apos;ll show you
+                  what&apos;s available! 🗓️
                 </p>
               </div>
             </div>
@@ -159,7 +159,8 @@ export default async function TenantHome({ params }: TenantHomeProps) {
                   3. Secure Your Spot!
                 </h3>
                 <p className="text-gray-600 font-playful text-lg leading-relaxed">
-                  Just a small deposit and you're all set for the big day! 🎯
+                  Just a small deposit and you&apos;re all set for the big day!
+                  🎯
                 </p>
               </div>
             </div>
@@ -196,8 +197,8 @@ export default async function TenantHome({ params }: TenantHomeProps) {
                   Lightning Fast Booking!
                 </h4>
                 <p className="text-gray-600 font-playful">
-                  Book your dream party online in just 3 easy steps - it's that
-                  simple!
+                  Book your dream party online in just 3 easy steps - it&apos;s
+                  that simple!
                 </p>
               </div>
 
@@ -238,8 +239,8 @@ export default async function TenantHome({ params }: TenantHomeProps) {
               🎊 Ready to Party? 🎊
             </h2>
             <p className="text-xl font-playful mb-8 max-w-2xl mx-auto">
-              Join hundreds of families who've made unforgettable memories with
-              us! Your perfect party is just one click away! ✨
+              Join hundreds of families who&apos;ve made unforgettable memories
+              with us! Your perfect party is just one click away! ✨
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -262,8 +263,9 @@ export default async function TenantHome({ params }: TenantHomeProps) {
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto border-4 border-yellow-200">
             <div className="text-5xl mb-4">⭐⭐⭐⭐⭐</div>
             <p className="text-lg font-playful text-gray-700 italic mb-4">
-              "Best party ever! The kids had a blast and I didn't have to worry
-              about anything. The staff was amazing and the room was perfect!"
+              &quot;Best party ever! The kids had a blast and I didn&apos;t have
+              to worry about anything. The staff was amazing and the room was
+              perfect!&quot;
             </p>
             <p className="font-party text-purple-600">
               - Sarah M., Happy Mom 🎉

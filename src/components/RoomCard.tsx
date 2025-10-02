@@ -113,7 +113,7 @@ export default function RoomCard({ room, packages, tenant }: RoomCardProps) {
         <div className="relative z-10">
           <p className="text-gray-700 mb-4 font-playful text-lg leading-relaxed">
             {room.description ||
-              "A magical space where dreams come true and parties become unforgettable memories! ✨"}
+              "            &quot;This room is perfect for creating unforgettable memories!&quot;"}
           </p>
 
           {/* Fun Stats */}
@@ -174,7 +174,7 @@ export default function RoomCard({ room, packages, tenant }: RoomCardProps) {
 
           {/* Fun call-to-action text */}
           <p className="text-center text-xs font-playful text-gray-500 mt-3 italic">
-            "Where every celebration becomes magical!" ✨
+            &quot;Where every celebration becomes magical!&quot; ✨
           </p>
         </div>
       </div>
