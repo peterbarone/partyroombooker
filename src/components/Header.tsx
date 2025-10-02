@@ -2,18 +2,18 @@ import Link from "next/link";
 
 export default function Header() {
   return (
-    <header className="bg-gradient-to-r from-pink-400 via-purple-500 to-blue-500 shadow-xl relative overflow-hidden">
+    <header className="bg-party-gradient shadow-xl relative overflow-hidden">
       {/* Fun background patterns */}
       <div className="absolute inset-0 bg-party-pattern opacity-10"></div>
 
       {/* Floating decorative elements */}
-      <div className="absolute top-2 left-10 w-3 h-3 bg-yellow-300 rounded-full animate-float opacity-70"></div>
+      <div className="absolute top-2 left-10 w-3 h-3 bg-party-yellow rounded-full animate-float opacity-70"></div>
       <div
-        className="absolute top-4 right-20 w-2 h-2 bg-pink-300 rounded-full animate-float opacity-70"
+        className="absolute top-4 right-20 w-2 h-2 bg-white rounded-full animate-float opacity-70"
         style={{ animationDelay: "1s" }}
       ></div>
       <div
-        className="absolute bottom-2 left-1/4 w-4 h-4 bg-green-300 rounded-full animate-float opacity-70"
+        className="absolute bottom-2 left-1/4 w-4 h-4 bg-party-green rounded-full animate-float opacity-70"
         style={{ animationDelay: "2s" }}
       ></div>
 
@@ -22,30 +22,30 @@ export default function Header() {
           {/* Logo/Brand */}
           <Link
             href="/"
-            className="text-3xl font-party font-bold text-white hover:text-yellow-200 transition-all duration-300 transform hover:scale-105 drop-shadow-lg"
+            className="text-3xl font-party font-bold text-white hover:text-party-yellow transition-all duration-300 transform hover:scale-105 drop-shadow-lg"
           >
-            🎉 Party Room Booker 🎊
+            � Family Fun Factory �
           </Link>
 
           {/* Navigation Menu */}
           <nav className="hidden md:flex space-x-6">
             <Link
               href="/"
-              className="text-white hover:text-yellow-200 transition-all duration-300 font-playful font-semibold text-lg transform hover:scale-110 hover:rotate-1 drop-shadow"
+              className="text-white hover:text-party-yellow transition-all duration-300 font-playful font-semibold text-lg transform hover:scale-110 hover:rotate-1 drop-shadow"
             >
               🏠 Home
             </Link>
             <Link
               href="/rooms"
-              className="text-white hover:text-yellow-200 transition-all duration-300 font-playful font-semibold text-lg transform hover:scale-110 hover:rotate-1 drop-shadow"
+              className="text-white hover:text-party-yellow transition-all duration-300 font-playful font-semibold text-lg transform hover:scale-110 hover:rotate-1 drop-shadow"
             >
-              🏰 Rooms
+              🏰 Party Rooms
             </Link>
             <Link
               href="/bookings"
-              className="text-white hover:text-yellow-200 transition-all duration-300 font-playful font-semibold text-lg transform hover:scale-110 hover:rotate-1 drop-shadow"
+              className="text-white hover:text-party-yellow transition-all duration-300 font-playful font-semibold text-lg transform hover:scale-110 hover:rotate-1 drop-shadow"
             >
-              📅 My Parties
+              🎂 My Parties
             </Link>
             <Link
               href="/about"

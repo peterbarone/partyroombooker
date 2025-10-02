@@ -3,32 +3,52 @@
 @tailwind utilities;
 
 /* Fun Party Theme Custom Styles */
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700;800;900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 :root {
-  /* Party Color Palette */
+  /* Party Color Palette - Matching the image */
+  --party-pink-light: #FF8FAB;
   --party-pink: #FF6B9D;
+  --party-pink-dark: #E91E63;
   --party-purple: #9B59B6;
   --party-blue: #3498DB;
   --party-yellow: #F1C40F;
   --party-orange: #E67E22;
   --party-green: #2ECC71;
   --party-red: #E74C3C;
+  --brown-dark: #7B4B36;
+  --brown-medium: #8B5A46;
+  --brown-light: #9B6A56;
   
   /* Gradients */
   --gradient-party: linear-gradient(135deg, #FF6B9D 0%, #9B59B6 100%);
   --gradient-fun: linear-gradient(135deg, #F1C40F 0%, #E67E22 100%);
   --gradient-celebration: linear-gradient(135deg, #3498DB 0%, #2ECC71 100%);
   --gradient-rainbow: linear-gradient(135deg, #FF6B9D 0%, #9B59B6 25%, #3498DB 50%, #2ECC71 75%, #F1C40F 100%);
+  --gradient-pink-main: linear-gradient(135deg, #FF8FAB 0%, #FF6B9D 50%, #E91E63 100%);
 }
 
-/* Fun Typography */
+/* Typography matching the image */
 .font-party {
   font-family: 'Fredoka', cursive;
 }
 
 .font-playful {
   font-family: 'Nunito', sans-serif;
+}
+
+.font-bold-display {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.text-shadow-strong {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.text-shadow-soft {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Party Animations */

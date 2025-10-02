@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ResponsiveBackground from "@/components/ResponsiveBackground";
 
 interface TenantHomeProps {
   params: Promise<{ tenant: string }>;
@@ -55,7 +56,8 @@ export default async function TenantHome({ params }: TenantHomeProps) {
   const { tenant } = await params;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
+      <ResponsiveBackground className="absolute inset-0 -z-10" overlay={<div className="absolute inset-0 bg-gradient-to-br from-pink-400/30 via-pink-500/40 to-pink-600/30"/>} />
       <Confetti />
       <FloatingBalloons />
 
@@ -63,31 +65,31 @@ export default async function TenantHome({ params }: TenantHomeProps) {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="mb-8">
-            <h1 className="text-6xl font-party font-bold text-rainbow mb-4 animate-bounce-fun">
-              🎉 Welcome to {tenant.charAt(0).toUpperCase() + tenant.slice(1)}{" "}
+            <h1 className="text-6xl md:text-8xl font-black text-white mb-6 animate-bounce-fun text-shadow-strong tracking-tight">
+              🎉 WELCOME TO {tenant.charAt(0).toUpperCase() + tenant.slice(1).toUpperCase()}{" "}
               🎉
             </h1>
-            <p className="text-2xl font-playful text-gray-700 max-w-3xl mx-auto mb-8 leading-relaxed">
-              Where every celebration becomes a magical memory! ✨
+            <p className="text-2xl md:text-3xl font-bold text-white max-w-4xl mx-auto mb-8 leading-relaxed text-shadow-soft">
+              WHERE EVERY CELEBRATION BECOMES A MAGICAL MEMORY! ✨
               <br />
-              <span className="text-lg text-gray-600">
-                Book your perfect party space with instant confirmation
+              <span className="text-xl md:text-2xl text-yellow-200 font-bold">
+                BOOK YOUR PERFECT PARTY SPACE WITH INSTANT CONFIRMATION
               </span>
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
             <Link
               href={`/${tenant}/book`}
-              className="btn-party text-xl font-party animate-pulse-party transform hover:rotate-1 transition-all duration-300"
+              className="bg-white text-pink-600 text-xl md:text-2xl font-black px-12 py-4 rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-4 border-white hover:border-yellow-400"
             >
-              🚀 Book Your Epic Party Now! 🚀
+              🚀 BOOK YOUR EPIC PARTY NOW! 🚀
             </Link>
             <Link
               href={`/${tenant}/rooms`}
-              className="btn-fun text-lg font-playful transform hover:-rotate-1 transition-all duration-300"
+              className="bg-yellow-400 text-pink-600 text-lg md:text-xl font-black px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-4 border-yellow-400 hover:border-white"
             >
-              🏠 Explore Our Rooms
+              🏠 EXPLORE OUR ROOMS
             </Link>
           </div>
 
