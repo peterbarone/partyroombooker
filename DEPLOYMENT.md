@@ -25,6 +25,7 @@ nano .env.production
 ```
 
 Update with your production values:
+
 - Supabase production URLs and keys
 - Clover production credentials
 - Your domain name
@@ -71,6 +72,7 @@ npm run dev:docker-rebuild
 ```
 
 ### Features
+
 - ✅ **Instant changes** - Edit code locally, see changes immediately
 - ✅ **Consistent environment** - Same Docker environment as production
 - ✅ **No rebuilds** - Container stays running between changes
@@ -111,11 +113,13 @@ docker-compose -f docker-compose.dev.yml logs -f
 ## Auto-Deployment
 
 The repository includes GitHub Actions for automatic deployment:
+
 - Triggers on push to `master` branch
 - Runs tests and builds the application
 - Deploys to your VPS automatically
 
 Make sure to set these secrets in your GitHub repository:
+
 - `VPS_HOST`: Your VPS IP address
 - `VPS_USERNAME`: SSH username
 - `VPS_SSH_KEY`: SSH private key
