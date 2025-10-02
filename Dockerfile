@@ -16,6 +16,11 @@ COPY . .
 # Next.js collects completely anonymous telemetry data about general usage.
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Set placeholder values for required environment variables during build
+ENV NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder-key
+ENV NEXT_PUBLIC_BASE_URL=http://localhost:3000
+
 RUN npm run build
 
 # Production image, copy all the files and run next
@@ -31,10 +36,9 @@ RUN adduser --system --uid 1001 nextjs
 # Copy the public folder
 COPY --from=builder /app/public ./public
 
-# Copy the built application
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+# Copy the standalone application
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
@@ -42,4 +46,4 @@ EXPOSE 3000
 
 ENV PORT=3000
 
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
