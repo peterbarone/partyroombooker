@@ -182,14 +182,14 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'greeting':
         return (
           <StepContainer>
-            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[600px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[600px] max-w-9xl mx-auto">
               {/* Right side on desktop, but show first on mobile (order classes) */}
-              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
                 <motion.div
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="flex items-center gap-3 mb-4"
+                  className="flex items-center gap-4 mb-4"
                 >
                   <div className="text-6xl">🎊</div>
                   <div className="text-6xl md:text-7xl font-black text-pink-600 leading-none tracking-tight">
@@ -251,52 +251,52 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'child-name':
         return (
           <StepContainer>
-            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[520px]">
-              {/* Left decorative / hero area (shows first on desktop, second on mobile) */}
-              <motion.div
-                className="order-2 md:order-1 flex items-center justify-center text-center px-6"
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <div>
-                  <div className="flex justify-center gap-4 mb-8">
-                    <Sparkles className="text-party-yellow w-16 h-16 animate-pulse-party" />
-                    <Cake className="text-party-pink w-16 h-16 animate-bounce-fun" />
-                    <PartyPopper className="text-party-blue w-16 h-16 animate-wiggle" />
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[600px] max-w-9xl mx-auto">
+              {/* Left illustration, always visible */}
+              <div className="order-2 md:order-1 relative flex items-center justify-center">
+                
+              </div>
 
-                  <h2 className="text-4xl md:text-5xl font-bold-display text-brown-dark mb-6 text-shadow-soft">
+              {/* Right card, matches greeting step */}
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/10 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center gap-4 mb-4"
+                >
+                  <div className="text-6xl">😉</div>
+                  <div className="text-4xl md:text-5xl font-black text-brown-dark leading-tight">
                     WHO'S THE LUCKY KID
                     <br />
                     <span className="bg-gradient-to-r from-pink-500 to-pink-600 bg-clip-text text-transparent">
                       WE'RE CELEBRATING?
                     </span>
-                  </h2>
-
-                  <div className="text-8xl mb-8">🥳</div>
-                </div>
-              </motion.div>
-
-              {/* Right form panel (appears on right for md+, but is first on mobile) */}
-              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl max-w-md mx-auto">
-                <motion.div
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <label className="block text-brown-dark font-bold mb-4 text-left text-lg">
-                    BIRTHDAY STAR'S NAME
-                  </label>
-                  <input
-                    type="text"
-                    value={bookingData.childName}
-                    onChange={(e) => updateBookingData({ childName: e.target.value })}
-                    placeholder="Enter the birthday child's name"
-                    className="w-full px-8 py-5 rounded-3xl border-4 border-pink-300 focus:border-pink-500 focus:outline-none text-xl font-bold bg-white shadow-lg focus:shadow-xl transition-all text-center"
-                    autoFocus
-                  />
+                  </div>
                 </motion.div>
+
+                <motion.p
+                  className="text-xl md:text-2xl font-bold text-brown-dark leading-relaxed"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Enter the birthday child's name below to get started!
+                </motion.p>
+
+                <div className="mt-8">
+                  <label className="sr-only">Birthday star's name</label>
+                  <div className="rounded-full border-4 shadow-lg" style={{ borderColor: '#593826' }}>
+                    <input
+                      type="text"
+                      value={bookingData.childName}
+                      onChange={(e) => updateBookingData({ childName: e.target.value })}
+                      placeholder="Enter the birthday child's name"
+                      className="w-full px-8 py-6 rounded-full text-xl font-bold bg-[#F6E8DB] placeholder:text-[#6b4b3b] focus:outline-none"
+                      autoFocus
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </StepContainer>
@@ -305,7 +305,7 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'child-age':
         return (
           <StepContainer>
-            <div className="text-center">
+            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
               <h2 className="text-4xl md:text-5xl font-bold-display text-brown-dark mb-6 text-shadow-soft">
                 AWESOME! AND HOW OLD
                 <br />
@@ -355,7 +355,7 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'child-gender':
         return (
           <StepContainer>
-            <div className="text-center">
+            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
               <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
                 Exciting! Is {bookingData.childName} a boy, a girl, or should we keep it neutral?
               </h2>
@@ -389,7 +389,7 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'party-date':
         return (
           <StepContainer>
-            <div className="text-center">
+            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
               <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
                 Great! Now, when's the big celebration happening?
               </h2>
@@ -415,7 +415,7 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'time-slot':
         return (
           <StepContainer>
-            <div className="text-center">
+            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
               <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
                 We've got some cool time slots. Which works best for your crew?
               </h2>
@@ -450,9 +450,9 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'guest-count':
         return (
           <StepContainer>
-            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[300px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[300px] max-w-6xl mx-auto">
               {/* Form/content column: show first on mobile, right on desktop */}
-              <div className="order-1 md:order-2 text-center space-y-4">
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
                 <h2 className="text-3xl md:text-4xl font-party text-brown-700">
                   How many awesome friends is {bookingData.childName} inviting to the party?
                 </h2>
@@ -498,9 +498,9 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'food-drinks':
         return (
           <StepContainer>
-            <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-8 max-w-6xl mx-auto">
               {/* Form content: selections - appears first on mobile, right on desktop */}
-              <div className="order-1 md:order-2 text-center">
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
                 <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
                   🍕 Hungry guests are happy guests! Want to add some food or drinks?
                 </h2>
@@ -544,9 +544,9 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'add-ons':
         return (
           <StepContainer>
-            <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-8 max-w-6xl mx-auto">
               {/* Form column: selections - first on mobile, right on desktop */}
-              <div className="order-1 md:order-2 text-center">
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
                 <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
                   Want to make this party epic? Choose some extra fun!
                 </h2>
@@ -591,7 +591,7 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'special-notes':
         return (
           <StepContainer>
-            <div className="text-center">
+            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
               <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
                 Any special requests or important info we should know about {bookingData.childName}'s big day?
               </h2>
@@ -616,7 +616,7 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'parent-info':
         return (
           <StepContainer>
-            <div className="text-center">
+            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
               <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
                 Almost done! We just need your info so we can lock this in.
               </h2>
@@ -676,7 +676,7 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'payment':
         return (
           <StepContainer>
-            <div className="text-center">
+            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
               <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
                 🎟️ To secure your spot, we just need the deposit. Ready to check out?
               </h2>
@@ -732,7 +732,7 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'confirmation':
         return (
           <StepContainer>
-            <div className="text-center">
+            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
