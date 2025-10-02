@@ -11,8 +11,7 @@
     "dev:docker-rebuild": "docker-compose -f docker-compose.dev.yml up --build --force-recreate",
     "dev:docker-stop": "docker-compose -f docker-compose.dev.yml down",
     "deploy": "npm run build && docker-compose up -d",
-    "deploy:prod": "./deploy.sh",
-    "postinstall": "npm run build"
+    "deploy:prod": "./deploy.sh"
   },
   "engines": {
     "node": ">=18.0.0",

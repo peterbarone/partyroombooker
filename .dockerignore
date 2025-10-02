@@ -1,36 +1,23 @@
-# Node modules
+# Dependencies
 node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Next.js build outputs
+# Production builds
 .next
 out
 build
+dist
 
-# Environment files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Git
-.git
-.gitignore
-
-# Docker files
-Dockerfile*
-docker-compose*
-.dockerignore
+# Environment variables (will be provided at runtime)
+.env*
 
 # IDE and editor files
 .vscode
 .idea
 *.swp
 *.swo
-*~
 
 # OS generated files
 .DS_Store
@@ -45,25 +32,22 @@ Thumbs.db
 logs
 *.log
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+# Git
+.git
+.gitignore
 
-# Coverage and test files
-coverage
-.nyc_output
-.jest
+# Docker files
+Dockerfile*
+docker-compose*.yml
 
 # Documentation
 README.md
-CHANGELOG.md
 *.md
 
 # Development scripts
-setup-webhook-dev.bat
-setup-webhook-dev.sh
+dev-docker.sh
+deploy.sh
+setup-webhook-dev.*
 test-webhook.js
 
 # Temporary files
