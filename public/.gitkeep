@@ -1,0 +1,5 @@
+# Public Assets
+
+This directory contains static assets that will be served directly by Next.js.
+
+Add images, favicon, robots.txt, and other static files here.

@@ -1,10 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  experimental: {
-    // Enable app directory
-    appDir: true,
-  },
+  // Remove standalone for now to avoid issues
+  // output: 'standalone',
 };
 
 module.exports = nextConfig;
