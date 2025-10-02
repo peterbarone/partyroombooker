@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 interface TenantHomeProps {
-  params: { tenant: string };
+  params: Promise<{ tenant: string }>;
 }
 
 export default async function TenantHome({ params }: TenantHomeProps) {

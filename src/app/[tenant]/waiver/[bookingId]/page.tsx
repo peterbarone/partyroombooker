@@ -1,17 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 interface WaiverPageProps {
-  params: {
+  params: Promise<{
     tenant: string;
     bookingId: string;
-  };
+  }>;
 }
 
 export default function WaiverPage({ params }: WaiverPageProps) {
   const router = useRouter();
+  const [resolvedParams, setResolvedParams] = useState<{
+    tenant: string;
+    bookingId: string;
+  } | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,10 +25,22 @@ export default function WaiverPage({ params }: WaiverPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  // Note: In Next.js 15, params should be awaited, but for this demo we'll handle it
-  const tenant = typeof params.tenant === "string" ? params.tenant : "demo";
-  const bookingId =
-    typeof params.bookingId === "string" ? params.bookingId : "demo";
+  useEffect(() => {
+    params.then(setResolvedParams);
+  }, [params]);
+
+  if (!resolvedParams) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { tenant, bookingId } = resolvedParams;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;

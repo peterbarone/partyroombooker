@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 
 interface TenantLayoutProps {
   children: React.ReactNode;
-  params: { tenant: string };
+  params: Promise<{ tenant: string }>;
 }
 
 export async function generateMetadata({
   params,
 }: {
-  params: { tenant: string };
+  params: Promise<{ tenant: string }>;
 }): Promise<Metadata> {
   // In a real app, you'd fetch tenant data from the database
   const resolvedParams = await params;

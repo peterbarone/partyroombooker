@@ -3,7 +3,7 @@
 import BookingWizard from "../../../components/BookingWizard";
 
 interface BookingPageProps {
-  params: { tenant: string };
+  params: Promise<{ tenant: string }>;
 }
 
 export default async function BookingPage({ params }: BookingPageProps) {
