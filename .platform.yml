@@ -1,0 +1,33 @@
+name: partyroombooker
+region: nyc
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: peterbarone/partyroombooker
+    branch: master
+  run_command: npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: NEXT_PUBLIC_SUPABASE_URL
+    value: ${NEXT_PUBLIC_SUPABASE_URL}
+  - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    value: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+  - key: SUPABASE_SERVICE_ROLE_KEY
+    value: ${SUPABASE_SERVICE_ROLE_KEY}
+  - key: CLOVER_APP_ID
+    value: ${CLOVER_APP_ID}
+  - key: CLOVER_APP_SECRET
+    value: ${CLOVER_APP_SECRET}
+  - key: CLOVER_ENVIRONMENT
+    value: production
+  - key: CLOVER_MERCHANT_ID
+    value: ${CLOVER_MERCHANT_ID}
+  - key: CLOVER_API_TOKEN
+    value: ${CLOVER_API_TOKEN}
+  - key: CLOVER_WEBHOOK_SECRET
+    value: ${CLOVER_WEBHOOK_SECRET}

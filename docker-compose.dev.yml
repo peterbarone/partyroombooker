@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  partyroombooker-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot reloading
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./package.json:/app/package.json
+      - ./next.config.js:/app/next.config.js
+      - ./tailwind.config.js:/app/tailwind.config.js
+      - ./tsconfig.json:/app/tsconfig.json
+      # Exclude node_modules to avoid conflicts
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env.local
+    stdin_open: true
+    tty: true

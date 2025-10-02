@@ -1,0 +1,21 @@
+name: Auto Deploy to VPS
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          cd /var/www/partyroombooker
+          git pull origin master
+          docker-compose down
+          docker-compose up -d --build
