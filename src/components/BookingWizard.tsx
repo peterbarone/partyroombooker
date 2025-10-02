@@ -257,43 +257,66 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
 
   const renderStep1 = () => {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Step 1: Choose Package & Date
-        </h2>
+      <div className="bg-white rounded-3xl shadow-2xl p-8 border-4 border-pink-200 relative overflow-hidden">
+        {/* Fun background elements */}
+        <div className="absolute top-4 right-6 w-12 h-12 bg-yellow-200 rounded-full opacity-30 animate-bounce-fun"></div>
+        <div className="absolute bottom-6 left-8 w-8 h-8 bg-pink-200 rounded-full opacity-30 animate-wiggle"></div>
+
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-party font-bold text-purple-700 mb-2">
+            🎪 Choose Your Perfect Party Package!
+          </h2>
+          <p className="text-gray-600 font-playful text-lg">
+            Pick the amazing package and when you want to celebrate! 🎉✨
+          </p>
+        </div>
 
         <div className="space-y-8">
           {/* Package Selection */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Select a Package
+            <h3 className="text-xl font-party font-bold text-purple-700 mb-6 flex items-center">
+              🎁 Select Your Amazing Package
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {availablePackages.map((pkg) => (
                 <div
                   key={pkg.id}
                   onClick={() => updatePackage(pkg)}
-                  className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
+                  className={`border-3 rounded-2xl p-6 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
                     booking.selectedPackage?.id === pkg.id
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-pink-400 bg-gradient-to-br from-pink-50 to-purple-50 shadow-xl scale-105"
+                      : "border-gray-200 bg-white hover:border-purple-300 hover:shadow-lg"
                   }`}
                 >
-                  <h4 className="font-semibold text-gray-900">{pkg.name}</h4>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {pkg.description}
-                  </p>
-                  <div className="mt-2">
-                    <span className="text-lg font-bold text-green-600">
-                      ${pkg.base_price}
-                    </span>
-                    <span className="text-sm text-gray-500 ml-1">
-                      for {pkg.base_kids} kids
-                    </span>
+                  <div className="text-center mb-4">
+                    <div className="text-4xl mb-2">🎉</div>
+                    <h4 className="text-xl font-party font-bold text-purple-700">
+                      {pkg.name}
+                    </h4>
+                    <p className="text-gray-600 font-playful mt-2">
+                      {pkg.description}
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    ${pkg.extra_kid_price}/extra child
-                  </p>
+
+                  <div className="text-center">
+                    <div className="text-3xl font-party font-bold text-green-600 mb-1">
+                      ${pkg.base_price}
+                    </div>
+                    <p className="text-purple-600 font-playful font-bold">
+                      for {pkg.base_kids} amazing kids! 🎈
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1 font-playful">
+                      ${pkg.extra_kid_price} per extra little party guest
+                    </p>
+                  </div>
+
+                  {booking.selectedPackage?.id === pkg.id && (
+                    <div className="mt-4 p-3 bg-gradient-to-r from-pink-100 to-purple-100 rounded-xl border-2 border-pink-300">
+                      <p className="text-center text-pink-700 font-party font-bold">
+                        🌟 Fantastic Choice! This will be AMAZING! 🌟
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -301,9 +324,9 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
 
           {/* Date Selection */}
           {booking.selectedPackage && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Select Date
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border-3 border-blue-200">
+              <h3 className="text-xl font-party font-bold text-blue-700 mb-4 flex items-center">
+                📅 When is the Big Celebration?
               </h3>
               <input
                 type="date"
@@ -312,18 +335,18 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
                 onChange={(e) =>
                   setBooking({ ...booking, selectedDate: e.target.value })
                 }
-                className="border border-gray-300 rounded-lg px-4 py-2"
+                className="w-full p-4 border-3 border-pink-200 rounded-xl focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all duration-300 font-playful text-lg"
               />
             </div>
           )}
 
           {/* Kids Count */}
           {booking.selectedPackage && booking.selectedDate && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Number of Children
+            <div className="bg-gradient-to-r from-green-50 to-yellow-50 rounded-2xl p-6 border-3 border-green-200">
+              <h3 className="text-xl font-party font-bold text-green-700 mb-4 flex items-center">
+                👶 How Many Little Party Stars?
               </h3>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-center space-x-6">
                 <button
                   onClick={() =>
                     setBooking({
@@ -331,13 +354,18 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
                       kidsCount: Math.max(1, booking.kidsCount - 1),
                     })
                   }
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center"
+                  className="w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white text-2xl font-bold rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg"
                 >
                   -
                 </button>
-                <span className="text-xl font-semibold">
-                  {booking.kidsCount}
-                </span>
+                <div className="text-center">
+                  <span className="text-4xl font-party font-bold text-purple-700">
+                    {booking.kidsCount}
+                  </span>
+                  <p className="text-purple-600 font-playful font-bold">
+                    party kids! 🎉
+                  </p>
+                </div>
                 <button
                   onClick={() =>
                     setBooking({
@@ -345,30 +373,33 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
                       kidsCount: booking.kidsCount + 1,
                     })
                   }
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center"
+                  className="w-12 h-12 bg-gradient-to-br from-blue-400 to-green-400 hover:from-blue-500 hover:to-green-500 text-white text-2xl font-bold rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-lg"
                 >
                   +
                 </button>
               </div>
               {booking.kidsCount > booking.selectedPackage.base_kids && (
-                <p className="text-sm text-gray-600 mt-2">
-                  Extra kids:{" "}
-                  {booking.kidsCount - booking.selectedPackage.base_kids} × $
-                  {booking.selectedPackage.extra_kid_price} = $
-                  {(booking.kidsCount - booking.selectedPackage.base_kids) *
-                    booking.selectedPackage.extra_kid_price}
-                </p>
+                <div className="mt-4 p-4 bg-white rounded-xl border-2 border-green-300">
+                  <p className="text-center text-green-700 font-playful">
+                    🌟 Extra party stars:{" "}
+                    {booking.kidsCount - booking.selectedPackage.base_kids} × $
+                    {booking.selectedPackage.extra_kid_price} = $
+                    {(booking.kidsCount - booking.selectedPackage.base_kids) *
+                      booking.selectedPackage.extra_kid_price}{" "}
+                    🌟
+                  </p>
+                </div>
               )}
             </div>
           )}
 
           {/* Time Selection */}
           {booking.selectedPackage && booking.selectedDate && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Select Time
+            <div className="bg-gradient-to-r from-pink-50 to-orange-50 rounded-2xl p-6 border-3 border-pink-200">
+              <h3 className="text-xl font-party font-bold text-pink-700 mb-4 flex items-center">
+                ⏰ What Time Should the Fun Begin?
               </h3>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   "10:00 AM",
                   "11:00 AM",
@@ -384,10 +415,10 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
                     onClick={() =>
                       setBooking({ ...booking, selectedTime: time })
                     }
-                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    className={`py-3 px-4 rounded-xl font-party font-bold transition-all duration-300 transform hover:scale-105 ${
                       booking.selectedTime === time
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                        ? "bg-gradient-to-br from-pink-400 via-purple-400 to-blue-400 text-white shadow-lg scale-105"
+                        : "bg-white border-3 border-pink-200 text-purple-700 hover:border-purple-400 hover:shadow-md"
                     }`}
                   >
                     {time}
@@ -398,8 +429,11 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
           )}
         </div>
 
-        <div className="flex justify-between mt-8">
-          <div></div>
+        <div className="flex justify-between mt-8 pt-6 border-t-3 border-pink-200">
+          <div className="flex items-center space-x-2">
+            <span className="text-2xl animate-bounce-fun">🎈</span>
+            <span className="text-gray-500 font-playful">Step 1 of 4</span>
+          </div>
           <button
             onClick={nextStep}
             disabled={
@@ -407,9 +441,15 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
               !booking.selectedDate ||
               !booking.selectedTime
             }
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+            className={`px-8 py-4 rounded-xl font-party font-bold text-lg transition-all duration-300 transform ${
+              !booking.selectedPackage ||
+              !booking.selectedDate ||
+              !booking.selectedTime
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-400 to-purple-400 text-white hover:from-blue-500 hover:to-purple-500 hover:scale-105 shadow-lg hover:shadow-xl animate-pulse-party"
+            }`}
           >
-            Next
+            Next: Choose Room! 🏰 →
           </button>
         </div>
       </div>
@@ -433,81 +473,159 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
     );
 
     return (
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Step 2: Choose Your Room
-        </h2>
+      <div className="bg-white rounded-3xl shadow-2xl p-8 border-4 border-blue-200 relative overflow-hidden">
+        {/* Fun background elements */}
+        <div className="absolute top-6 right-8 w-16 h-16 bg-blue-200 rounded-full opacity-30 animate-float"></div>
+        <div className="absolute bottom-8 left-6 w-10 h-10 bg-purple-200 rounded-full opacity-30 animate-wiggle"></div>
+
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-party font-bold text-blue-700 mb-2">
+            🏰 Choose Your Perfect Party Palace!
+          </h2>
+          <p className="text-gray-600 font-playful text-lg">
+            Pick the magical space where your celebration will happen! ✨🎪
+          </p>
+        </div>
 
         {/* Debug info */}
-        <div className="mb-4">
+        <div className="mb-6">
           <button
             onClick={() => setShowDebug(!showDebug)}
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className="text-sm text-blue-600 hover:text-blue-800 font-playful px-3 py-1 bg-blue-50 rounded-full border border-blue-200 transition-all duration-300 hover:bg-blue-100"
           >
-            {showDebug ? "Hide" : "Show"} Debug Info
+            {showDebug ? "Hide" : "Show"} Debug Info 🔍
           </button>
           {showDebug && (
-            <div className="mt-2 p-4 bg-gray-100 rounded text-sm">
-              <p>
-                Selected Package: {booking.selectedPackage?.name} (ID:{" "}
-                {booking.selectedPackage?.id})
-              </p>
-              <p>Tenant: {tenant}</p>
-              <p>Package Mappings: {JSON.stringify(packageMappings)}</p>
-              <p>Eligible Room IDs: {JSON.stringify(eligibleRoomIds)}</p>
-              <p>Total Rooms in System: {sampleRooms.length}</p>
-              <p>Filtered Rooms: {availableRooms.length}</p>
+            <div className="mt-4 p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl border-2 border-gray-200">
+              <h3 className="font-party font-bold text-gray-700 mb-3">
+                🔧 System Info
+              </h3>
+              <div className="text-sm font-playful space-y-1 text-gray-600">
+                <p>
+                  <strong>Selected Package:</strong>{" "}
+                  {booking.selectedPackage?.name} (ID:{" "}
+                  {booking.selectedPackage?.id})
+                </p>
+                <p>
+                  <strong>Tenant:</strong> {tenant}
+                </p>
+                <p>
+                  <strong>Package Mappings:</strong>{" "}
+                  {JSON.stringify(packageMappings)}
+                </p>
+                <p>
+                  <strong>Eligible Room IDs:</strong>{" "}
+                  {JSON.stringify(eligibleRoomIds)}
+                </p>
+                <p>
+                  <strong>Total Rooms in System:</strong> {sampleRooms.length}
+                </p>
+                <p>
+                  <strong>Filtered Rooms:</strong> {availableRooms.length}
+                </p>
+              </div>
             </div>
           )}
         </div>
 
         {availableRooms.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-600">
-              No rooms available for this package. Please contact us for
-              assistance.
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">😔</div>
+            <h3 className="text-xl font-party font-bold text-purple-700 mb-2">
+              Oops! No Rooms Available
+            </h3>
+            <p className="text-gray-600 font-playful text-lg mb-6">
+              No magical spaces are available for this package right now. Our
+              party experts would love to help you find the perfect solution!
             </p>
+            <button className="bg-gradient-to-r from-pink-400 to-purple-400 text-white font-party font-bold py-3 px-6 rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300 transform hover:scale-105">
+              📞 Contact Our Party Experts
+            </button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-8">
             {availableRooms.map((room) => (
               <div
                 key={room.id}
                 onClick={() => updateRoom(room)}
-                className={`border-2 rounded-lg p-6 cursor-pointer transition-colors ${
+                className={`border-3 rounded-2xl p-6 cursor-pointer transition-all duration-300 transform hover:scale-105 ${
                   booking.selectedRoom?.id === room.id
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-blue-400 bg-gradient-to-br from-blue-50 to-purple-50 shadow-xl scale-105"
+                    : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-lg"
                 }`}
               >
-                <h4 className="font-semibold text-gray-900 text-lg">
-                  {room.name}
-                </h4>
-                <p className="text-gray-600 mt-2">{room.description}</p>
-                <div className="mt-4">
-                  <p className="text-sm text-gray-500">
-                    Max Capacity: {room.max_kids} children
+                <div className="text-center mb-4">
+                  <div className="text-5xl mb-3">🏰</div>
+                  <h4 className="text-xl font-party font-bold text-blue-700">
+                    {room.name}
+                  </h4>
+                  <p className="text-gray-600 font-playful mt-2 leading-relaxed">
+                    {room.description}
                   </p>
                 </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl border-2 border-green-200">
+                    <span className="text-xl">👥</span>
+                    <span className="font-party font-bold text-green-700">
+                      Perfect for up to {room.max_kids} party kids!
+                    </span>
+                  </div>
+                </div>
+
+                {booking.selectedRoom?.id === room.id && (
+                  <div className="mt-4 p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl border-2 border-blue-300">
+                    <div className="text-center">
+                      <p className="text-blue-700 font-party font-bold mb-2">
+                        🎉 Excellent Choice! This room is PERFECT! 🎉
+                      </p>
+                      <div className="flex justify-center space-x-2">
+                        <span className="text-xl animate-bounce-fun">🎈</span>
+                        <span
+                          className="text-xl animate-bounce-fun"
+                          style={{ animationDelay: "0.2s" }}
+                        >
+                          🎊
+                        </span>
+                        <span
+                          className="text-xl animate-bounce-fun"
+                          style={{ animationDelay: "0.4s" }}
+                        >
+                          ✨
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
 
-        <div className="flex justify-between mt-8">
+        <div className="flex justify-between mt-8 pt-6 border-t-3 border-blue-200">
           <button
             onClick={prevStep}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+            className="px-8 py-4 bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl font-party font-bold text-lg hover:from-gray-500 hover:to-gray-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
-            Back
+            ← Back to Package
           </button>
-          <button
-            onClick={nextStep}
-            disabled={!booking.selectedRoom}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
-          >
-            Next
-          </button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl animate-bounce-fun">🎪</span>
+              <span className="text-gray-500 font-playful">Step 2 of 4</span>
+            </div>
+            <button
+              onClick={nextStep}
+              disabled={!booking.selectedRoom}
+              className={`px-8 py-4 rounded-xl font-party font-bold text-lg transition-all duration-300 transform ${
+                !booking.selectedRoom
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-purple-400 to-pink-400 text-white hover:from-purple-500 hover:to-pink-500 hover:scale-105 shadow-lg hover:shadow-xl animate-pulse-party"
+              }`}
+            >
+              Next: Add Fun Extras! ✨ →
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -519,18 +637,27 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
     );
 
     return (
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Step 3: Add-ons & Customer Info
-        </h2>
+      <div className="bg-white rounded-3xl shadow-2xl p-8 border-4 border-green-200 relative overflow-hidden">
+        {/* Fun background elements */}
+        <div className="absolute top-8 right-10 w-14 h-14 bg-green-200 rounded-full opacity-30 animate-wiggle"></div>
+        <div className="absolute bottom-10 left-12 w-10 h-10 bg-yellow-200 rounded-full opacity-30 animate-float"></div>
+
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-party font-bold text-green-700 mb-2">
+            ✨ Add Magical Extras & Your Info!
+          </h2>
+          <p className="text-gray-600 font-playful text-lg">
+            Make your party even more amazing with fun add-ons! 🎪🎈
+          </p>
+        </div>
 
         <div className="space-y-8">
           {/* Add-ons Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Optional Add-ons
+            <h3 className="text-xl font-party font-bold text-green-700 mb-6 flex items-center">
+              🎭 Optional Fun Add-ons
             </h3>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-6">
               {availableAddons.map((addon) => {
                 const currentQuantity =
                   booking.selectedAddons.find(
@@ -540,42 +667,51 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
                 return (
                   <div
                     key={addon.id}
-                    className="border border-gray-200 rounded-lg p-4"
+                    className="border-3 border-gray-200 rounded-2xl p-6 bg-gradient-to-br from-white to-green-50 hover:shadow-lg transition-all duration-300"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-semibold text-gray-900">
-                          {addon.name}
-                        </h4>
-                        <p className="text-sm text-gray-600">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center mb-2">
+                          <span className="text-2xl mr-2">🎪</span>
+                          <h4 className="text-lg font-party font-bold text-green-700">
+                            {addon.name}
+                          </h4>
+                        </div>
+                        <p className="text-gray-600 font-playful leading-relaxed">
                           {addon.description}
                         </p>
                       </div>
-                      <span className="text-lg font-bold text-green-600">
-                        ${addon.price}
-                      </span>
+                      <div className="text-right ml-4">
+                        <span className="text-2xl font-party font-bold text-green-600">
+                          ${addon.price}
+                        </span>
+                        <p className="text-sm text-gray-500 font-playful">
+                          {addon.unit}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        per {addon.unit}
+
+                    <div className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-green-200">
+                      <span className="font-party font-bold text-green-700">
+                        Add to party? 🎉
                       </span>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-3">
                         <button
                           onClick={() =>
                             updateAddon(addon, Math.max(0, currentQuantity - 1))
                           }
-                          className="bg-gray-200 hover:bg-gray-300 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-sm"
+                          className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white text-xl font-bold rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md"
                         >
                           -
                         </button>
-                        <span className="w-8 text-center">
+                        <span className="w-12 text-center text-xl font-party font-bold text-purple-700">
                           {currentQuantity}
                         </span>
                         <button
                           onClick={() =>
                             updateAddon(addon, currentQuantity + 1)
                           }
-                          className="bg-gray-200 hover:bg-gray-300 text-gray-700 w-6 h-6 rounded-full flex items-center justify-center text-sm"
+                          className="w-10 h-10 bg-gradient-to-br from-blue-400 to-green-400 hover:from-blue-500 hover:to-green-500 text-white text-xl font-bold rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-md"
                         >
                           +
                         </button>
@@ -588,14 +724,14 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
           </div>
 
           {/* Customer Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Customer Information
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border-3 border-purple-200">
+            <h3 className="text-xl font-party font-bold text-purple-700 mb-6 flex items-center">
+              👑 Tell Us About the Party Host!
             </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-lg font-party font-bold text-purple-700">
+                  🎭 Your Amazing Name
                 </label>
                 <input
                   type="text"
@@ -609,13 +745,13 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
                       },
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your full name"
+                  className="w-full p-4 border-3 border-pink-200 rounded-xl focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all duration-300 font-playful text-lg"
+                  placeholder="The fantastic party host's name"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
+              <div className="space-y-2">
+                <label className="block text-lg font-party font-bold text-purple-700">
+                  📧 Email Address
                 </label>
                 <input
                   type="email"
@@ -629,13 +765,13 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
                       },
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your email"
+                  className="w-full p-4 border-3 border-pink-200 rounded-xl focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all duration-300 font-playful text-lg"
+                  placeholder="your.awesome.email@example.com"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone
+              <div className="space-y-2 md:col-span-2">
+                <label className="block text-lg font-party font-bold text-purple-700">
+                  📞 Phone Number
                 </label>
                 <input
                   type="tel"
@@ -649,58 +785,112 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
                       },
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your phone number"
+                  className="w-full p-4 border-3 border-pink-200 rounded-xl focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all duration-300 font-playful text-lg"
+                  placeholder="(555) 123-4567"
                 />
+                <p className="text-sm text-purple-600 font-playful">
+                  📱 We&apos;ll only call with exciting party updates!
+                </p>
               </div>
             </div>
           </div>
 
           {/* Price Summary */}
-          <div className="bg-gray-50 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Price Summary
+          <div className="bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 rounded-2xl p-6 border-4 border-blue-300">
+            <h3 className="text-xl font-party font-bold text-blue-700 mb-6 flex items-center">
+              💰 Your Amazing Party Investment!
             </h3>
             {(() => {
               const pricing = calculatePrice();
               return (
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Base Package:</span>
-                    <span>${pricing.base_price.toFixed(2)}</span>
+                <div className="space-y-3 text-lg font-playful">
+                  <div className="flex justify-between items-center p-3 bg-white rounded-xl border-2 border-blue-200">
+                    <span className="flex items-center">
+                      <span className="text-xl mr-2">🎉</span>
+                      Base Package:
+                    </span>
+                    <span className="font-party font-bold text-green-600">
+                      ${pricing.base_price.toFixed(2)}
+                    </span>
                   </div>
                   {pricing.extra_kids_price > 0 && (
-                    <div className="flex justify-between">
-                      <span>Extra Children:</span>
-                      <span>${pricing.extra_kids_price.toFixed(2)}</span>
+                    <div className="flex justify-between items-center p-3 bg-white rounded-xl border-2 border-blue-200">
+                      <span className="flex items-center">
+                        <span className="text-xl mr-2">👶</span>
+                        Extra Party Stars:
+                      </span>
+                      <span className="font-party font-bold text-green-600">
+                        ${pricing.extra_kids_price.toFixed(2)}
+                      </span>
                     </div>
                   )}
                   {pricing.addons_price > 0 && (
-                    <div className="flex justify-between">
-                      <span>Add-ons:</span>
-                      <span>${pricing.addons_price.toFixed(2)}</span>
+                    <div className="flex justify-between items-center p-3 bg-white rounded-xl border-2 border-blue-200">
+                      <span className="flex items-center">
+                        <span className="text-xl mr-2">✨</span>
+                        Fun Add-ons:
+                      </span>
+                      <span className="font-party font-bold text-green-600">
+                        ${pricing.addons_price.toFixed(2)}
+                      </span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>${pricing.subtotal.toFixed(2)}</span>
+                  <div className="flex justify-between items-center p-3 bg-white rounded-xl border-2 border-blue-200">
+                    <span className="flex items-center">
+                      <span className="text-xl mr-2">🧮</span>
+                      Subtotal:
+                    </span>
+                    <span className="font-party font-bold text-blue-600">
+                      ${pricing.subtotal.toFixed(2)}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Tax (8.75%):</span>
-                    <span>${pricing.tax.toFixed(2)}</span>
+                  <div className="flex justify-between items-center p-3 bg-white rounded-xl border-2 border-blue-200">
+                    <span className="flex items-center">
+                      <span className="text-xl mr-2">📊</span>
+                      Tax (8.75%):
+                    </span>
+                    <span className="font-party font-bold text-blue-600">
+                      ${pricing.tax.toFixed(2)}
+                    </span>
                   </div>
-                  <hr className="my-2" />
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total:</span>
-                    <span>${pricing.total.toFixed(2)}</span>
+
+                  <div className="h-1 bg-gradient-to-r from-pink-300 via-purple-300 to-blue-300 rounded-full my-4"></div>
+
+                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl border-3 border-green-300">
+                    <span className="flex items-center text-xl">
+                      <span className="text-2xl mr-2">🎊</span>
+                      <span className="font-party font-bold text-green-700">
+                        Total Party Cost:
+                      </span>
+                    </span>
+                    <span className="text-3xl font-party font-bold text-green-600">
+                      ${pricing.total.toFixed(2)}
+                    </span>
                   </div>
-                  <div className="flex justify-between text-green-600">
-                    <span>Deposit (50%):</span>
-                    <span>${pricing.deposit_amount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Balance Due at Event:</span>
-                    <span>${pricing.balance_amount.toFixed(2)}</span>
+
+                  <div className="grid md:grid-cols-2 gap-4 mt-4">
+                    <div className="flex justify-between items-center p-3 bg-yellow-100 rounded-xl border-2 border-yellow-300">
+                      <span className="flex items-center">
+                        <span className="text-xl mr-2">💳</span>
+                        <span className="font-party font-bold text-yellow-700">
+                          Deposit (50%):
+                        </span>
+                      </span>
+                      <span className="font-party font-bold text-yellow-600">
+                        ${pricing.deposit_amount.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-orange-100 rounded-xl border-2 border-orange-300">
+                      <span className="flex items-center">
+                        <span className="text-xl mr-2">🎈</span>
+                        <span className="font-party font-bold text-orange-700">
+                          Pay at Party:
+                        </span>
+                      </span>
+                      <span className="font-party font-bold text-orange-600">
+                        ${pricing.balance_amount.toFixed(2)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               );
@@ -708,24 +898,36 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
           </div>
         </div>
 
-        <div className="flex justify-between mt-8">
+        <div className="flex justify-between mt-8 pt-6 border-t-3 border-green-200">
           <button
             onClick={prevStep}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+            className="px-8 py-4 bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl font-party font-bold text-lg hover:from-gray-500 hover:to-gray-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
           >
-            Back
+            ← Back to Rooms
           </button>
-          <button
-            onClick={nextStep}
-            disabled={
-              !booking.customerInfo.name ||
-              !booking.customerInfo.email ||
-              !booking.customerInfo.phone
-            }
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
-          >
-            Next
-          </button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl animate-wiggle">✨</span>
+              <span className="text-gray-500 font-playful">Step 3 of 4</span>
+            </div>
+            <button
+              onClick={nextStep}
+              disabled={
+                !booking.customerInfo.name ||
+                !booking.customerInfo.email ||
+                !booking.customerInfo.phone
+              }
+              className={`px-8 py-4 rounded-xl font-party font-bold text-lg transition-all duration-300 transform ${
+                !booking.customerInfo.name ||
+                !booking.customerInfo.email ||
+                !booking.customerInfo.phone
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-green-400 via-emerald-400 to-blue-400 text-white hover:from-green-500 hover:via-emerald-500 hover:to-blue-500 hover:scale-105 shadow-lg hover:shadow-xl animate-pulse-party"
+              }`}
+            >
+              Final Step: Payment! 💳 →
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -991,36 +1193,76 @@ export default function BookingWizard({ tenant }: BookingWizardProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 py-8 relative overflow-hidden">
+      {/* Fun background decorations */}
+      <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-200 rounded-full opacity-20 animate-float"></div>
+      <div
+        className="absolute top-32 right-16 w-16 h-16 bg-pink-200 rounded-full opacity-20 animate-float"
+        style={{ animationDelay: "1s" }}
+      ></div>
+      <div
+        className="absolute bottom-20 left-20 w-12 h-12 bg-blue-200 rounded-full opacity-20 animate-float"
+        style={{ animationDelay: "2s" }}
+      ></div>
+      <div
+        className="absolute bottom-40 right-32 w-14 h-14 bg-green-200 rounded-full opacity-20 animate-float"
+        style={{ animationDelay: "3s" }}
+      ></div>
+
+      <div className="max-w-4xl mx-auto px-4 relative z-10">
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-4">
-            {[1, 2, 3, 4].map((step) => (
-              <div key={step} className="flex items-center">
+            {[
+              { number: 1, title: "🎪 Pick Package", emoji: "🎉" },
+              { number: 2, title: "🏰 Choose Room", emoji: "🎈" },
+              { number: 3, title: "✨ Add Fun Extras", emoji: "🎊" },
+              { number: 4, title: "💳 Secure Payment", emoji: "🎁" },
+            ].map((step, index) => (
+              <div key={step.number} className="flex flex-col items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    step <= booking.step
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-300 text-gray-600"
+                  className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-party font-bold transition-all duration-500 transform ${
+                    step.number <= booking.step
+                      ? "bg-gradient-to-br from-pink-400 via-purple-400 to-blue-400 text-white scale-110 shadow-lg animate-pulse-party"
+                      : "bg-white border-4 border-gray-200 text-gray-400"
                   }`}
                 >
-                  {step}
+                  {step.number <= booking.step ? "✅" : step.emoji}
                 </div>
-                {step < 4 && (
-                  <div
-                    className={`w-16 h-1 mx-2 ${
-                      step < booking.step ? "bg-blue-600" : "bg-gray-300"
+                <div className="mt-3 text-center">
+                  <p
+                    className={`text-sm font-party font-bold ${
+                      step.number <= booking.step
+                        ? "text-purple-700"
+                        : "text-gray-400"
                     }`}
+                  >
+                    {step.title}
+                  </p>
+                </div>
+                {index < 3 && (
+                  <div
+                    className={`absolute top-8 w-16 h-2 rounded-full transition-all duration-500 ${
+                      step.number < booking.step
+                        ? "bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400"
+                        : "bg-gray-200"
+                    }`}
+                    style={{
+                      left: `calc(${25 * (index + 1)}% + ${8 * index}px)`,
+                      transform: "translateX(-50%)",
+                    }}
                   />
                 )}
               </div>
             ))}
           </div>
-          <div className="text-center mt-4">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Book Your Party
+          <div className="text-center mt-6">
+            <h1 className="text-4xl font-party font-bold text-purple-700 mb-2">
+              🎉 Book Your Amazing Party! 🎉
             </h1>
+            <p className="text-purple-600 font-playful text-lg">
+              Let&apos;s create magical memories together! ✨
+            </p>
           </div>
         </div>
 
