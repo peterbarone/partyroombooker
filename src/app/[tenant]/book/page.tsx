@@ -1,4 +1,6 @@
-import BookingWizard from "@/components/BookingWizard";
+// Ensure the BookingWizard component exists at the correct path.
+// If the file is actually at "src/components/BookingWizard.tsx", update the import as follows:
+import BookingWizard from "../../../components/BookingWizard";
 
 interface BookingPageProps {
   params: { tenant: string };
