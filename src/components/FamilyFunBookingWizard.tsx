@@ -251,35 +251,52 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'child-name':
         return (
           <StepContainer>
-            <div className="text-center">
-              <motion.div className="flex justify-center gap-4 mb-8">
-                <Sparkles className="text-party-yellow w-16 h-16 animate-pulse-party" />
-                <Cake className="text-party-pink w-16 h-16 animate-bounce-fun" />
-                <PartyPopper className="text-party-blue w-16 h-16 animate-wiggle" />
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[520px]">
+              {/* Left decorative / hero area (shows first on desktop, second on mobile) */}
+              <motion.div
+                className="order-2 md:order-1 flex items-center justify-center text-center px-6"
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <div>
+                  <div className="flex justify-center gap-4 mb-8">
+                    <Sparkles className="text-party-yellow w-16 h-16 animate-pulse-party" />
+                    <Cake className="text-party-pink w-16 h-16 animate-bounce-fun" />
+                    <PartyPopper className="text-party-blue w-16 h-16 animate-wiggle" />
+                  </div>
+
+                  <h2 className="text-4xl md:text-5xl font-bold-display text-brown-dark mb-6 text-shadow-soft">
+                    WHO'S THE LUCKY KID
+                    <br />
+                    <span className="bg-gradient-to-r from-pink-500 to-pink-600 bg-clip-text text-transparent">
+                      WE'RE CELEBRATING?
+                    </span>
+                  </h2>
+
+                  <div className="text-8xl mb-8">🥳</div>
+                </div>
               </motion.div>
-              
-              <h2 className="text-4xl md:text-5xl font-bold-display text-brown-dark mb-6 text-shadow-soft">
-                WHO'S THE LUCKY KID
-                <br />
-                <span className="bg-gradient-to-r from-pink-500 to-pink-600 bg-clip-text text-transparent">
-                  WE'RE CELEBRATING?
-                </span>
-              </h2>
-              
-              <div className="text-8xl mb-8">🥳</div>
-              
-              <div className="max-w-md mx-auto">
-                <label className="block text-brown-dark font-bold mb-4 text-left text-lg">
-                  BIRTHDAY STAR'S NAME
-                </label>
-                <input
-                  type="text"
-                  value={bookingData.childName}
-                  onChange={(e) => updateBookingData({ childName: e.target.value })}
-                  placeholder="Enter the birthday child's name"
-                  className="w-full px-8 py-5 rounded-3xl border-4 border-pink-300 focus:border-pink-500 focus:outline-none text-xl font-bold bg-white shadow-lg focus:shadow-xl transition-all text-center"
-                  autoFocus
-                />
+
+              {/* Right form panel (appears on right for md+, but is first on mobile) */}
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl max-w-md mx-auto">
+                <motion.div
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <label className="block text-brown-dark font-bold mb-4 text-left text-lg">
+                    BIRTHDAY STAR'S NAME
+                  </label>
+                  <input
+                    type="text"
+                    value={bookingData.childName}
+                    onChange={(e) => updateBookingData({ childName: e.target.value })}
+                    placeholder="Enter the birthday child's name"
+                    className="w-full px-8 py-5 rounded-3xl border-4 border-pink-300 focus:border-pink-500 focus:outline-none text-xl font-bold bg-white shadow-lg focus:shadow-xl transition-all text-center"
+                    autoFocus
+                  />
+                </motion.div>
               </div>
             </div>
           </StepContainer>
