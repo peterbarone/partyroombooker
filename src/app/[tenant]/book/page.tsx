@@ -7,7 +7,5 @@ interface BookingPageProps {
 
 export default async function BookingPage({ params }: BookingPageProps) {
   const resolvedParams = await params;
-  return (
-    <FamilyFunBookingWizard tenant={resolvedParams.tenant} />
-  );
+  return <FamilyFunBookingWizard tenant={resolvedParams.tenant} />;
 }
