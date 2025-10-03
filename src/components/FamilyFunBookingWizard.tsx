@@ -293,25 +293,10 @@ export default function FamilyFunBookingWizard({
   );
 
   const renderChildNameStep = () => (
-    <motion.div
-      initial={{ opacity: 0, x: 100 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -100 }}
-      className="space-y-8 text-center"
-    >
-      {/* Emoji with winking animation */}
-      <motion.div
-        animate={{
-          scale: [1, 1.1, 1],
-          rotate: [0, 5, -5, 0],
-        }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="text-8xl mb-6"
-      >
-        �
-      </motion.div>
+    <div className="space-y-8 text-center">
+      {/* Static emoji (animation removed for mobile stability) */}
+      <div className="text-8xl mb-6 select-none">🎈</div>
 
-      {/* Title matching the image style (bolder) */}
       <div className="space-y-1 font-extrabold tracking-tight drop-shadow-sm">
         <h2 className="text-6xl font-bold-display text-amber-800 leading-[0.95]">
           WHO&apos;S THE
@@ -321,12 +306,10 @@ export default function FamilyFunBookingWizard({
         <h2 className="text-6xl text-pink-600 leading-[0.95]">CELEBRATING?</h2>
       </div>
 
-      {/* Subtitle */}
       <p className="text-xl text-amber-700 font-semibold mb-10 tracking-wide">
         Enter the birthday child&apos;s name below to get started!
       </p>
 
-      {/* Input field matching the image */}
       <div className="max-w-sm mx-auto">
         <input
           type="text"
@@ -343,7 +326,7 @@ export default function FamilyFunBookingWizard({
           className={`${inputBaseClass} text-amber-800 placeholder-amber-600 bg-amber-50 focus:border-pink-500`}
         />
       </div>
-    </motion.div>
+    </div>
   );
 
   const renderChildAgeStep = () => (
@@ -1074,6 +1057,10 @@ export default function FamilyFunBookingWizard({
 
   return (
     <div className="min-h-[100dvh] flex flex-col lg:flex-row relative">
+      {/* Mobile full background */}
+      <div className="absolute inset-0 lg:hidden bg-[url('/newmobilebackgroundimage.png')] bg-top bg-cover bg-no-repeat" />
+      <div className="absolute inset-0 lg:hidden" />
+
       {/* Desktop visual panel */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/party-background.png')] bg-cover bg-center" />
@@ -1081,7 +1068,7 @@ export default function FamilyFunBookingWizard({
       </div>
 
       {/* Content panel */}
-      <div className="w-full lg:w-1/2 flex flex-col relative bg-gradient-to-b from-white/80 to-white/60 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md">
+      <div className="w-full lg:w-1/2 flex flex-col relative bg-transparent lg:bg-gradient-to-b lg:from-white/10 lg:to-white/10 lg:backdrop-blur supports-[backdrop-filter]:backdrop-blur-md">
         {showCelebration && <ConfettiAnimation />}
 
         {/* Sticky progress */}
@@ -1107,15 +1094,14 @@ export default function FamilyFunBookingWizard({
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-5 pt-4 pb-36 md:pb-40 space-y-6">
+        <div className="flex-1 overflow-y-auto px-5 pt-4 pb-8 space-y-6">
           <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
         </div>
-
-        {/* Global nav bar */}
+        {/* Global nav bar (flow-based) */}
         {STEPS[currentStep] !== "greeting" &&
           STEPS[currentStep] !== "payment" &&
           STEPS[currentStep] !== "confirmation" && (
-            <div className="absolute bottom-0 left-0 right-0 px-4 py-4 bg-white/90 backdrop-blur-md border-t border-amber-200 flex items-center justify-between gap-3">
+            <div className="px-4 pt-2 pb-4 bg-white/10 backdrop-blur-md border-t border-amber-200 flex items-center justify-between gap-3">
               <button
                 onClick={prevStep}
                 disabled={currentStep === 0}
@@ -1135,8 +1121,7 @@ export default function FamilyFunBookingWizard({
             </div>
           )}
 
-        {/* Mobile bottom decorative image */}
-        <div className="pointer-events-none lg:hidden absolute inset-x-0 bottom-0 h-40 bg-[url('/mobilepartybackground.png')] bg-bottom bg-no-repeat bg-contain opacity-90" />
+        {/* Removed bottom decorative image; handled by root mobile background */}
       </div>
     </div>
   );
