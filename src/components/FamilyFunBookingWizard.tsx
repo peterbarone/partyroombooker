@@ -10,15 +10,18 @@ import ConfettiAnimation from "./ConfettiAnimation";
 // Shared style tokens (add near top after imports and before component)
 // If already present, skip duplication.
 // We'll search for a marker to avoid duplication.
+// Responsive style tokens (mobile-first scaling)
 const inputBaseClass =
-  "w-full px-8 py-5 rounded-full border-[3px] font-medium tracking-wide placeholder-opacity-70 focus:outline-none transition-all duration-200 shadow-sm focus:shadow-md bg-amber-50 border-amber-800 focus:border-pink-500 text-amber-800 placeholder-amber-600";
+  "w-full px-5 py-4 md:px-8 md:py-5 rounded-full border-[3px] font-medium tracking-wide placeholder-opacity-70 focus:outline-none transition-all duration-200 shadow-sm focus:shadow-md bg-amber-50 border-amber-800 focus:border-pink-500 text-amber-800 placeholder-amber-600 text-base md:text-lg";
 
-// Heading style tokens for consistent bold playful typography
 const headingStackClass =
   "space-y-1 font-extrabold tracking-tight drop-shadow-sm";
-const headingLinePrimary = "text-6xl text-amber-800 leading-[0.95]";
-const headingLineAccent = "text-6xl text-pink-600 leading-[0.95]";
-const subheadingClass = "text-xl font-semibold tracking-wide text-amber-700";
+const headingLinePrimary =
+  "text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-amber-800 leading-tight";
+const headingLineAccent =
+  "text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-pink-600 leading-tight";
+const subheadingClass =
+  "text-base sm:text-lg md:text-xl font-semibold tracking-wide text-amber-700";
 
 // Types from the original BookingWizard
 interface Package {
@@ -260,21 +263,21 @@ export default function FamilyFunBookingWizard({
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -50 }}
-      className="text-center space-y-8"
+      className="text-center space-y-6 md:space-y-8"
     >
       <motion.div
         animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
-        className="text-8xl mb-8"
+        className="text-6xl sm:text-7xl md:text-8xl mb-6 md:mb-8"
       >
         🎉
       </motion.div>
 
-      <h2 className="text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent mb-4">
+      <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent mb-2 md:mb-4 leading-tight">
         Welcome to the Party Palace!
       </h2>
 
-      <p className="text-2xl text-gray-700 mb-8">
+      <p className="text-lg sm:text-xl text-gray-700 mb-6 md:mb-8">
         Let&apos;s plan the most AMAZING party ever! 🎈
       </p>
 
@@ -1040,86 +1043,100 @@ export default function FamilyFunBookingWizard({
     </motion.div>
   );
 
-  const StepContainer = ({ children }: { children: React.ReactNode }) => (
-    <motion.div
-      key={currentStep}
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      transition={{ duration: 0.3 }}
-      className="w-full max-w-2xl mx-auto mt-6"
-    >
-      {children}
-    </motion.div>
-  );
+  // Validation gating for Next button (mobile + desktop unified)
+  function isNextDisabled() {
+    switch (STEPS[currentStep]) {
+      case "child-name":
+        return !bookingData.customerInfo.childName.trim();
+      case "child-age":
+        return (
+          !bookingData.customerInfo.childAge ||
+          bookingData.customerInfo.childAge < 1
+        );
+      case "party-date":
+        return !bookingData.selectedDate;
+      case "time-slot":
+        return !bookingData.selectedTime;
+      case "package-choice":
+        return !bookingData.selectedPackage;
+      case "room-choice":
+        return !bookingData.selectedRoom;
+      case "parent-info":
+        return (
+          !bookingData.customerInfo.parentName.trim() ||
+          !bookingData.customerInfo.parentEmail.trim() ||
+          !bookingData.customerInfo.parentPhone.trim()
+        );
+      default:
+        return false;
+    }
+  }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left side - Party Background Image (takes up ~60% of screen) */}
-      <div
-        className="flex-1 bg-cover bg-center bg-no-repeat relative"
-        style={{
-          backgroundImage: "url('/party-background.png')",
-          filter: "brightness(0.95) contrast(1.1)",
-        }}
-      >
-        {/* Subtle overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10"></div>
+    <div className="min-h-[100dvh] flex flex-col lg:flex-row relative">
+      {/* Desktop visual panel */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/party-background.png')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10" />
       </div>
 
-      {/* Right side - Content Area (takes up ~40% of screen) */}
-      <div className="w-2/5 min-w-[500px] bg-white flex flex-col">
-        {/* Party Celebration */}
+      {/* Content panel */}
+      <div className="w-full lg:w-1/2 flex flex-col relative bg-gradient-to-b from-white/80 to-white/60 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md">
         {showCelebration && <ConfettiAnimation />}
 
-        {/* Step Progress */}
-        {currentStep > 0 && (
-          <div className="px-8 pt-6">
-            <div className="text-right text-gray-400 font-medium text-sm mb-2">
-              Step {currentStep + 1} of {STEPS.length}
-            </div>
-            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-pink-500 to-purple-500"
-                initial={{ width: 0 }}
-                animate={{
-                  width: `${((currentStep + 1) / STEPS.length) * 100}%`,
-                }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
-              />
-            </div>
+        {/* Sticky progress */}
+        <div className="sticky top-0 z-20 px-4 pt-4 pb-3 bg-white/80 backdrop-blur-md shadow-sm border-b border-amber-100">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] sm:text-xs font-semibold text-amber-700 uppercase tracking-wide">
+              Step {currentStep + 1} / {STEPS.length}
+            </span>
+            <span className="text-[11px] sm:text-xs font-semibold text-amber-700 tracking-wide">
+              {Math.round(((currentStep + 1) / STEPS.length) * 100)}%
+            </span>
           </div>
-        )}
-
-        {/* Main Content */}
-        <div className="flex-1 flex items-center justify-center px-8 py-8">
-          <div className="w-full max-w-md">{renderStep()}</div>
+          <div className="h-3 rounded-full bg-amber-100 overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600"
+              initial={{ width: 0 }}
+              animate={{
+                width: `${((currentStep + 1) / STEPS.length) * 100}%`,
+              }}
+              transition={{ duration: 0.45, ease: "easeInOut" }}
+            />
+          </div>
         </div>
 
-        {/* Navigation Buttons */}
-        {currentStep > 0 && (
-          <div className="px-8 pb-8">
-            <div className="flex justify-between w-full max-w-md mx-auto">
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-5 pt-4 pb-36 md:pb-40 space-y-6">
+          <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
+        </div>
+
+        {/* Global nav bar */}
+        {STEPS[currentStep] !== "greeting" &&
+          STEPS[currentStep] !== "payment" &&
+          STEPS[currentStep] !== "confirmation" && (
+            <div className="absolute bottom-0 left-0 right-0 px-4 py-4 bg-white/90 backdrop-blur-md border-t border-amber-200 flex items-center justify-between gap-3">
               <button
                 onClick={prevStep}
-                className="flex items-center gap-2 px-6 py-3 rounded-full bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
+                disabled={currentStep === 0}
+                className="flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold border-[3px] border-amber-800 text-amber-800 bg-amber-50 hover:bg-amber-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={18} />
                 Back
               </button>
-
-              {currentStep < STEPS.length - 1 && (
-                <button
-                  onClick={nextStep}
-                  className="flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium hover:from-pink-600 hover:to-purple-600 transition-colors"
-                >
-                  Next
-                  <ChevronRight size={20} />
-                </button>
-              )}
+              <button
+                onClick={nextStep}
+                disabled={isNextDisabled()}
+                className="flex items-center gap-2 rounded-full px-8 py-3 text-sm font-bold text-white bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 border-[3px] border-pink-600 shadow-sm hover:shadow-md transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next
+                <ChevronRight size={18} />
+              </button>
             </div>
-          </div>
-        )}
+          )}
+
+        {/* Mobile bottom decorative image */}
+        <div className="pointer-events-none lg:hidden absolute inset-x-0 bottom-0 h-40 bg-[url('/mobilepartybackground.png')] bg-bottom bg-no-repeat bg-contain opacity-90" />
       </div>
     </div>
   );
