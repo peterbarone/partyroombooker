@@ -2,7 +2,7 @@
 
 /* eslint-disable react/no-unescaped-entities */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   PartyPopper, 
@@ -164,14 +164,47 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
     </motion.div>
   );
 
+  // Memoize sparkle positions/durations to avoid flicker on each keystroke (was recalculating randoms per render)
+  const sparklesRef = useRef(
+    Array.from({ length: 8 }).map(() => ({
+      left: 20 + Math.random() * 60,
+      top: 20 + Math.random() * 60,
+      delay: Math.random() * 3,
+      duration: 4 + Math.random() * 4,
+    }))
+  );
+
   const ProgressBar = () => (
-    <div className="w-full bg-white/20 rounded-full h-3 mb-6">
-      <motion.div 
-        className="bg-fun-gradient h-3 rounded-full"
-        initial={{ width: 0 }}
-        animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
-        transition={{ duration: 0.5 }}
-      />
+    // Reduced bottom margin for tighter layout
+    <div className="relative w-full h-12 flex items-center mb-2">
+      {/* Animated emoji at start */}
+      <motion.div
+        className="absolute left-0 top-1/2 -translate-y-1/2 text-3xl"
+        animate={{ x: [0, 10, 0], rotate: [0, 20, -20, 0] }}
+        transition={{ repeat: Infinity, duration: 2 }}
+      >
+        🎉
+      </motion.div>
+      {/* Animated progress bar with gradient border */}
+      <div className="flex-1 mx-8 relative">
+        <div className="absolute inset-0 rounded-full border-4 border-gradient-to-r from-pink-400 via-yellow-300 to-pink-600"></div>
+        <div className="w-full bg-white/20 rounded-full h-6 overflow-hidden relative">
+          <motion.div
+            className="bg-gradient-to-r from-pink-500 via-yellow-300 to-pink-600 h-6 rounded-full shadow-lg"
+            initial={{ width: 0 }}
+            animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+        {/* Animated emoji at end */}
+        <motion.div
+          className="absolute right-0 top-1/2 -translate-y-1/2 text-3xl"
+          animate={{ x: [0, -10, 0], rotate: [0, -20, 20, 0] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+        >
+          🚀
+        </motion.div>
+      </div>
     </div>
   );
 
@@ -258,13 +291,9 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
               </div>
 
               {/* Right card, matches greeting step */}
-              <div className="order-1 md:order-2 text-left space-y-6 bg-white/10 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
-                <motion.div
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex items-center gap-4 mb-4"
-                >
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
+                {/* Removed motion animations to avoid flicker while typing */}
+                <div className="flex items-center gap-4 mb-4">
                   <div className="text-6xl">😉</div>
                   <div className="text-4xl md:text-5xl font-black text-brown-dark leading-tight">
                     WHO'S THE LUCKY KID
@@ -273,16 +302,11 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
                       WE'RE CELEBRATING?
                     </span>
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.p
-                  className="text-xl md:text-2xl font-bold text-brown-dark leading-relaxed"
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
+                <p className="text-xl md:text-2xl font-bold text-brown-dark leading-relaxed">
                   Enter the birthday child's name below to get started!
-                </motion.p>
+                </p>
 
                 <div className="mt-8">
                   <label className="sr-only">Birthday star's name</label>
@@ -305,49 +329,66 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'child-age':
         return (
           <StepContainer>
-            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
-              <h2 className="text-4xl md:text-5xl font-bold-display text-brown-dark mb-6 text-shadow-soft">
-                AWESOME! AND HOW OLD
-                <br />
-                WILL{' '}
-                <span className="bg-gradient-to-r from-pink-500 to-pink-600 bg-clip-text text-transparent">
-                  {bookingData.childName.toUpperCase()}
-                </span>
-                <br />
-                BE TURNING?
-              </h2>
-              
-              <div className="text-8xl mb-8">🎂</div>
-              
-              <div className="flex justify-center items-center gap-6">
-                <button
-                  onClick={() => updateBookingData({ childAge: Math.max(1, bookingData.childAge - 1) })}
-                  className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 text-white text-3xl font-bold hover:scale-110 transition-transform shadow-lg"
-                >
-                  -
-                </button>
-                
-                <motion.div 
-                  className="w-32 h-32 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center text-white shadow-2xl"
-                  key={bookingData.childAge}
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", bounce: 0.6 }}
-                >
-                  <span className="text-5xl font-bold-display">{bookingData.childAge}</span>
-                </motion.div>
-                
-                <button
-                  onClick={() => updateBookingData({ childAge: Math.min(18, bookingData.childAge + 1) })}
-                  className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 text-white text-3xl font-bold hover:scale-110 transition-transform shadow-lg"
-                >
-                  +
-                </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[600px] max-w-9xl mx-auto">
+              {/* Left illustration, always visible */}
+              <div className="order-2 md:order-1 relative flex items-center justify-center">
+                <div className="text-8xl opacity-30">🎂</div>
               </div>
-              
-              <p className="text-xl font-bold text-brown-dark mt-6">
-                {bookingData.childAge} YEARS OLD!
-              </p>
+
+              {/* Right card, matches child-name step */}
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center gap-4 mb-4"
+                >
+                  <div className="text-6xl">🎂</div>
+                  <div className="text-4xl md:text-5xl font-black text-brown-dark leading-tight">
+                    AWESOME! AND HOW OLD
+                    <br />
+                    <span className="bg-gradient-to-r from-pink-500 to-pink-600 bg-clip-text text-transparent">
+                      WILL {bookingData.childName.toUpperCase()} BE TURNING?
+                    </span>
+                  </div>
+                </motion.div>
+
+                <motion.p
+                  className="text-xl md:text-2xl font-bold text-brown-dark leading-relaxed"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Use the buttons below to select the birthday star's age!
+                </motion.p>
+
+                <div className="flex justify-center items-center gap-6 mt-8">
+                  <button
+                    onClick={() => updateBookingData({ childAge: Math.max(1, bookingData.childAge - 1) })}
+                    className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 text-white text-3xl font-bold hover:scale-110 transition-transform shadow-lg"
+                  >
+                    -
+                  </button>
+                  <motion.div 
+                    className="w-32 h-32 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center text-white shadow-2xl"
+                    key={bookingData.childAge}
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", bounce: 0.6 }}
+                  >
+                    <span className="text-5xl font-bold-display">{bookingData.childAge}</span>
+                  </motion.div>
+                  <button
+                    onClick={() => updateBookingData({ childAge: Math.min(18, bookingData.childAge + 1) })}
+                    className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 text-white text-3xl font-bold hover:scale-110 transition-transform shadow-lg"
+                  >
+                    +
+                  </button>
+                </div>
+                <p className="text-xl font-bold text-brown-dark mt-6 text-center">
+                  {bookingData.childAge} YEARS OLD!
+                </p>
+              </div>
             </div>
           </StepContainer>
         );
@@ -355,32 +396,61 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'child-gender':
         return (
           <StepContainer>
-            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
-              <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
-                Exciting! Is {bookingData.childName} a boy, a girl, or should we keep it neutral?
-              </h2>
-              
-              <div className="flex justify-center gap-4 mt-8">
-                {[
-                  { value: 'boy', emoji: '👦', label: 'Boy', color: 'from-blue-400 to-blue-600' },
-                  { value: 'girl', emoji: '👧', label: 'Girl', color: 'from-pink-400 to-pink-600' },
-                  { value: 'neutral', emoji: '🎈', label: 'Neutral', color: 'from-purple-400 to-purple-600' }
-                ].map((option) => (
-                  <motion.button
-                    key={option.value}
-                    onClick={() => updateBookingData({ childGender: option.value as any })}
-                    className={`p-6 rounded-3xl border-4 transition-all ${
-                      bookingData.childGender === option.value 
-                        ? 'border-party-yellow bg-white shadow-xl scale-105' 
-                        : 'border-transparent bg-white/80 hover:scale-105'
-                    }`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div className="text-6xl mb-3">{option.emoji}</div>
-                    <div className="font-party text-xl text-brown-700">{option.label}</div>
-                  </motion.button>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[600px] max-w-9xl mx-auto">
+              {/* Left illustration/emoji */}
+              <div className="order-2 md:order-1 relative flex items-center justify-center">
+                <div className="text-8xl opacity-30">🎈</div>
+              </div>
+
+              {/* Right card, matches child-age step */}
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center gap-4 mb-4"
+                >
+                  <div className="text-6xl">🎈</div>
+                  <div className="text-4xl md:text-5xl font-black text-brown-dark leading-tight">
+                    EXCITING! IS {bookingData.childName || 'THE BIRTHDAY STAR'}
+                    <br />
+                    <span className="bg-gradient-to-r from-pink-500 to-pink-600 bg-clip-text text-transparent">
+                      A BOY, A GIRL, OR NEUTRAL?
+                    </span>
+                  </div>
+                </motion.div>
+
+                <motion.p
+                  className="text-xl md:text-2xl font-bold text-brown-dark leading-relaxed"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Pick the option that fits best!
+                </motion.p>
+
+                <div className="flex justify-center gap-4 mt-8">
+                  {[ 
+                    { value: 'boy', emoji: '👦', label: 'Boy', color: 'from-blue-400 to-blue-600' },
+                    { value: 'girl', emoji: '👧', label: 'Girl', color: 'from-pink-400 to-pink-600' },
+                    { value: 'neutral', emoji: '🎈', label: 'Neutral', color: 'from-purple-400 to-purple-600' }
+                  ].map((option) => (
+                    <motion.button
+                      key={option.value}
+                      onClick={() => updateBookingData({ childGender: option.value as any })}
+                      className={`p-6 rounded-3xl border-4 transition-all ${
+                        bookingData.childGender === option.value 
+                          ? 'border-party-yellow bg-white shadow-xl scale-105' 
+                          : 'border-transparent bg-white/80 hover:scale-105'
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <div className="text-6xl mb-3">{option.emoji}</div>
+                      <div className="text-xl text-brown-700 font-semibold">{option.label}</div>
+                    </motion.button>
+                  ))}
+                </div>
               </div>
             </div>
           </StepContainer>
@@ -389,24 +459,51 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'party-date':
         return (
           <StepContainer>
-            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
-              <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
-                Great! Now, when's the big celebration happening?
-              </h2>
-              
-              <div className="text-6xl mb-6">📅</div>
-              
-              <div className="max-w-md mx-auto">
-                <label className="block text-brown-600 font-semibold mb-3 text-left">
-                  Select Party Date
-                </label>
-                <input
-                  type="date"
-                  value={bookingData.partyDate}
-                  onChange={(e) => updateBookingData({ partyDate: e.target.value })}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-6 py-4 rounded-2xl border-2 border-party-pink/30 focus:border-party-pink focus:outline-none text-lg font-medium bg-white/90 backdrop-blur-sm"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[600px] max-w-9xl mx-auto">
+              {/* Left illustration/emoji */}
+              <div className="order-2 md:order-1 relative flex items-center justify-center">
+                <div className="text-8xl opacity-30">📅</div>
+              </div>
+
+              {/* Right card, matches child-age step */}
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center gap-4 mb-4"
+                >
+                  <div className="text-6xl">📅</div>
+                  <div className="text-4xl md:text-5xl font-black text-brown-dark leading-tight">
+                    GREAT! NOW, WHEN'S THE BIG CELEBRATION
+                    <br />
+                    <span className="bg-gradient-to-r from-pink-500 to-pink-600 bg-clip-text text-transparent">
+                      HAPPENING?
+                    </span>
+                  </div>
+                </motion.div>
+
+                <motion.p
+                  className="text-xl md:text-2xl font-bold text-brown-dark leading-relaxed"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Select the party date below!
+                </motion.p>
+
+                <div className="mt-8 max-w-md mx-auto">
+                  <label className="block text-brown-600 font-semibold mb-3 text-left">
+                    Select Party Date
+                  </label>
+                  <input
+                    type="date"
+                    value={bookingData.partyDate}
+                    onChange={(e) => updateBookingData({ partyDate: e.target.value })}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-6 py-4 rounded-2xl border-2 border-party-pink/30 focus:border-party-pink focus:outline-none text-lg font-medium bg-white/90 backdrop-blur-sm"
+                  />
+                </div>
               </div>
             </div>
           </StepContainer>
@@ -415,33 +512,62 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       case 'time-slot':
         return (
           <StepContainer>
-            <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
-              <h2 className="text-3xl md:text-4xl font-party text-brown-700 mb-4">
-                We've got some cool time slots. Which works best for your crew?
-              </h2>
-              
-              <div className="flex justify-center gap-6 mt-8">
-                {[
-                  { value: 'morning', emoji: '🌅', label: 'Morning', time: '10:00 AM - 12:00 PM' },
-                  { value: 'afternoon', emoji: '☀️', label: 'Afternoon', time: '2:00 PM - 4:00 PM' },
-                  { value: 'evening', emoji: '🌙', label: 'Evening', time: '6:00 PM - 8:00 PM' }
-                ].map((slot) => (
-                  <motion.button
-                    key={slot.value}
-                    onClick={() => updateBookingData({ timeSlot: slot.value as any })}
-                    className={`p-6 rounded-3xl border-4 transition-all ${
-                      bookingData.timeSlot === slot.value 
-                        ? 'border-party-yellow bg-white shadow-xl scale-105' 
-                        : 'border-transparent bg-white/80 hover:scale-105'
-                    }`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div className="text-5xl mb-3">{slot.emoji}</div>
-                    <div className="font-party text-xl text-brown-700 mb-1">{slot.label}</div>
-                    <div className="text-sm text-brown-600 font-playful">{slot.time}</div>
-                  </motion.button>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 min-h-[600px] max-w-9xl mx-auto">
+              {/* Left illustration/emoji */}
+              <div className="order-2 md:order-1 relative flex items-center justify-center">
+                <div className="text-8xl opacity-30">⏰</div>
+              </div>
+
+              {/* Right card, matches child-age step */}
+              <div className="order-1 md:order-2 text-left space-y-6 bg-white/95 backdrop-blur-sm rounded-3xl max-w-9xl mx-auto p-8 shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center gap-4 mb-4"
+                >
+                  <div className="text-6xl">⏰</div>
+                  <div className="text-4xl md:text-5xl font-black text-brown-dark leading-tight">
+                    WE'VE GOT SOME COOL TIME SLOTS
+                    <br />
+                    <span className="bg-gradient-to-r from-pink-500 to-pink-600 bg-clip-text text-transparent">
+                      WHICH WORKS BEST FOR YOUR CREW?
+                    </span>
+                  </div>
+                </motion.div>
+
+                <motion.p
+                  className="text-xl md:text-2xl font-bold text-brown-dark leading-relaxed"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Pick a time slot for your party!
+                </motion.p>
+
+                <div className="flex justify-center gap-6 mt-8">
+                  {[
+                    { value: 'morning', emoji: '🌅', label: 'Morning', time: '10:00 AM - 12:00 PM' },
+                    { value: 'afternoon', emoji: '☀️', label: 'Afternoon', time: '2:00 PM - 4:00 PM' },
+                    { value: 'evening', emoji: '🌙', label: 'Evening', time: '6:00 PM - 8:00 PM' }
+                  ].map((slot) => (
+                    <motion.button
+                      key={slot.value}
+                      onClick={() => updateBookingData({ timeSlot: slot.value as any })}
+                      className={`p-6 rounded-3xl border-4 transition-all ${
+                        bookingData.timeSlot === slot.value 
+                          ? 'border-party-yellow bg-white shadow-xl scale-105' 
+                          : 'border-transparent bg-white/80 hover:scale-105'
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <div className="text-5xl mb-3">{slot.emoji}</div>
+                      <div className="text-xl text-brown-700 font-semibold mb-1">{slot.label}</div>
+                      <div className="text-sm text-brown-600 font-playful">{slot.time}</div>
+                    </motion.button>
+                  ))}
+                </div>
               </div>
             </div>
           </StepContainer>
@@ -825,7 +951,8 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -50 }}
       transition={{ duration: 0.3 }}
-      className="w-full max-w-4xl mx-auto"
+      // Reduced width and top margin to match new layout and reduce scroll
+      className="w-full max-w-2xl mx-auto mt-6"
     >
       {children}
     </motion.div>
@@ -841,27 +968,23 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
         trigger={showCelebration} 
         onComplete={() => setShowCelebration(false)}
       />
-      
       {/* Subtle floating elements that complement the background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Just a few subtle sparkles to add movement */}
-        {[...Array(8)].map((_, i) => (
+        {sparklesRef.current.map((s, i) => (
           <motion.div
             key={`sparkle-${i}`}
             className="absolute text-2xl opacity-20"
-            style={{
-              left: `${20 + Math.random() * 60}%`,
-              top: `${20 + Math.random() * 60}%`,
-            }}
+            style={{ left: `${s.left}%`, top: `${s.top}%` }}
             animate={{
               scale: [1, 1.5, 1],
               opacity: [0.1, 0.3, 0.1],
               rotate: [0, 180, 360]
             }}
             transition={{
-              duration: 4 + Math.random() * 4,
+              duration: s.duration,
               repeat: Infinity,
-              delay: Math.random() * 3
+              delay: s.delay
             }}
           >
             ✨
@@ -871,34 +994,37 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col min-h-screen p-6">
-        {/* Header with Progress */}
-        {currentStep > 0 && (
-          <div className="w-full max-w-4xl mx-auto mb-8">
-            <ProgressBar />
-            <div className="text-center text-white font-playful font-bold text-lg drop-shadow-lg">
-              Step {currentStep + 1} of {STEPS.length}
+        <div className="w-full max-w-7xl mx-auto relative">
+          {/* Progress Bar aligned to right edge of step container */}
+          {currentStep > 0 && (
+            // Further reduced width to max-w-2xl
+            <div className="w-full max-w-2xl mx-auto flex flex-col items-end pr-1">
+              <ProgressBar />
+              <div className="text-right text-white font-playful font-bold text-lg drop-shadow-lg -mt-1 mb-2">
+                Step {currentStep + 1} of {STEPS.length}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Step Content */}
-        <div className="flex-1 flex items-center justify-center px-4">
-          <div className="w-full max-w-7xl">
-            {currentStep === 0 ? (
-              // Special layout for greeting page - no background card to show the party scene
-              <div className="min-h-[80vh] flex items-center">
-                {renderStep()}
+          {/* Step Content */}
+            <div className="flex items-center justify-center px-4">
+              <div className="w-full">
+                {currentStep === 0 ? (
+                  <div className="min-h-[80vh] flex items-center">
+                    {renderStep()}
+                  </div>
+                ) : (
+                  <div>
+                    {renderStep()}
+                  </div>
+                )}
               </div>
-            ) : (
-              // Standard layout for other steps with semi-transparent background
-              <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20">
-                {renderStep()}
-              </div>
-            )}
-            
-            {/* Navigation Buttons */}
+            </div>
+
+            {/* Navigation Buttons - directly under step container and aligned */}
             {currentStep > 0 && (
-              <div className="flex justify-between mt-8">
+              // Match new reduced width (max-w-2xl) and tighter top margin
+              <div className="flex justify-between w-full max-w-2xl mx-auto mt-6 px-1">
                 <button
                   onClick={prevStep}
                   className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/90 text-gray-700 font-semibold hover:bg-white transition-colors backdrop-blur-sm border border-white/30"
@@ -906,7 +1032,6 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
                   <ChevronLeft size={20} />
                   Back
                 </button>
-                
                 {currentStep < STEPS.length - 1 && (
                   <button
                     onClick={nextStep}
@@ -918,7 +1043,6 @@ export default function FamilyFunBookingWizard({ tenant }: FamilyFunBookingWizar
                 )}
               </div>
             )}
-          </div>
         </div>
       </div>
     </div>
