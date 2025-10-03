@@ -116,164 +116,128 @@ export default async function TenantHome({ params }: TenantHomeProps) {
           </div>
         </div>
 
-        {/* How It Works Section */}
-        <div className="mb-16">
-          <h2 className="text-4xl font-party text-center text-purple-700 mb-12 animate-wiggle">
-            🌟 How It Works 🌟
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div className="card-party group">
-              <div className="p-8 text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:animate-bounce-fun">
-                  <span className="text-3xl">📅</span>
-                </div>
-                <h3 className="text-2xl font-party text-gray-900 mb-4">
-                  1. Pick Your Perfect Date!
-                </h3>
-                <p className="text-gray-600 font-playful text-lg leading-relaxed">
-                  Choose when you want to party and we&apos;ll show you
-                  what&apos;s available! 🗓️
-                </p>
-              </div>
-            </div>
-
-            <div className="card-fun group">
-              <div className="p-8 text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:animate-bounce-fun">
-                  <span className="text-3xl">🏰</span>
-                </div>
-                <h3 className="text-2xl font-party text-gray-900 mb-4">
-                  2. Choose Your Fun Zone!
-                </h3>
-                <p className="text-gray-600 font-playful text-lg leading-relaxed">
-                  Pick from our amazing party packages and magical rooms! 🎪
-                </p>
-              </div>
-            </div>
-
-            <div className="card-party group">
-              <div className="p-8 text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:animate-bounce-fun">
-                  <span className="text-3xl">💳</span>
-                </div>
-                <h3 className="text-2xl font-party text-gray-900 mb-4">
-                  3. Secure Your Spot!
-                </h3>
-                <p className="text-gray-600 font-playful text-lg leading-relaxed">
-                  Just a small deposit and you&apos;re all set for the big day!
-                  🎯
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Why Choose Us Section */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl border-4 border-rainbow-300 p-8 mb-16 relative overflow-hidden">
-          <div className="absolute inset-0 bg-party-pattern opacity-5"></div>
-          <div className="relative z-10">
-            <h2 className="text-4xl font-party text-center text-purple-700 mb-12">
-              🌈 Why Families Love Us! 🌈
+        {/* How It Works Section (Restyled) */}
+        <section className="mb-20 relative">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-center text-5xl md:text-6xl font-black tracking-tight mb-12">
+              <span className="bg-gradient-to-r from-pink-500 via-yellow-400 to-pink-600 bg-clip-text text-transparent drop-shadow-lg">
+                How It Works
+              </span>
             </h2>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-              <div className="text-center group">
-                <div className="text-6xl mb-4 group-hover:animate-wiggle transition-all duration-300">
-                  🎉
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  icon: '📅',
+                  title: 'Pick Your Perfect Date',
+                  text: "Choose when you want to party and we'll show what's available!",
+                  gradient: 'from-pink-500 to-pink-600'
+                },
+                {
+                  icon: '🏰',
+                  title: 'Choose Your Fun Zone',
+                  text: 'Pick from our amazing party packages and magical rooms!',
+                  gradient: 'from-yellow-400 to-orange-500'
+                },
+                {
+                  icon: '💳',
+                  title: 'Secure Your Spot',
+                  text: "Small deposit and you are all set for the big day!",
+                  gradient: 'from-blue-400 to-green-500'
+                }
+              ].map((step, i) => (
+                <div
+                  key={i}
+                  className="group relative bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/40 hover:shadow-3xl transition-all duration-300 overflow-hidden"
+                >
+                  <div className={`w-24 h-24 mx-auto mb-6 rounded-3xl flex items-center justify-center text-4xl font-bold text-white shadow-lg bg-gradient-to-br ${step.gradient} group-hover:scale-105 transition-transform`}>{step.icon}</div>
+                  <h3 className="text-2xl font-black text-brown-dark mb-4 leading-snug">
+                    {i + 1}. {step.title}!
+                  </h3>
+                  <p className="font-playful text-brown-700 leading-relaxed text-lg">
+                    {step.text}
+                  </p>
+                  <div className="absolute -bottom-6 -right-6 w-40 h-40 bg-gradient-to-br from-pink-500/10 to-yellow-400/10 rounded-full blur-2xl" />
                 </div>
-                <h4 className="text-xl font-party text-gray-900 mb-2">
-                  Epic Fun Guarantee!
-                </h4>
-                <p className="text-gray-600 font-playful">
-                  Every party is designed to create magical moments and endless
-                  laughter!
-                </p>
-              </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-              <div className="text-center group">
-                <div className="text-6xl mb-4 group-hover:animate-wiggle transition-all duration-300">
-                  ⚡
-                </div>
-                <h4 className="text-xl font-party text-gray-900 mb-2">
-                  Lightning Fast Booking!
-                </h4>
-                <p className="text-gray-600 font-playful">
-                  Book your dream party online in just 3 easy steps - it&apos;s
-                  that simple!
-                </p>
-              </div>
-
-              <div className="text-center group">
-                <div className="text-6xl mb-4 group-hover:animate-wiggle transition-all duration-300">
-                  💎
-                </div>
-                <h4 className="text-xl font-party text-gray-900 mb-2">
-                  Flexible & Fair!
-                </h4>
-                <p className="text-gray-600 font-playful">
-                  Small deposit now, pay the rest later. No hidden fees, just
-                  pure fun!
-                </p>
-              </div>
-
-              <div className="text-center group">
-                <div className="text-6xl mb-4 group-hover:animate-wiggle transition-all duration-300">
-                  �
-                </div>
-                <h4 className="text-xl font-party text-gray-900 mb-2">
-                  Full Party Service!
-                </h4>
-                <p className="text-gray-600 font-playful">
-                  Sit back and relax - we handle decorations, setup, and
-                  cleanup!
-                </p>
+        {/* Why Choose Us Section (Restyled) */}
+        <section className="mb-20 relative">
+          <div className="max-w-6xl mx-auto bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/40 p-12 overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,192,203,0.25),transparent_60%)]" />
+            <div className="relative z-10">
+              <h2 className="text-center text-5xl md:text-6xl font-black mb-14">
+                <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-pink-600 bg-clip-text text-transparent">Why Families Love Us</span>
+              </h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
+                {[
+                  { icon: '🎉', title: 'Epic Fun Guarantee', text: 'Designed for magical moments & endless laughter.' },
+                  { icon: '⚡', title: 'Lightning Fast Booking', text: 'In just a few clicks your date is locked in.' },
+                  { icon: '💎', title: 'Flexible & Fair', text: 'Small deposit now, pay balance on party day.' },
+                  { icon: '🛠️', title: 'Full Party Service', text: 'We handle setup, hosting, and cleanup.' }
+                ].map((item, i) => (
+                  <div key={i} className="group relative text-center px-4">
+                    <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center text-5xl rounded-2xl bg-gradient-to-br from-pink-500/20 to-yellow-400/20 group-hover:from-pink-500/30 group-hover:to-yellow-400/30 transition-all">
+                      {item.icon}
+                    </div>
+                    <h3 className="text-xl font-black text-brown-dark mb-3 tracking-tight">{item.title}</h3>
+                    <p className="font-playful text-brown-700 text-sm leading-relaxed max-w-[14ch] mx-auto">
+                      {item.text}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Call to Action Section */}
-        <div className="text-center bg-gradient-to-r from-pink-400 via-purple-500 to-blue-500 rounded-3xl p-12 text-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-confetti opacity-20"></div>
-          <div className="relative z-10">
-            <h2 className="text-4xl font-party mb-6 animate-pulse-party">
-              🎊 Ready to Party? 🎊
-            </h2>
-            <p className="text-xl font-playful mb-8 max-w-2xl mx-auto">
-              Join hundreds of families who&apos;ve made unforgettable memories
-              with us! Your perfect party is just one click away! ✨
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href={`/${tenant}/book`}
-                className="bg-white text-purple-600 hover:text-purple-800 font-bold py-4 px-8 rounded-full text-xl font-party transform hover:scale-110 transition-all duration-300 shadow-xl hover:shadow-2xl"
-              >
-                🚀 Start Your Party Adventure! 🚀
-              </Link>
-
-              <button className="bg-yellow-400 hover:bg-yellow-500 text-purple-800 font-bold py-4 px-8 rounded-full text-xl font-party transform hover:scale-110 transition-all duration-300 shadow-xl hover:shadow-2xl">
-                📞 Call Us: (555) PARTY-FUN
-              </button>
+        {/* Call to Action Section (Restyled) */}
+        <section className="mb-20">
+          <div className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-yellow-400 to-pink-600 opacity-90" />
+            <div className="absolute inset-0 mix-blend-overlay bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.4),transparent_60%)]" />
+            <div className="relative z-10 p-12 text-center text-white">
+              <h2 className="text-5xl md:text-6xl font-black mb-8 tracking-tight drop-shadow-xl">
+                Ready To Celebrate?
+              </h2>
+              <p className="font-playful text-xl md:text-2xl max-w-3xl mx-auto mb-10 leading-relaxed">
+                Join hundreds of families creating unforgettable memories. Your perfect party is one click away!
+              </p>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <Link
+                  href={`/${tenant}/book`}
+                  className="bg-white text-pink-600 font-black text-lg md:text-xl px-10 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all border-4 border-white/80 hover:border-yellow-300"
+                >
+                  🚀 Start Your Party Adventure
+                </Link>
+                <a
+                  href="tel:15557278938"
+                  className="bg-yellow-300 text-pink-700 font-black text-lg md:text-xl px-10 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all border-4 border-yellow-300 hover:border-white"
+                >
+                  📞 (555) PARTY-FUN
+                </a>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Testimonial Preview */}
-        <div className="mt-16 text-center">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto border-4 border-yellow-200">
-            <div className="text-5xl mb-4">⭐⭐⭐⭐⭐</div>
-            <p className="text-lg font-playful text-gray-700 italic mb-4">
-              &quot;Best party ever! The kids had a blast and I didn&apos;t have
-              to worry about anything. The staff was amazing and the room was
-              perfect!&quot;
-            </p>
-            <p className="font-party text-purple-600">
-              - Sarah M., Happy Mom 🎉
-            </p>
+        {/* Testimonial (Restyled) */}
+        <section className="mt-24 mb-12">
+          <div className="max-w-3xl mx-auto relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-yellow-400 to-pink-600 rounded-3xl blur opacity-40" />
+            <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl p-10 shadow-2xl border border-white/60">
+              <div className="flex flex-col items-center text-center">
+                <div className="text-6xl mb-4 tracking-wider bg-gradient-to-r from-pink-500 to-yellow-400 bg-clip-text text-transparent">★★★★★</div>
+                <blockquote className="font-playful text-brown-700 text-lg md:text-xl italic leading-relaxed mb-6">
+                  “Best party ever! The kids had a blast and I didn’t worry about a thing. Staff was amazing and the room was perfect!”
+                </blockquote>
+                <div className="font-black text-pink-600 text-lg">— Sarah M. (Happy Mom)</div>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
