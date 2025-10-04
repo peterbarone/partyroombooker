@@ -2,82 +2,37 @@
 
 import { useState, useEffect } from "react";
 import AdminLayout from "../../../../components/AdminLayout";
+import { supabase } from "@/lib/supabase";
 
 interface BookingManagementProps {
-  params: Promise<{ tenant: string }>;
+  params: { tenant: string };
 }
 
-// Mock booking data - in production this would come from your database
-const mockBookings = [
-  {
-    id: "BK001",
-    customerName: "Sarah Johnson",
-    customerEmail: "sarah.j@email.com",
-    customerPhone: "(555) 123-4567",
-    date: "2025-10-03",
-    time: "2:00 PM - 4:00 PM",
-    package: "Birthday Bash",
-    room: "Party Room A",
-    kidsCount: 8,
-    status: "confirmed",
-    depositPaid: 150,
-    totalAmount: 299,
-    balanceDue: 149,
-    notes: "Birthday for 6-year-old Emma. Allergy to nuts.",
-    createdAt: "2025-09-28",
-  },
-  {
-    id: "BK002",
-    customerName: "Mike Chen",
-    customerEmail: "mike.chen@email.com",
-    customerPhone: "(555) 987-6543",
-    date: "2025-10-03",
-    time: "4:30 PM - 6:30 PM",
-    package: "Ultimate Celebration",
-    room: "Sports Arena",
-    kidsCount: 14,
-    status: "pending_payment",
-    depositPaid: 0,
-    totalAmount: 459,
-    balanceDue: 459,
-    notes: "Corporate family event. Need setup by 4:00 PM.",
-    createdAt: "2025-09-30",
-  },
-  {
-    id: "BK003",
-    customerName: "Lisa Rodriguez",
-    customerEmail: "lisa.r@email.com",
-    customerPhone: "(555) 456-7890",
-    date: "2025-10-04",
-    time: "11:00 AM - 1:00 PM",
-    package: "Mini Party",
-    room: "Craft Corner",
-    kidsCount: 5,
-    status: "confirmed",
-    depositPaid: 100,
-    totalAmount: 199,
-    balanceDue: 99,
-    notes: "Quiet party - child has autism.",
-    createdAt: "2025-09-25",
-  },
-  {
-    id: "BK004",
-    customerName: "David Kim",
-    customerEmail: "david.kim@email.com",
-    customerPhone: "(555) 111-2222",
-    date: "2025-10-05",
-    time: "3:00 PM - 5:00 PM",
-    package: "Birthday Bash",
-    room: "Party Room B",
-    kidsCount: 10,
-    status: "cancelled",
-    depositPaid: 150,
-    totalAmount: 329,
-    balanceDue: 0,
-    notes: "Cancelled due to illness. Refund processed.",
-    createdAt: "2025-09-20",
-  },
-];
+type UIBooking = {
+  id: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  date: string;
+  time: string; // formatted range
+  package: string;
+  room: string;
+  kidsCount: number;
+  status: string;
+  depositPaid: number;
+  totalAmount: number;
+  balanceDue: number;
+  notes?: string;
+  createdAt: string;
+};
+
+type UIAddonLine = {
+  id: string; // addon_id
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+};
 
 type BookingStatus =
   | "all"
@@ -114,9 +69,9 @@ const BookingRow = ({
   onEdit,
   onViewDetails,
 }: {
-  booking: (typeof mockBookings)[0];
-  onEdit: (booking: (typeof mockBookings)[0]) => void;
-  onViewDetails: (booking: (typeof mockBookings)[0]) => void;
+  booking: UIBooking;
+  onEdit: (booking: UIBooking) => void;
+  onViewDetails: (booking: UIBooking) => void;
 }) => {
   return (
     <tr className="hover:bg-gray-50">
@@ -128,8 +83,8 @@ const BookingRow = ({
         <div className="text-sm text-gray-900 font-medium">
           {booking.customerName}
         </div>
-        <div className="text-xs text-gray-500">{booking.customerEmail}</div>
-        <div className="text-xs text-gray-500">{booking.customerPhone}</div>
+        <div className="text-xs text-gray-500">{booking.customerEmail || ""}</div>
+        <div className="text-xs text-gray-500">{booking.customerPhone || ""}</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900 font-medium">{booking.date}</div>
@@ -174,10 +129,12 @@ const BookingRow = ({
 
 const BookingDetailModal = ({
   booking,
+  addons,
   isOpen,
   onClose,
 }: {
-  booking: (typeof mockBookings)[0] | null;
+  booking: UIBooking | null;
+  addons: UIAddonLine[];
   isOpen: boolean;
   onClose: () => void;
 }) => {
@@ -314,6 +271,45 @@ const BookingDetailModal = ({
             </p>
           </div>
 
+          {/* Add-ons */}
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 mb-3">Add-ons</h3>
+            {addons.length > 0 ? (
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {addons.map((a) => (
+                      <tr key={a.id}>
+                        <td className="px-4 py-2 text-sm text-gray-900">{a.name}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900 text-right">{a.quantity}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900 text-right">${a.unitPrice.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900 text-right">${a.total.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-gray-50">
+                    <tr>
+                      <td className="px-4 py-2 text-sm font-semibold text-gray-900" colSpan={3}>Add-ons Subtotal</td>
+                      <td className="px-4 py-2 text-sm font-semibold text-gray-900 text-right">
+                        ${addons.reduce((s, a) => s + a.total, 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600">No add-ons for this booking.</p>
+            )}
+          </div>
+
           {/* Actions */}
           <div className="flex space-x-3 pt-4 border-t border-gray-200">
             <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
@@ -333,21 +329,102 @@ const BookingDetailModal = ({
 };
 
 export default function BookingManagement({ params }: BookingManagementProps) {
-  const [resolvedParams, setResolvedParams] = useState<{
-    tenant: string;
-  } | null>(null);
-  const [bookings, setBookings] = useState(mockBookings);
-  const [filteredBookings, setFilteredBookings] = useState(mockBookings);
+  const tenant = params.tenant;
+  const [loading, setLoading] = useState(true);
+  const [bookings, setBookings] = useState<UIBooking[]>([]);
+  const [filteredBookings, setFilteredBookings] = useState<UIBooking[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<BookingStatus>("all");
-  const [selectedBooking, setSelectedBooking] = useState<
-    (typeof mockBookings)[0] | null
-  >(null);
+  const [selectedBooking, setSelectedBooking] = useState<UIBooking | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [bookingAddons, setBookingAddons] = useState<UIAddonLine[]>([]);
 
   useEffect(() => {
-    params.then(setResolvedParams);
-  }, [params]);
+    const load = async () => {
+      setLoading(true);
+      try {
+        // resolve tenant id
+        const { data: tenantRow } = await supabase
+          .from("tenants")
+          .select("id")
+          .eq("slug", tenant)
+          .eq("active", true)
+          .single();
+        if (!tenantRow?.id) {
+          setBookings([]);
+          setFilteredBookings([]);
+          return;
+        }
+
+        // fetch latest bookings
+        const { data: rawBookings } = await supabase
+          .from("bookings")
+          .select("id, customer_id, package_id, room_id, start_time, end_time, kids_count, status, deposit_due, notes, created_at")
+          .eq("tenant_id", tenantRow.id)
+          .order("start_time", { ascending: false })
+          .limit(100);
+
+        const customerIds = Array.from(new Set((rawBookings || []).map(b => b.customer_id)));
+        const packageIds = Array.from(new Set((rawBookings || []).map(b => b.package_id)));
+        const roomIds = Array.from(new Set((rawBookings || []).map(b => b.room_id)));
+
+        const [customersRes, packagesRes, roomsRes, paymentsRes] = await Promise.all([
+          customerIds.length ? supabase.from("customers").select("id,name,email,phone").in("id", customerIds) : Promise.resolve({ data: [] as any[] }),
+          packageIds.length ? supabase.from("packages").select("id,name,duration_min,duration_minutes,base_price,base_kids,extra_kid_price").in("id", packageIds) : Promise.resolve({ data: [] as any[] }),
+          roomIds.length ? supabase.from("rooms").select("id,name").in("id", roomIds) : Promise.resolve({ data: [] as any[] }),
+          supabase.from("payments").select("booking_id, amount, status, type"),
+        ]);
+
+        const customers = new Map((customersRes.data || []).map((c: any) => [c.id, c]));
+        const packages = new Map((packagesRes.data || []).map((p: any) => [p.id, p]));
+        const rooms = new Map((roomsRes.data || []).map((r: any) => [r.id, r]));
+        const payments = paymentsRes.data || [];
+
+        const ui: UIBooking[] = (rawBookings || []).map((b: any) => {
+          const cust = customers.get(b.customer_id) || {};
+          const pkg = packages.get(b.package_id) || {};
+          const room = rooms.get(b.room_id) || {};
+          const start = new Date(b.start_time);
+          const end = new Date(b.end_time);
+
+          // compute total using package pricing if desired; use deposit_due as total fallback
+          const base = Number(pkg.base_price || 0);
+          const baseKids = Number(pkg.base_kids || 0);
+          const extraPrice = Number(pkg.extra_kid_price || 0);
+          const extraKids = Math.max(0, Number(b.kids_count || 0) - baseKids);
+          const totalAmount = base + extraKids * extraPrice;
+
+          const paid = payments
+            .filter((p: any) => p.booking_id === b.id && p.status === "completed")
+            .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+
+          return {
+            id: b.id,
+            customerName: cust.name || "Customer",
+            customerEmail: cust.email,
+            customerPhone: cust.phone,
+            date: start.toISOString().split("T")[0],
+            time: `${start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} - ${end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`,
+            package: pkg.name || "Package",
+            room: room.name || "Room",
+            kidsCount: Number(b.kids_count || 0),
+            status: b.status,
+            depositPaid: paid,
+            totalAmount: totalAmount || Number(b.deposit_due || 0) * 2, // assume deposit is 50%
+            balanceDue: Math.max(0, (totalAmount || Number(b.deposit_due || 0) * 2) - paid),
+            notes: b.notes || undefined,
+            createdAt: new Date(b.created_at).toISOString().split("T")[0],
+          };
+        });
+
+        setBookings(ui);
+        setFilteredBookings(ui);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [tenant]);
 
   // Filter bookings based on search and status
   useEffect(() => {
@@ -360,11 +437,11 @@ export default function BookingManagement({ params }: BookingManagementProps) {
           booking.customerName
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          booking.customerEmail
+          (booking.customerEmail || "")
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
           booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          booking.customerPhone.includes(searchTerm)
+          (booking.customerPhone || "").includes(searchTerm)
       );
     }
 
@@ -376,17 +453,57 @@ export default function BookingManagement({ params }: BookingManagementProps) {
     setFilteredBookings(filtered);
   }, [searchTerm, statusFilter, bookings]);
 
-  const handleViewDetails = (booking: (typeof mockBookings)[0]) => {
+  const handleViewDetails = (booking: UIBooking) => {
     setSelectedBooking(booking);
     setIsDetailModalOpen(true);
   };
 
-  const handleEdit = (booking: (typeof mockBookings)[0]) => {
+  // Load add-ons whenever we open the modal for a booking
+  useEffect(() => {
+    const loadAddons = async (bookingId: string) => {
+      // fetch booking_addons for this booking
+      const { data: baRows } = await supabase
+        .from("booking_addons")
+        .select("addon_id, quantity, unit_price")
+        .eq("booking_id", bookingId);
+      const rows = baRows || [];
+      if (rows.length === 0) {
+        setBookingAddons([]);
+        return;
+      }
+      const addonIds = Array.from(new Set(rows.map((r: any) => r.addon_id).filter(Boolean)));
+      const { data: addonsRows } = await supabase
+        .from("addons")
+        .select("id, name")
+        .in("id", addonIds);
+      const nameMap = new Map((addonsRows || []).map((a: any) => [a.id, a.name]));
+      const ui: UIAddonLine[] = rows.map((r: any) => {
+        const qty = Number(r.quantity || 0);
+        const unit = Number(r.unit_price || 0);
+        return {
+          id: r.addon_id,
+          name: nameMap.get(r.addon_id) || "Addon",
+          quantity: qty,
+          unitPrice: unit,
+          total: qty * unit,
+        };
+      });
+      setBookingAddons(ui);
+    };
+
+    if (isDetailModalOpen && selectedBooking) {
+      loadAddons(selectedBooking.id);
+    } else {
+      setBookingAddons([]);
+    }
+  }, [isDetailModalOpen, selectedBooking]);
+
+  const handleEdit = (booking: UIBooking) => {
     // In a real app, this would open an edit modal or navigate to edit page
     console.log("Edit booking:", booking.id);
   };
 
-  if (!resolvedParams) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -398,7 +515,7 @@ export default function BookingManagement({ params }: BookingManagementProps) {
   }
 
   return (
-    <AdminLayout tenant={resolvedParams.tenant}>
+    <AdminLayout tenant={tenant}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -537,6 +654,7 @@ export default function BookingManagement({ params }: BookingManagementProps) {
       {/* Booking Detail Modal */}
       <BookingDetailModal
         booking={selectedBooking}
+        addons={bookingAddons}
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
       />

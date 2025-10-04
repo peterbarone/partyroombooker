@@ -27,21 +27,35 @@ const subheadingClass =
 interface Package {
   id: string;
   name: string;
-  description: string;
-  price: number;
-  duration: number;
-  maxGuests: number;
-  includes: string[];
+  description?: string;
+  base_price: number;
+  base_kids: number;
+  extra_kid_price: number;
+  duration_min: number;
+  includes?: string[];
 }
 
 interface Room {
   id: string;
   name: string;
-  description: string;
-  capacity: number;
-  hourlyRate: number;
-  amenities: string[];
-  images: string[];
+  description?: string;
+  max_kids: number;
+  amenities?: string[];
+  images?: string[];
+}
+
+interface AvailabilityRoom {
+  roomId: string;
+  roomName: string;
+  maxKids: number;
+  eligible: boolean;
+  available: boolean;
+}
+
+interface AvailabilitySlot {
+  timeStart: string; // ISO
+  timeEnd: string;   // ISO
+  rooms: AvailabilityRoom[];
 }
 
 interface Addon {
@@ -59,6 +73,7 @@ interface BookingData {
   selectedRoom: Room | null;
   guestCount: number;
   selectedTime: string;
+  selectedSlot?: { timeStart: string; timeEnd: string };
   customerInfo: {
     parentName: string;
     parentEmail: string;
@@ -71,6 +86,7 @@ interface BookingData {
   specialNotes: string;
   paymentStatus: "pending" | "processing" | "completed" | "failed";
   paymentId?: string;
+  bookingId?: string;
 }
 
 interface FamilyFunBookingWizardProps {
@@ -82,10 +98,10 @@ const STEPS = [
   "child-name",
   "child-age",
   "party-date",
-  "time-slot",
   "package-choice",
-  "room-choice",
   "guest-count",
+  "time-slot",
+  "room-choice",
   "add-ons",
   "parent-info",
   "special-notes",
@@ -102,6 +118,9 @@ export default function FamilyFunBookingWizard({
   const [addons, setAddons] = useState<Addon[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [availability, setAvailability] = useState<AvailabilitySlot[] | null>(null);
+  const [availableRoomsForSelectedSlot, setAvailableRoomsForSelectedSlot] = useState<AvailabilityRoom[] | null>(null);
   const sparklesRef = useRef<
     Array<{ left: number; top: number; duration: number; delay: number }>
   >([]);
@@ -136,35 +155,74 @@ export default function FamilyFunBookingWizard({
     }));
   }, []);
 
-  // Load data from Supabase
+  // Load data from Supabase (resolve tenant slug -> id, then load catalog)
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
+        // Resolve tenant id by slug
+        const { data: tenantRow, error: tenantErr } = await supabase
+          .from("tenants")
+          .select("id")
+          .eq("slug", tenant)
+          .eq("active", true)
+          .single();
+        if (tenantErr || !tenantRow?.id) {
+          console.error("Unable to resolve tenant by slug", tenantErr);
+          return;
+        }
+        setTenantId(tenantRow.id);
 
-        // Load packages
+        // Load packages (map to UI shape)
         const { data: packagesData } = await supabase
           .from("packages")
-          .select("*")
-          .eq("tenant_id", tenant)
+          .select("id,name,description,base_price,base_kids,extra_kid_price,duration_min,duration_minutes,includes_json")
+          .eq("tenant_id", tenantRow.id)
           .eq("active", true);
 
-        // Load rooms
+        // Load rooms (map to UI shape)
         const { data: roomsData } = await supabase
           .from("rooms")
-          .select("*")
-          .eq("tenant_id", tenant)
-          .eq("status", "active");
+          .select("id,name,description,max_kids,active")
+          .eq("tenant_id", tenantRow.id)
+          .eq("active", true);
 
         // Load addons
         const { data: addonsData } = await supabase
           .from("addons")
-          .select("*")
-          .eq("tenant_id", tenant)
+          .select("id,name,description,price,category,active")
+          .eq("tenant_id", tenantRow.id)
           .eq("active", true);
 
-        setPackages(packagesData || []);
-        setRooms(roomsData || []);
+        const mappedPackages: Package[] = (packagesData || []).map((p: any) => {
+          const minutes = p.duration_min ?? p.duration_minutes ?? 120;
+          let includes: string[] | undefined = undefined;
+          if (Array.isArray(p.includes_json)) {
+            includes = p.includes_json;
+          } else if (p.includes_json && Array.isArray(p.includes_json.includes)) {
+            includes = p.includes_json.includes;
+          }
+          return {
+            id: p.id,
+            name: p.name,
+            description: p.description ?? undefined,
+            base_price: Number(p.base_price ?? 0),
+            base_kids: Number(p.base_kids ?? 0),
+            extra_kid_price: Number(p.extra_kid_price ?? 0),
+            duration_min: Number(minutes),
+            includes,
+          };
+        });
+
+        const mappedRooms: Room[] = (roomsData || []).map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          description: r.description ?? undefined,
+          max_kids: Number(r.max_kids ?? 0),
+        }));
+
+        setPackages(mappedPackages);
+        setRooms(mappedRooms);
         setAddons(addonsData || []);
       } catch (error) {
         console.error("Error loading data:", error);
@@ -175,6 +233,37 @@ export default function FamilyFunBookingWizard({
 
     loadData();
   }, [tenant]);
+
+  // Fetch availability when date/package/guestCount are set and when entering time-slot step
+  useEffect(() => {
+    const needsAvailability =
+      bookingData.selectedDate && bookingData.selectedPackage && bookingData.guestCount > 0;
+    if (!needsAvailability) return;
+
+    const fetchAvailability = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("availability", {
+          body: {
+            tenantSlug: tenant,
+            date: bookingData.selectedDate,
+            packageId: bookingData.selectedPackage?.id,
+            kids: bookingData.guestCount,
+          },
+        });
+        if (error) {
+          console.error("availability error", error);
+          setAvailability(null);
+          return;
+        }
+        setAvailability((data as any) || null);
+      } catch (e) {
+        console.error("availability exception", e);
+        setAvailability(null);
+      }
+    };
+
+    fetchAvailability();
+  }, [tenant, bookingData.selectedDate, bookingData.selectedPackage, bookingData.guestCount]);
 
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
@@ -194,21 +283,19 @@ export default function FamilyFunBookingWizard({
 
   const calculateTotal = () => {
     let total = 0;
-
     if (bookingData.selectedPackage) {
-      total += bookingData.selectedPackage.price;
+      const p = bookingData.selectedPackage;
+      const extraKids = Math.max(0, (bookingData.guestCount || 0) - (p.base_kids || 0));
+      total += (p.base_price || 0) + extraKids * (p.extra_kid_price || 0);
     }
-
-    if (bookingData.selectedRoom) {
-      const duration = bookingData.selectedPackage?.duration || 2;
-      total += bookingData.selectedRoom.hourlyRate * duration;
-    }
-
     bookingData.selectedAddons.forEach(({ addon, quantity }) => {
-      total += addon.price * quantity;
+      total += (addon.price || 0) * quantity;
     });
-
     return total;
+  };
+
+  const calculateDeposit = () => {
+    return Math.max(0, Math.round(calculateTotal() * 0.5 * 100) / 100);
   };
 
   if (loading) {
@@ -440,49 +527,35 @@ export default function FamilyFunBookingWizard({
         </p>
       </div>
 
-      <div className="flex justify-center gap-6">
-        {[
-          {
-            value: "morning",
-            emoji: "🌅",
-            label: "Morning",
-            time: "10:00 AM - 12:00 PM",
-          },
-          {
-            value: "afternoon",
-            emoji: "☀️",
-            label: "Afternoon",
-            time: "2:00 PM - 4:00 PM",
-          },
-          {
-            value: "evening",
-            emoji: "🌙",
-            label: "Evening",
-            time: "6:00 PM - 8:00 PM",
-          },
-        ].map((slot) => (
-          <motion.button
-            key={slot.value}
-            onClick={() =>
-              updateBookingData({ selectedTime: slot.value as any })
-            }
-            className={`p-6 rounded-3xl border-4 transition-all ${
-              bookingData.selectedTime === slot.value
-                ? "border-party-yellow bg-white shadow-xl scale-105"
-                : "border-transparent bg-white/80 hover:scale-105"
-            }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <div className="text-5xl mb-3">{slot.emoji}</div>
-            <div className="text-xl text-brown-700 font-semibold mb-1">
-              {slot.label}
-            </div>
-            <div className="text-sm text-brown-600 font-playful">
-              {slot.time}
-            </div>
-          </motion.button>
-        ))}
+      <div className="flex flex-col items-center gap-4">
+        {!availability && (
+          <div className="text-brown-700">Checking availability...</div>
+        )}
+        {availability && availability.length === 0 && (
+          <div className="text-brown-700">No time slots available. Try another date.</div>
+        )}
+        {availability && availability.map((slot) => {
+          const label = new Date(slot.timeStart).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) +
+            " - " + new Date(slot.timeEnd).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+          const isSelected = bookingData.selectedSlot?.timeStart === slot.timeStart;
+          return (
+            <motion.button
+              key={slot.timeStart}
+              onClick={() => {
+                updateBookingData({ selectedTime: label, selectedSlot: { timeStart: slot.timeStart, timeEnd: slot.timeEnd } });
+                setAvailableRoomsForSelectedSlot(slot.rooms || []);
+              }}
+              className={`w-full max-w-md p-6 rounded-3xl border-4 transition-all ${
+                isSelected ? "border-party-yellow bg-white shadow-xl scale-105" : "border-transparent bg-white/80 hover:scale-105"
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="text-xl text-brown-700 font-semibold mb-1">{label}</div>
+              <div className="text-sm text-brown-600 font-playful">{(slot.rooms || []).filter(r => r.available && r.eligible).length} rooms available</div>
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* Inline nav removed; using global nav */}
@@ -538,10 +611,10 @@ export default function FamilyFunBookingWizard({
             <div className="text-gray-600 mb-4">{pkg.description}</div>
             <div className="flex items-center justify-between">
               <div className="text-xl font-semibold text-party-pink">
-                ${pkg.price.toFixed(2)}
+                ${pkg.base_price.toFixed(2)}
               </div>
               <div className="text-sm text-gray-500">
-                {pkg.duration} hours • Up to {pkg.maxGuests} guests
+                {Math.max(1, Math.round((pkg.duration_min || 120) / 60))} hours • Includes up to {pkg.base_kids} kids
               </div>
             </div>
           </motion.div>
@@ -576,7 +649,14 @@ export default function FamilyFunBookingWizard({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {rooms.map((room) => (
+        {(availableRoomsForSelectedSlot
+          ? availableRoomsForSelectedSlot.filter(r => r.available && r.eligible && r.maxKids >= (bookingData.guestCount || 0)).map(r => ({
+              id: r.roomId,
+              name: r.roomName,
+              max_kids: r.maxKids,
+            }))
+          : rooms.filter(r => r.max_kids >= (bookingData.guestCount || 0))
+        ).map((room) => (
           <motion.div
             key={room.id}
             className={`p-6 rounded-3xl border-4 transition-all cursor-pointer
@@ -586,7 +666,7 @@ export default function FamilyFunBookingWizard({
                   : "border-transparent bg-white/80 hover:scale-105"
               }
             `}
-            onClick={() => updateBookingData({ selectedRoom: room })}
+            onClick={() => updateBookingData({ selectedRoom: room as any })}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -596,13 +676,12 @@ export default function FamilyFunBookingWizard({
             <div className="text-2xl font-bold text-gray-800 mb-2">
               {room.name}
             </div>
-            <div className="text-gray-600 mb-4">{room.description}</div>
+            {((room as any).description ? (
+              <div className="text-gray-600 mb-4">{(room as any).description}</div>
+            ) : null)}
             <div className="flex items-center justify-between">
-              <div className="text-xl font-semibold text-party-pink">
-                ${room.hourlyRate.toFixed(2)}/hour
-              </div>
               <div className="text-sm text-gray-500">
-                Fits up to {room.capacity} guests
+                Fits up to {room.max_kids} kids
               </div>
             </div>
           </motion.div>
@@ -926,7 +1005,7 @@ export default function FamilyFunBookingWizard({
         <div className="border-t border-gray-200 pt-6">
           <div className="flex justify-between text-xl font-party text-brown-700">
             <span>Deposit Required:</span>
-            <span className="text-party-pink">$149.99</span>
+            <span className="text-party-pink">${calculateDeposit().toFixed(2)}</span>
           </div>
           <p className="text-sm text-brown-600 font-playful mt-2">
             Remaining balance due on party day
@@ -935,9 +1014,42 @@ export default function FamilyFunBookingWizard({
       </div>
 
       <motion.button
-        onClick={() => {
-          setShowCelebration(true);
-          setTimeout(() => nextStep(), 500);
+        onClick={async () => {
+          try {
+            updateBookingData({ paymentStatus: "processing" });
+            const { data, error } = await supabase.functions.invoke("createBooking", {
+              body: {
+                tenantSlug: tenant,
+                customer: {
+                  name: bookingData.customerInfo.parentName,
+                  email: bookingData.customerInfo.parentEmail,
+                  phone: bookingData.customerInfo.parentPhone,
+                },
+                packageId: bookingData.selectedPackage?.id,
+                roomId: bookingData.selectedRoom?.id,
+                startTime: bookingData.selectedSlot?.timeStart,
+                kidsCount: bookingData.guestCount,
+              },
+            });
+            if (error) {
+              console.error("createBooking error", error);
+              updateBookingData({ paymentStatus: "failed" });
+              return;
+            }
+            const checkoutUrl = (data as any)?.checkoutUrl;
+            const bookingId = (data as any)?.bookingId;
+            updateBookingData({ bookingId, paymentId: (data as any)?.paymentId });
+            if (checkoutUrl) {
+              window.location.href = checkoutUrl;
+            } else {
+              // Fallback advance if no URL (dev mode)
+              setShowCelebration(true);
+              setTimeout(() => nextStep(), 500);
+            }
+          } catch (e) {
+            console.error("createBooking exception", e);
+            updateBookingData({ paymentStatus: "failed" });
+          }
         }}
         className="btn-party text-xl px-12 py-4"
         whileHover={{ scale: 1.05 }}
@@ -985,6 +1097,17 @@ export default function FamilyFunBookingWizard({
           <div>👥 {bookingData.guestCount} guests</div>
         </div>
       </div>
+
+      {bookingData.bookingId && (
+        <div className="text-center">
+          <a
+            href={`/${tenant}/waiver/${bookingData.bookingId}`}
+            className="inline-block mt-2 text-party-pink font-bold underline"
+          >
+            Complete Waiver
+          </a>
+        </div>
+      )}
 
       <motion.div
         className="space-y-4"

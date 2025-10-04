@@ -1,23 +1,48 @@
-import { samplePackages, sampleRooms, packageRoomMappings } from "@/data/rooms";
+import { supabase } from "@/lib/supabase";
 
-export default function DebugPage() {
+export default async function DebugPage() {
   const tenant = "thefamilyfunfactory";
 
-  // Test data filtering
-  const availablePackages = samplePackages.filter(
-    (pkg) => pkg.tenant_id === tenant
-  );
+  // Resolve tenant id
+  const { data: tenantRow } = await supabase
+    .from("tenants")
+    .select("id")
+    .eq("slug", tenant)
+    .eq("active", true)
+    .single();
+
+  const tenantId = tenantRow?.id || "";
+
+  // Load packages
+  const { data: packages } = await supabase
+    .from("packages")
+    .select("id, tenant_id, name, base_price, active")
+    .eq("tenant_id", tenantId)
+    .eq("active", true);
+
+  const availablePackages = packages || [];
+
+  // Load rooms
+  const { data: rooms } = await supabase
+    .from("rooms")
+    .select("id, tenant_id, name, max_kids, active")
+    .eq("tenant_id", tenantId)
+    .eq("active", true);
+
+  // Load package-room mappings
+  const { data: mappings } = await supabase
+    .from("package_rooms")
+    .select("package_id, room_id")
+    .eq("tenant_id", tenantId);
+
+  const packageRoomMappings = mappings || [];
 
   const getAvailableRooms = (packageId: string, kidsCount: number) => {
     const eligibleRoomIds = packageRoomMappings
-      .filter((mapping) => mapping.package_id === packageId)
-      .map((mapping) => mapping.room_id);
-
-    return sampleRooms.filter(
-      (room) =>
-        eligibleRoomIds.includes(room.id) &&
-        room.max_kids >= kidsCount &&
-        room.tenant_id === tenant
+      .filter((m) => m.package_id === packageId)
+      .map((m) => m.room_id);
+    return (rooms || []).filter(
+      (room) => eligibleRoomIds.includes(room.id) && room.max_kids >= kidsCount
     );
   };
 
@@ -49,11 +74,9 @@ export default function DebugPage() {
         </div>
 
         <div>
-          <h2 className="text-2xl font-semibold mb-4">
-            All Rooms ({sampleRooms.length})
-          </h2>
+          <h2 className="text-2xl font-semibold mb-4">All Rooms ({rooms?.length || 0})</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            {sampleRooms.map((room) => (
+            {(rooms || []).map((room) => (
               <div key={room.id} className="border rounded-lg p-4">
                 <h3 className="font-semibold">{room.name}</h3>
                 <p className="text-sm text-gray-600">ID: {room.id}</p>

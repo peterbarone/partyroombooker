@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import AdminLayout from "../../../../components/AdminLayout";
+import { supabase } from "@/lib/supabase";
 
 interface CustomerManagementProps {
-  params: Promise<{ tenant: string }>;
+  params: { tenant: string };
 }
 
 // Mock customer data with booking history
@@ -237,14 +238,16 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
+type UICustomer = (typeof mockCustomers)[0];
+
 const CustomerRow = ({
   customer,
   onEdit,
   onViewDetails,
 }: {
-  customer: (typeof mockCustomers)[0];
-  onEdit: (customer: (typeof mockCustomers)[0]) => void;
-  onViewDetails: (customer: (typeof mockCustomers)[0]) => void;
+  customer: UICustomer;
+  onEdit: (customer: UICustomer) => void;
+  onViewDetails: (customer: UICustomer) => void;
 }) => {
   return (
     <tr className="hover:bg-gray-50">
@@ -312,7 +315,7 @@ const CustomerDetailModal = ({
   isOpen,
   onClose,
 }: {
-  customer: (typeof mockCustomers)[0] | null;
+  customer: UICustomer | null;
   isOpen: boolean;
   onClose: () => void;
 }) => {
@@ -607,24 +610,128 @@ const CustomerDetailModal = ({
   );
 };
 
-export default function CustomerManagement({
-  params,
-}: CustomerManagementProps) {
-  const [resolvedParams, setResolvedParams] = useState<{
-    tenant: string;
-  } | null>(null);
-  const [customers, setCustomers] = useState(mockCustomers);
-  const [filteredCustomers, setFilteredCustomers] = useState(mockCustomers);
+export default function CustomerManagement({ params }: CustomerManagementProps) {
+  const tenant = params.tenant;
+  const [loading, setLoading] = useState(true);
+  const [customers, setCustomers] = useState<UICustomer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<UICustomer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<CustomerStatus>("all");
-  const [selectedCustomer, setSelectedCustomer] = useState<
-    (typeof mockCustomers)[0] | null
-  >(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<UICustomer | null>(
+    null
+  );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   useEffect(() => {
-    params.then(setResolvedParams);
-  }, [params]);
+    const load = async () => {
+      setLoading(true);
+      try {
+        // resolve tenant id
+        const { data: tenantRow } = await supabase
+          .from("tenants")
+          .select("id")
+          .eq("slug", tenant)
+          .eq("active", true)
+          .single();
+        if (!tenantRow?.id) {
+          setCustomers([]);
+          setFilteredCustomers([]);
+          return;
+        }
+
+        // fetch customers
+        const { data: custs } = await supabase
+          .from("customers")
+          .select("id,name,email,phone")
+          .eq("tenant_id", tenantRow.id)
+          .order("name", { ascending: true });
+
+        const customerIds = (custs || []).map((c: any) => c.id);
+
+        // fetch bookings per customer for stats
+        const { data: bookings } = await supabase
+          .from("bookings")
+          .select("id,customer_id,package_id,room_id,start_time,status,deposit_due,kids_count")
+          .eq("tenant_id", tenantRow.id)
+          .in("customer_id", customerIds);
+
+        const pkgIds = Array.from(new Set((bookings || []).map((b: any) => b.package_id)));
+        const roomIds = Array.from(new Set((bookings || []).map((b: any) => b.room_id)));
+
+        const [packagesRes, roomsRes] = await Promise.all([
+          pkgIds.length
+            ? supabase.from("packages").select("id,name").in("id", pkgIds)
+            : Promise.resolve({ data: [] as any[] }),
+          roomIds.length
+            ? supabase.from("rooms").select("id,name").in("id", roomIds)
+            : Promise.resolve({ data: [] as any[] }),
+        ]);
+
+        const pkgMap = new Map((packagesRes.data || []).map((p: any) => [p.id, p.name]));
+        const roomMap = new Map((roomsRes.data || []).map((r: any) => [r.id, r.name]));
+
+        // group bookings by customer
+        const byCustomer = new Map<string, any[]>();
+        (bookings || []).forEach((b: any) => {
+          const arr = byCustomer.get(b.customer_id) || [];
+          arr.push(b);
+          byCustomer.set(b.customer_id, arr);
+        });
+
+        const ui: UICustomer[] = (custs || []).map((c: any) => {
+          const [firstName, ...rest] = String(c.name || "Customer").split(" ");
+          const lastName = rest.join(" ");
+          const list = byCustomer.get(c.id) || [];
+          const totalBookings = list.length;
+          const lastBooking = list.length
+            ? new Date(
+                Math.max(
+                  ...list.map((b: any) => new Date(b.start_time).getTime())
+                )
+              )
+                .toISOString()
+                .split("T")[0]
+            : "";
+          const status = totalBookings > 0 ? "active" : "inactive";
+          const bookingHistory = list.slice(0, 5).map((b: any) => ({
+            id: b.id,
+            date: new Date(b.start_time).toISOString().split("T")[0],
+            package: pkgMap.get(b.package_id) || "Package",
+            room: roomMap.get(b.room_id) || "Room",
+            amount: Number(b.deposit_due || 0) * 2,
+            status: b.status,
+            kidsCount: Number(b.kids_count || 0),
+          }));
+
+        return {
+            id: c.id,
+            firstName,
+            lastName,
+            email: c.email,
+            phone: c.phone,
+            address: "",
+            dateOfBirth: "",
+            joinDate: "",
+            totalBookings,
+            totalSpent: bookingHistory.reduce((s: number, x: any) => s + x.amount, 0),
+            lastBooking,
+            status,
+            loyaltyPoints: 0,
+            notes: "",
+            emergencyContact: "",
+            bookingHistory,
+            communications: [],
+          } as UICustomer;
+        });
+
+        setCustomers(ui);
+        setFilteredCustomers(ui);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [tenant]);
 
   // Filter customers based on search and status
   useEffect(() => {
@@ -652,16 +759,16 @@ export default function CustomerManagement({
     setFilteredCustomers(filtered);
   }, [searchTerm, statusFilter, customers]);
 
-  const handleViewDetails = (customer: (typeof mockCustomers)[0]) => {
+  const handleViewDetails = (customer: UICustomer) => {
     setSelectedCustomer(customer);
     setIsDetailModalOpen(true);
   };
 
-  const handleEdit = (customer: (typeof mockCustomers)[0]) => {
+  const handleEdit = (customer: UICustomer) => {
     console.log("Edit customer:", customer.id);
   };
 
-  if (!resolvedParams) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -673,7 +780,7 @@ export default function CustomerManagement({
   }
 
   return (
-    <AdminLayout tenant={resolvedParams.tenant}>
+    <AdminLayout tenant={tenant}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

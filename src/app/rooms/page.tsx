@@ -1,7 +1,22 @@
 import RoomCard from "@/components/RoomCard";
-import { sampleRooms } from "@/data/rooms";
+import { supabase } from "@/lib/supabase";
 
-export default function RoomsPage() {
+export default async function RoomsPage() {
+  const tenant = "thefamilyfunfactory";
+  const { data: tenantRow } = await supabase
+    .from("tenants")
+    .select("id")
+    .eq("slug", tenant)
+    .eq("active", true)
+    .single();
+  const tenantId = tenantRow?.id || "";
+
+  const { data: rooms } = await supabase
+    .from("rooms")
+    .select("id, name, description, max_kids, active")
+    .eq("tenant_id", tenantId)
+    .eq("active", true);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -66,8 +81,8 @@ export default function RoomsPage() {
 
         {/* Room Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          {sampleRooms.map((room) => (
-            <RoomCard key={room.id} room={room} />
+          {(rooms || []).map((room) => (
+            <RoomCard key={room.id} room={room as any} tenant={tenant} />
           ))}
         </div>
 

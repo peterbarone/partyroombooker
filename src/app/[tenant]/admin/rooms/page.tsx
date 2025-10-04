@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import AdminLayout from "../../../../components/AdminLayout";
+import { supabase } from "@/lib/supabase";
 
 interface RoomManagementProps {
-  params: Promise<{ tenant: string }>;
+  params: { tenant: string };
 }
 
 // Mock room data
@@ -798,15 +799,13 @@ const PackageDetailModal = ({
 };
 
 export default function RoomManagement({ params }: RoomManagementProps) {
-  const [resolvedParams, setResolvedParams] = useState<{
-    tenant: string;
-  } | null>(null);
+  const tenant = params.tenant;
   const [activeTab, setActiveTab] = useState<"rooms" | "packages">("rooms");
   const [roomStatusFilter, setRoomStatusFilter] = useState<RoomStatus>("all");
   const [packageStatusFilter, setPackageStatusFilter] =
     useState<PackageStatus>("all");
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [loading, setLoading] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<
     (typeof mockRooms)[0] | null
   >(null);
@@ -816,16 +815,114 @@ export default function RoomManagement({ params }: RoomManagementProps) {
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
 
-  const [filteredRooms, setFilteredRooms] = useState(mockRooms);
-  const [filteredPackages, setFilteredPackages] = useState(mockPackages);
+  const [rooms, setRooms] = useState<(typeof mockRooms)[0][]>([]);
+  const [packages, setPackages] = useState<(typeof mockPackages)[0][]>([]);
+  const [filteredRooms, setFilteredRooms] = useState<(typeof mockRooms)[0][]>(
+    []
+  );
+  const [filteredPackages, setFilteredPackages] = useState<
+    (typeof mockPackages)[0][]
+  >([]);
 
   useEffect(() => {
-    params.then(setResolvedParams);
-  }, [params]);
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data: tenantRow } = await supabase
+          .from("tenants")
+          .select("id")
+          .eq("slug", tenant)
+          .eq("active", true)
+          .single();
+        if (!tenantRow?.id) {
+          setRooms([]);
+          setPackages([]);
+          return;
+        }
+
+        const [{ data: roomsData }, { data: packagesData }, { data: mappings }] =
+          await Promise.all([
+            supabase
+              .from("rooms")
+              .select("id,name,description,max_kids,active")
+              .eq("tenant_id", tenantRow.id),
+            supabase
+              .from("packages")
+              .select(
+                "id,name,description,base_price,base_kids,duration_min,duration_minutes,includes_json,active"
+              )
+              .eq("tenant_id", tenantRow.id),
+            supabase
+              .from("package_rooms")
+              .select("package_id,room_id")
+              .eq("tenant_id", tenantRow.id),
+          ]);
+
+        const packageToRooms = new Map<string, string[]>();
+        (mappings || []).forEach((m: any) => {
+          const arr = packageToRooms.get(m.package_id) || [];
+          arr.push(m.room_id);
+          packageToRooms.set(m.package_id, arr);
+        });
+
+        const mappedRooms: (typeof mockRooms)[0][] = (roomsData || []).map(
+          (r: any) => ({
+            id: r.id,
+            name: r.name,
+            description: r.description || "",
+            capacity: Number(r.max_kids || 0),
+            size: "",
+            amenities: [],
+            hourlyRate: 0,
+            status: r.active ? "active" : "inactive",
+            availability: "weekdays_weekends",
+            images: [],
+            bookingCount: 0,
+            revenue: 0,
+            rating: 5,
+            lastMaintenance: "",
+            nextMaintenance: "",
+          })
+        );
+
+        const mappedPkgs: (typeof mockPackages)[0][] = (packagesData || []).map(
+          (p: any) => {
+            const minutes = Number(p.duration_min ?? p.duration_minutes ?? 120);
+            let includes: string[] = [];
+            if (Array.isArray(p.includes_json)) includes = p.includes_json;
+            else if (p.includes_json?.includes) includes = p.includes_json.includes;
+            return {
+              id: p.id,
+              name: p.name,
+              description: p.description || "",
+              duration: Math.max(1, Math.round(minutes / 60)),
+              maxGuests: Number(p.base_kids || 0),
+              basePrice: Number(p.base_price || 0),
+              includes,
+              addOns: [],
+              availableRooms: packageToRooms.get(p.id) || [],
+              status: p.active ? "active" : "inactive",
+              bookingCount: 0,
+              revenue: 0,
+              popularity: 0,
+            };
+          }
+        );
+
+        setRooms(mappedRooms);
+        setPackages(mappedPkgs);
+        setFilteredRooms(mappedRooms);
+        setFilteredPackages(mappedPkgs);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [tenant]);
 
   // Filter rooms
   useEffect(() => {
-    let filtered = mockRooms;
+    let filtered = rooms;
 
     if (searchTerm) {
       filtered = filtered.filter(
@@ -840,11 +937,11 @@ export default function RoomManagement({ params }: RoomManagementProps) {
     }
 
     setFilteredRooms(filtered);
-  }, [searchTerm, roomStatusFilter]);
+  }, [searchTerm, roomStatusFilter, rooms]);
 
   // Filter packages
   useEffect(() => {
-    let filtered = mockPackages;
+    let filtered = packages;
 
     if (searchTerm) {
       filtered = filtered.filter(
@@ -859,7 +956,7 @@ export default function RoomManagement({ params }: RoomManagementProps) {
     }
 
     setFilteredPackages(filtered);
-  }, [searchTerm, packageStatusFilter]);
+  }, [searchTerm, packageStatusFilter, packages]);
 
   const handleRoomViewDetails = (room: (typeof mockRooms)[0]) => {
     setSelectedRoom(room);
@@ -879,7 +976,7 @@ export default function RoomManagement({ params }: RoomManagementProps) {
     console.log("Edit package:", pkg.id);
   };
 
-  if (!resolvedParams) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -891,7 +988,7 @@ export default function RoomManagement({ params }: RoomManagementProps) {
   }
 
   return (
-    <AdminLayout tenant={resolvedParams.tenant}>
+    <AdminLayout tenant={tenant}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -912,8 +1009,8 @@ export default function RoomManagement({ params }: RoomManagementProps) {
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {[
-              { id: "rooms", label: "Rooms", count: mockRooms.length },
-              { id: "packages", label: "Packages", count: mockPackages.length },
+              { id: "rooms", label: "Rooms", count: rooms.length },
+              { id: "packages", label: "Packages", count: packages.length },
             ].map((tab) => (
               <button
                 key={tab.id}

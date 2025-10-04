@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import { packageRoomMappings } from '@/data/rooms'
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,10 +55,21 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get eligible rooms for this package (using mock data for now)
-    const eligibleRoomIds = packageRoomMappings
-      .filter(mapping => mapping.package_id === packageId)
-      .map(mapping => mapping.room_id)
+    // Get eligible rooms for this package from DB
+    const { data: mappings, error: mappingError } = await supabase
+      .from('package_rooms')
+      .select('room_id')
+      .eq('tenant_id', tenant.id)
+      .eq('package_id', packageId)
+
+    if (mappingError) {
+      return NextResponse.json(
+        { error: 'Failed to fetch package room mappings', details: mappingError.message },
+        { status: 500 }
+      )
+    }
+
+    const eligibleRoomIds = (mappings || []).map(m => m.room_id)
 
     const { data: rooms, error: roomsError } = await supabase
       .from('rooms')
@@ -78,7 +88,7 @@ export async function GET(request: NextRequest) {
     // Filter rooms by capacity
     const availableRooms = (rooms || []).filter(room => room.max_kids >= kidsCount)
 
-    // Mock time slots (in a real implementation, this would check existing bookings)
+    // Mock time slots (frontend uses Edge Function availability for real data)
     const timeSlots = [
       {
         time_start: '10:00',

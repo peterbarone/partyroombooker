@@ -2,120 +2,47 @@
 
 import { useState, useEffect } from "react";
 import AdminLayout from "../../../../components/AdminLayout";
+import { supabase } from "@/lib/supabase";
 
 interface ReportsProps {
-  params: Promise<{ tenant: string }>;
+  params: { tenant: string };
 }
 
-// Mock analytics data
-const mockAnalytics = {
+type Analytics = {
   revenue: {
-    current: 142850,
-    previous: 128940,
-    growth: 10.8,
-    target: 150000,
-    monthly: [
-      { month: "Jan", amount: 12450 },
-      { month: "Feb", amount: 13200 },
-      { month: "Mar", amount: 14850 },
-      { month: "Apr", amount: 13980 },
-      { month: "May", amount: 15600 },
-      { month: "Jun", amount: 16200 },
-      { month: "Jul", amount: 17100 },
-      { month: "Aug", amount: 15800 },
-      { month: "Sep", amount: 16950 },
-      { month: "Oct", amount: 6720 }, // Partial month
-    ],
-  },
+    current: number;
+    previous: number;
+    growth: number;
+    target: number;
+    monthly: { month: string; amount: number }[];
+  };
   bookings: {
-    total: 478,
-    confirmed: 412,
-    pending: 28,
-    cancelled: 38,
-    completed: 385,
-    growth: 15.2,
-    daily: [
-      { date: "2025-09-25", bookings: 8 },
-      { date: "2025-09-26", bookings: 12 },
-      { date: "2025-09-27", bookings: 6 },
-      { date: "2025-09-28", bookings: 15 },
-      { date: "2025-09-29", bookings: 18 },
-      { date: "2025-09-30", bookings: 9 },
-      { date: "2025-10-01", bookings: 14 },
-      { date: "2025-10-02", bookings: 11 },
-    ],
-  },
+    total: number;
+    confirmed: number;
+    pending: number;
+    cancelled: number;
+    completed: number;
+    growth: number;
+    daily: { date: string; bookings: number }[];
+  };
   customers: {
-    total: 312,
-    new: 45,
-    returning: 267,
-    vip: 28,
-    retention: 85.6,
-    acquisition: [
-      { month: "Jul", new: 38, returning: 42 },
-      { month: "Aug", new: 42, returning: 48 },
-      { month: "Sep", new: 45, returning: 52 },
-      { month: "Oct", new: 18, returning: 23 }, // Partial month
-    ],
-  },
+    total: number;
+    new: number;
+    returning: number;
+    vip: number;
+    retention: number;
+    acquisition: { month: string; new: number; returning: number }[];
+  };
   rooms: {
-    utilization: [
-      { room: "Party Room A", bookings: 125, revenue: 18750, utilization: 78 },
-      { room: "Party Room B", bookings: 98, revenue: 16660, utilization: 65 },
-      { room: "Sports Arena", bookings: 87, revenue: 19575, utilization: 58 },
-      { room: "Craft Corner", bookings: 168, revenue: 11340, utilization: 89 },
-    ],
-  },
+    utilization: { room: string; bookings: number; revenue: number; utilization: number }[];
+  };
   packages: {
-    performance: [
-      {
-        name: "Birthday Bash",
-        bookings: 203,
-        revenue: 60697,
-        popularity: 92,
-        avgPrice: 299,
-      },
-      {
-        name: "Mini Party",
-        bookings: 156,
-        revenue: 31044,
-        popularity: 85,
-        avgPrice: 199,
-      },
-      {
-        name: "Ultimate Celebration",
-        bookings: 89,
-        revenue: 40851,
-        popularity: 78,
-        avgPrice: 459,
-      },
-      {
-        name: "Craft Party Special",
-        bookings: 67,
-        revenue: 16683,
-        popularity: 71,
-        avgPrice: 249,
-      },
-    ],
-  },
+    performance: { name: string; bookings: number; revenue: number; popularity: number; avgPrice: number }[];
+  };
   timeAnalysis: {
-    busyHours: [
-      { hour: "10:00", bookings: 45 },
-      { hour: "11:00", bookings: 78 },
-      { hour: "12:00", bookings: 92 },
-      { hour: "13:00", bookings: 125 },
-      { hour: "14:00", bookings: 156 },
-      { hour: "15:00", bookings: 142 },
-      { hour: "16:00", bookings: 98 },
-      { hour: "17:00", bookings: 67 },
-    ],
-    seasonality: [
-      { period: "Weekday Mornings", percentage: 15, trend: "stable" },
-      { period: "Weekday Afternoons", percentage: 35, trend: "growing" },
-      { period: "Weekend Mornings", percentage: 25, trend: "growing" },
-      { period: "Weekend Afternoons", percentage: 45, trend: "peak" },
-    ],
-  },
+    busyHours: { hour: string; bookings: number }[];
+    seasonality: { period: string; percentage: number; trend: string }[];
+  };
 };
 
 type ReportType =
@@ -279,32 +206,32 @@ const TableReport = ({
   );
 };
 
-const OverviewReport = () => (
+const OverviewReport = ({ analytics }: { analytics: Analytics }) => (
   <div className="space-y-6">
     {/* Key Metrics */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <MetricCard
         title="Total Revenue"
-        value={mockAnalytics.revenue.current}
-        change={mockAnalytics.revenue.growth}
+        value={analytics.revenue.current}
+        change={analytics.revenue.growth}
         format="currency"
         trend="up"
       />
       <MetricCard
         title="Total Bookings"
-        value={mockAnalytics.bookings.total}
-        change={mockAnalytics.bookings.growth}
+        value={analytics.bookings.total}
+        change={analytics.bookings.growth}
         trend="up"
       />
       <MetricCard
         title="Total Customers"
-        value={mockAnalytics.customers.total}
+        value={analytics.customers.total}
         change={14.2}
         trend="up"
       />
       <MetricCard
         title="Customer Retention"
-        value={mockAnalytics.customers.retention}
+        value={analytics.customers.retention}
         change={2.1}
         format="percentage"
         trend="up"
@@ -315,14 +242,14 @@ const OverviewReport = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <SimpleChart
         title="Monthly Revenue Trend"
-        data={mockAnalytics.revenue.monthly.slice(-6)}
+        data={analytics.revenue.monthly.slice(-6)}
         xKey="month"
         yKey="amount"
         type="bar"
       />
       <SimpleChart
         title="Daily Bookings (Last 7 Days)"
-        data={mockAnalytics.bookings.daily}
+        data={analytics.bookings.daily}
         xKey="date"
         yKey="bookings"
         type="line"
@@ -333,7 +260,7 @@ const OverviewReport = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <TableReport
         title="Top Performing Packages"
-        data={mockAnalytics.packages.performance}
+        data={analytics.packages.performance}
         columns={[
           { key: "name", label: "Package" },
           { key: "bookings", label: "Bookings" },
@@ -343,7 +270,7 @@ const OverviewReport = () => (
       />
       <TableReport
         title="Room Utilization"
-        data={mockAnalytics.rooms.utilization}
+        data={analytics.rooms.utilization}
         columns={[
           { key: "room", label: "Room" },
           { key: "bookings", label: "Bookings" },
@@ -355,24 +282,24 @@ const OverviewReport = () => (
   </div>
 );
 
-const RevenueReport = () => (
+const RevenueReport = ({ analytics }: { analytics: Analytics }) => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <MetricCard
         title="Current Month Revenue"
-        value={mockAnalytics.revenue.current}
+        value={analytics.revenue.current}
         format="currency"
       />
       <MetricCard
         title="Revenue Growth"
-        value={mockAnalytics.revenue.growth}
+        value={analytics.revenue.growth}
         format="percentage"
         trend="up"
       />
       <MetricCard
         title="Target Achievement"
         value={
-          (mockAnalytics.revenue.current / mockAnalytics.revenue.target) * 100
+          (analytics.revenue.current / analytics.revenue.target) * 100
         }
         format="percentage"
         trend="up"
@@ -381,7 +308,7 @@ const RevenueReport = () => (
 
     <SimpleChart
       title="Revenue by Month"
-      data={mockAnalytics.revenue.monthly}
+      data={analytics.revenue.monthly}
       xKey="month"
       yKey="amount"
       height={300}
@@ -389,7 +316,7 @@ const RevenueReport = () => (
 
     <TableReport
       title="Revenue by Package"
-      data={mockAnalytics.packages.performance}
+      data={analytics.packages.performance}
       columns={[
         { key: "name", label: "Package" },
         { key: "bookings", label: "Bookings" },
@@ -400,30 +327,30 @@ const RevenueReport = () => (
   </div>
 );
 
-const BookingsReport = () => (
+const BookingsReport = ({ analytics }: { analytics: Analytics }) => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <MetricCard title="Total Bookings" value={mockAnalytics.bookings.total} />
+      <MetricCard title="Total Bookings" value={analytics.bookings.total} />
       <MetricCard
         title="Confirmed"
-        value={mockAnalytics.bookings.confirmed}
+        value={analytics.bookings.confirmed}
         trend="up"
       />
       <MetricCard
         title="Pending"
-        value={mockAnalytics.bookings.pending}
+        value={analytics.bookings.pending}
         trend="neutral"
       />
       <MetricCard
         title="Cancelled"
-        value={mockAnalytics.bookings.cancelled}
+        value={analytics.bookings.cancelled}
         trend="down"
       />
     </div>
 
     <SimpleChart
       title="Daily Booking Trend"
-      data={mockAnalytics.bookings.daily}
+      data={analytics.bookings.daily}
       xKey="date"
       yKey="bookings"
       height={250}
@@ -431,7 +358,7 @@ const BookingsReport = () => (
 
     <SimpleChart
       title="Peak Booking Hours"
-      data={mockAnalytics.timeAnalysis.busyHours}
+      data={analytics.timeAnalysis.busyHours}
       xKey="hour"
       yKey="bookings"
       height={300}
@@ -439,22 +366,22 @@ const BookingsReport = () => (
   </div>
 );
 
-const CustomersReport = () => (
+const CustomersReport = ({ analytics }: { analytics: Analytics }) => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <MetricCard
         title="Total Customers"
-        value={mockAnalytics.customers.total}
+        value={analytics.customers.total}
       />
       <MetricCard
         title="New Customers"
-        value={mockAnalytics.customers.new}
+        value={analytics.customers.new}
         trend="up"
       />
-      <MetricCard title="VIP Customers" value={mockAnalytics.customers.vip} />
+      <MetricCard title="VIP Customers" value={analytics.customers.vip} />
       <MetricCard
         title="Retention Rate"
-        value={mockAnalytics.customers.retention}
+        value={analytics.customers.retention}
         format="percentage"
         trend="up"
       />
@@ -463,7 +390,7 @@ const CustomersReport = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <SimpleChart
         title="Customer Acquisition"
-        data={mockAnalytics.customers.acquisition}
+        data={analytics.customers.acquisition}
         xKey="month"
         yKey="new"
         height={250}
@@ -477,8 +404,7 @@ const CustomersReport = () => (
             <span className="text-sm text-gray-600">Repeat Customers</span>
             <span className="text-sm font-medium text-gray-900">
               {Math.round(
-                (mockAnalytics.customers.returning /
-                  mockAnalytics.customers.total) *
+                (analytics.customers.returning / analytics.customers.total) *
                   100
               )}
               %
@@ -488,8 +414,7 @@ const CustomersReport = () => (
             <span className="text-sm text-gray-600">VIP Conversion Rate</span>
             <span className="text-sm font-medium text-gray-900">
               {Math.round(
-                (mockAnalytics.customers.vip / mockAnalytics.customers.total) *
-                  100
+                (analytics.customers.vip / analytics.customers.total) * 100
               )}
               %
             </span>
@@ -499,9 +424,7 @@ const CustomersReport = () => (
               Average Bookings per Customer
             </span>
             <span className="text-sm font-medium text-gray-900">
-              {(
-                mockAnalytics.bookings.total / mockAnalytics.customers.total
-              ).toFixed(1)}
+              {(analytics.bookings.total / analytics.customers.total).toFixed(1)}
             </span>
           </div>
         </div>
@@ -511,15 +434,248 @@ const CustomersReport = () => (
 );
 
 export default function ReportsAnalytics({ params }: ReportsProps) {
-  const [resolvedParams, setResolvedParams] = useState<{
-    tenant: string;
-  } | null>(null);
+  const tenant = params.tenant;
   const [activeReport, setActiveReport] = useState<ReportType>("overview");
   const [dateRange, setDateRange] = useState("last_30_days");
+  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<Analytics>({
+    revenue: { current: 0, previous: 0, growth: 0, target: 150000, monthly: [] },
+    bookings: { total: 0, confirmed: 0, pending: 0, cancelled: 0, completed: 0, growth: 0, daily: [] },
+    customers: { total: 0, new: 0, returning: 0, vip: 0, retention: 0, acquisition: [] },
+    rooms: { utilization: [] },
+    packages: { performance: [] },
+    timeAnalysis: { busyHours: [], seasonality: [] },
+  });
 
   useEffect(() => {
-    params.then(setResolvedParams);
-  }, [params]);
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data: tenantRow } = await supabase
+          .from("tenants")
+          .select("id")
+          .eq("slug", tenant)
+          .eq("active", true)
+          .single();
+        if (!tenantRow?.id) {
+          setAnalytics((a) => ({ ...a }));
+          return;
+        }
+
+        // Compute date range
+        const now = new Date();
+        let start = new Date(now);
+        if (dateRange === "last_7_days") start.setDate(now.getDate() - 6);
+        else if (dateRange === "last_30_days") start.setDate(now.getDate() - 29);
+        else if (dateRange === "last_90_days") start.setDate(now.getDate() - 89);
+        else if (dateRange === "this_year") start = new Date(now.getFullYear(), 0, 1);
+        else start.setDate(now.getDate() - 29);
+        const end = now;
+
+        // Fetch core data in parallel
+        const [paymentsRes, bookingsRes, customersRes, roomsRes, packagesRes] = await Promise.all([
+          supabase
+            .from("payments")
+            .select("id,booking_id,amount,status,created_at,tenant_id")
+            .eq("tenant_id", tenantRow.id)
+            .gte("created_at", start.toISOString())
+            .lte("created_at", end.toISOString()),
+          supabase
+            .from("bookings")
+            .select("id,status,start_time,room_id,package_id,customer_id,tenant_id")
+            .eq("tenant_id", tenantRow.id)
+            .gte("start_time", start.toISOString())
+            .lte("start_time", end.toISOString()),
+          supabase
+            .from("customers")
+            .select("id,created_at")
+            .eq("tenant_id", tenantRow.id),
+          supabase
+            .from("rooms")
+            .select("id,name")
+            .eq("tenant_id", tenantRow.id),
+          supabase
+            .from("packages")
+            .select("id,name,base_price")
+            .eq("tenant_id", tenantRow.id),
+        ]);
+
+        const payments = (paymentsRes.data || []).filter((p: any) => p.status === "completed");
+        const bookings = bookingsRes.data || [];
+        const customers = customersRes.data || [];
+        const roomMap = new Map((roomsRes.data || []).map((r: any) => [r.id, r.name]));
+        const packageMap = new Map((packagesRes.data || []).map((p: any) => [p.id, { name: p.name, base_price: p.base_price }]));
+
+        // Revenue current & previous period
+        const currentRevenue = payments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+        const periodDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        const prevStart = new Date(start);
+        prevStart.setDate(start.getDate() - periodDays);
+        const prevEnd = new Date(start);
+        const { data: prevPaymentsData } = await supabase
+          .from("payments")
+          .select("amount,status,created_at,tenant_id")
+          .eq("tenant_id", tenantRow.id)
+          .gte("created_at", prevStart.toISOString())
+          .lte("created_at", prevEnd.toISOString());
+        const previousRevenue = (prevPaymentsData || [])
+          .filter((p: any) => p.status === "completed")
+          .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+        const revenueGrowth = previousRevenue === 0 ? 100 : ((currentRevenue - previousRevenue) / previousRevenue) * 100;
+
+        // Monthly revenue (last 6 months incl current)
+        const monthly: { month: string; amount: number }[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
+          const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+          const { data } = await supabase
+            .from("payments")
+            .select("amount,status,created_at,tenant_id")
+            .eq("tenant_id", tenantRow.id)
+            .gte("created_at", mStart.toISOString())
+            .lte("created_at", mEnd.toISOString());
+          const amt = (data || [])
+            .filter((p: any) => p.status === "completed")
+            .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+          monthly.push({ month: mStart.toLocaleString("en-US", { month: "short" }), amount: amt });
+        }
+
+        // Booking stats
+        const total = bookings.length;
+        const byStatus = bookings.reduce((acc: Record<string, number>, b: any) => {
+          acc[b.status] = (acc[b.status] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        const confirmed = byStatus["confirmed"] || 0;
+        const pending = (byStatus["pending"] || 0) + (byStatus["pending_payment"] || 0);
+        const cancelled = byStatus["cancelled"] || 0;
+        const completed = byStatus["completed"] || 0;
+
+        // Daily booking trend (up to last 8 days of range)
+        const daily: { date: string; bookings: number }[] = [];
+        const days = Math.min(8, periodDays);
+        for (let i = days - 1; i >= 0; i--) {
+          const d = new Date(end);
+          d.setDate(end.getDate() - i);
+          const ds = d.toISOString().split("T")[0];
+          const count = bookings.filter((b: any) => new Date(b.start_time).toISOString().split("T")[0] === ds).length;
+          daily.push({ date: ds, bookings: count });
+        }
+
+        // Customers
+        const totalCustomers = customers.length;
+        const newCustomers = customers.filter((c: any) => c.created_at && new Date(c.created_at) >= start && new Date(c.created_at) <= end).length;
+        const returning = Math.max(0, totalCustomers - newCustomers);
+        const retention = totalCustomers ? Math.round((returning / totalCustomers) * 1000) / 10 : 0;
+        // Acquisition last 4 months (unique customers per month via bookings)
+        const acquisition: { month: string; new: number; returning: number }[] = [];
+        for (let i = 3; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const mStart = new Date(d.getFullYear(), d.getMonth(), 1);
+          const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+          const { data: mBookings } = await supabase
+            .from("bookings")
+            .select("customer_id,start_time,tenant_id")
+            .eq("tenant_id", tenantRow.id)
+            .gte("start_time", mStart.toISOString())
+            .lte("start_time", mEnd.toISOString());
+          const unique = new Set((mBookings || []).map((b: any) => b.customer_id));
+          acquisition.push({ month: mStart.toLocaleString("en-US", { month: "short" }), new: unique.size, returning: Math.max(0, unique.size - 1) });
+        }
+
+        // Room utilization and revenue by room
+        const bookingsByRoom = new Map<string, any[]>();
+        bookings.forEach((b: any) => {
+          const arr = bookingsByRoom.get(b.room_id) || [];
+          arr.push(b);
+          bookingsByRoom.set(b.room_id, arr);
+        });
+        const revenueByBookingId = payments.reduce((acc: Map<string, number>, p: any) => {
+          const curr = acc.get(p.booking_id) || 0;
+          acc.set(p.booking_id, curr + Number(p.amount || 0));
+          return acc;
+        }, new Map<string, number>());
+        const roomUtilization = Array.from(bookingsByRoom.entries()).map(([roomId, list]) => {
+          const bookingsCount = list.length;
+          const revenue = list.reduce((s: number, b: any) => s + (revenueByBookingId.get(b.id) || 0), 0);
+          return {
+            room: roomMap.get(roomId) || "Room",
+            bookings: bookingsCount,
+            revenue,
+            utilization: Math.min(100, Math.round((bookingsCount / Math.max(1, total)) * 100)),
+          };
+        });
+
+        // Package performance
+        const bookingsByPackage = new Map<string, any[]>();
+        bookings.forEach((b: any) => {
+          const arr = bookingsByPackage.get(b.package_id) || [];
+          arr.push(b);
+          bookingsByPackage.set(b.package_id, arr);
+        });
+        const packagePerformance = Array.from(bookingsByPackage.entries()).map(([pkgId, list]) => {
+          const revenue = list.reduce((s: number, b: any) => s + (revenueByBookingId.get(b.id) || 0), 0);
+          const base = packageMap.get(pkgId)?.base_price || 0;
+          const avgPrice = list.length ? Math.round((revenue || base * list.length) / list.length) : base;
+          return {
+            name: packageMap.get(pkgId)?.name || "Package",
+            bookings: list.length,
+            revenue,
+            popularity: Math.min(100, Math.round((list.length / Math.max(1, total)) * 100)),
+            avgPrice,
+          };
+        });
+
+        // Busy hours
+        const busyMap = new Map<string, number>();
+        bookings.forEach((b: any) => {
+          const dt = new Date(b.start_time);
+          const h = `${String(dt.getHours()).padStart(2, "0")}:00`;
+          busyMap.set(h, (busyMap.get(h) || 0) + 1);
+        });
+        const busyHours = Array.from(busyMap.entries())
+          .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+          .map(([hour, count]) => ({ hour, bookings: count }));
+
+        setAnalytics({
+          revenue: {
+            current: currentRevenue,
+            previous: previousRevenue,
+            growth: Math.round(revenueGrowth * 10) / 10,
+            target: 150000,
+            monthly,
+          },
+          bookings: {
+            total,
+            confirmed,
+            pending,
+            cancelled,
+            completed,
+            growth: 0,
+            daily,
+          },
+          customers: {
+            total: totalCustomers,
+            new: newCustomers,
+            returning,
+            vip: 0,
+            retention,
+            acquisition,
+          },
+          rooms: { utilization: roomUtilization },
+          packages: { performance: packagePerformance },
+          timeAnalysis: {
+            busyHours,
+            seasonality: [],
+          },
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [tenant, dateRange]);
 
   const reportTypes = [
     { id: "overview", label: "Overview", icon: "📊" },
@@ -535,7 +691,7 @@ export default function ReportsAnalytics({ params }: ReportsProps) {
     console.log("Exporting report:", activeReport);
   };
 
-  if (!resolvedParams) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -549,18 +705,18 @@ export default function ReportsAnalytics({ params }: ReportsProps) {
   const renderReport = () => {
     switch (activeReport) {
       case "overview":
-        return <OverviewReport />;
+        return <OverviewReport analytics={analytics} />;
       case "revenue":
-        return <RevenueReport />;
+        return <RevenueReport analytics={analytics} />;
       case "bookings":
-        return <BookingsReport />;
+        return <BookingsReport analytics={analytics} />;
       case "customers":
-        return <CustomersReport />;
+        return <CustomersReport analytics={analytics} />;
       case "rooms":
         return (
           <TableReport
             title="Room Performance Analysis"
-            data={mockAnalytics.rooms.utilization}
+            data={analytics.rooms.utilization}
             columns={[
               { key: "room", label: "Room Name" },
               { key: "bookings", label: "Total Bookings" },
@@ -581,7 +737,7 @@ export default function ReportsAnalytics({ params }: ReportsProps) {
         return (
           <TableReport
             title="Package Performance Analysis"
-            data={mockAnalytics.packages.performance}
+            data={analytics.packages.performance}
             columns={[
               { key: "name", label: "Package Name" },
               { key: "bookings", label: "Total Bookings" },
@@ -596,12 +752,12 @@ export default function ReportsAnalytics({ params }: ReportsProps) {
           />
         );
       default:
-        return <OverviewReport />;
+        return <OverviewReport analytics={analytics} />;
     }
   };
 
   return (
-    <AdminLayout tenant={resolvedParams.tenant}>
+    <AdminLayout tenant={tenant}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

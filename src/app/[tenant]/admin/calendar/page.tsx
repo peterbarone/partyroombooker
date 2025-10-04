@@ -1,93 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import AdminLayout from "../../../../components/AdminLayout";
+import { supabase } from "@/lib/supabase";
 
 interface CalendarProps {
-  params: Promise<{ tenant: string }>;
+  params: { tenant: string };
 }
 
-// Mock booking data for calendar display
-const mockCalendarBookings = [
-  {
-    id: "BK001",
-    title: "Sarah Johnson - Birthday Bash",
-    customerName: "Sarah Johnson",
-    date: "2025-10-03",
-    startTime: "14:00",
-    endTime: "16:00",
-    room: "Party Room A",
-    package: "Birthday Bash",
-    status: "confirmed",
-    kidsCount: 8,
-    color: "bg-green-500",
-  },
-  {
-    id: "BK002",
-    title: "Mike Chen - Ultimate Celebration",
-    customerName: "Mike Chen",
-    date: "2025-10-03",
-    startTime: "16:30",
-    endTime: "18:30",
-    room: "Sports Arena",
-    package: "Ultimate Celebration",
-    status: "pending_payment",
-    kidsCount: 14,
-    color: "bg-yellow-500",
-  },
-  {
-    id: "BK003",
-    title: "Lisa Rodriguez - Mini Party",
-    customerName: "Lisa Rodriguez",
-    date: "2025-10-04",
-    startTime: "11:00",
-    endTime: "13:00",
-    room: "Craft Corner",
-    package: "Mini Party",
-    status: "confirmed",
-    kidsCount: 5,
-    color: "bg-green-500",
-  },
-  {
-    id: "BK004",
-    title: "David Kim - Birthday Bash",
-    customerName: "David Kim",
-    date: "2025-10-05",
-    startTime: "15:00",
-    endTime: "17:00",
-    room: "Party Room B",
-    package: "Birthday Bash",
-    status: "cancelled",
-    kidsCount: 10,
-    color: "bg-red-500",
-  },
-  {
-    id: "BK005",
-    title: "Emma Wilson - Ultimate Celebration",
-    customerName: "Emma Wilson",
-    date: "2025-10-06",
-    startTime: "13:00",
-    endTime: "15:00",
-    room: "Party Room A",
-    package: "Ultimate Celebration",
-    status: "confirmed",
-    kidsCount: 12,
-    color: "bg-green-500",
-  },
-  {
-    id: "BK006",
-    title: "John Smith - Mini Party",
-    customerName: "John Smith",
-    date: "2025-10-07",
-    startTime: "10:00",
-    endTime: "12:00",
-    room: "Craft Corner",
-    package: "Mini Party",
-    status: "confirmed",
-    kidsCount: 6,
-    color: "bg-green-500",
-  },
-];
+type UIEvent = {
+  id: string;
+  title: string;
+  customerName: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
+  endTime: string; // HH:mm
+  room: string;
+  package: string;
+  status: string;
+  kidsCount: number;
+  color: string; // tailwind bg color
+};
 
 type CalendarView = "month" | "week" | "day";
 
@@ -176,8 +109,8 @@ const BookingEvent = ({
   booking,
   onClick,
 }: {
-  booking: (typeof mockCalendarBookings)[0];
-  onClick: (booking: (typeof mockCalendarBookings)[0]) => void;
+  booking: UIEvent;
+  onClick: (booking: UIEvent) => void;
 }) => {
   return (
     <div
@@ -198,8 +131,8 @@ const MonthView = ({
   onBookingClick,
 }: {
   currentDate: Date;
-  bookings: typeof mockCalendarBookings;
-  onBookingClick: (booking: (typeof mockCalendarBookings)[0]) => void;
+  bookings: UIEvent[];
+  onBookingClick: (booking: UIEvent) => void;
 }) => {
   const startOfMonth = new Date(
     currentDate.getFullYear(),
@@ -298,8 +231,8 @@ const WeekView = ({
   onBookingClick,
 }: {
   currentDate: Date;
-  bookings: typeof mockCalendarBookings;
-  onBookingClick: (booking: (typeof mockCalendarBookings)[0]) => void;
+  bookings: UIEvent[];
+  onBookingClick: (booking: UIEvent) => void;
 }) => {
   const startOfWeek = new Date(currentDate);
   startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
@@ -395,8 +328,8 @@ const DayView = ({
   onBookingClick,
 }: {
   currentDate: Date;
-  bookings: typeof mockCalendarBookings;
-  onBookingClick: (booking: (typeof mockCalendarBookings)[0]) => void;
+  bookings: UIEvent[];
+  onBookingClick: (booking: UIEvent) => void;
 }) => {
   const timeSlots = [];
   for (let hour = 9; hour <= 20; hour++) {
@@ -467,7 +400,7 @@ const BookingDetailModal = ({
   isOpen,
   onClose,
 }: {
-  booking: (typeof mockCalendarBookings)[0] | null;
+  booking: UIEvent | null;
   isOpen: boolean;
   onClose: () => void;
 }) => {
@@ -568,19 +501,94 @@ const BookingDetailModal = ({
 };
 
 export default function CalendarView({ params }: CalendarProps) {
-  const [resolvedParams, setResolvedParams] = useState<{
-    tenant: string;
-  } | null>(null);
+  const tenant = params.tenant;
+  const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>("month");
-  const [selectedBooking, setSelectedBooking] = useState<
-    (typeof mockCalendarBookings)[0] | null
-  >(null);
+  const [events, setEvents] = useState<UIEvent[]>([]);
+  const [selectedBooking, setSelectedBooking] = useState<UIEvent | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
+  // Load events around the current month (previous 1 week to next 6 weeks)
   useEffect(() => {
-    params.then(setResolvedParams);
-  }, [params]);
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data: tenantRow } = await supabase
+          .from("tenants")
+          .select("id")
+          .eq("slug", tenant)
+          .eq("active", true)
+          .single();
+        if (!tenantRow?.id) {
+          setEvents([]);
+          return;
+        }
+
+        const startRange = new Date(currentDate);
+        startRange.setDate(startRange.getDate() - 7);
+        const endRange = new Date(currentDate);
+        endRange.setDate(endRange.getDate() + 42);
+
+        const { data: raw } = await supabase
+          .from("bookings")
+          .select("id, customer_id, package_id, room_id, start_time, end_time, status, kids_count")
+          .eq("tenant_id", tenantRow.id)
+          .gte("start_time", startRange.toISOString())
+          .lte("start_time", endRange.toISOString());
+
+        const customerIds = Array.from(new Set((raw || []).map((b: any) => b.customer_id)));
+        const packageIds = Array.from(new Set((raw || []).map((b: any) => b.package_id)));
+        const roomIds = Array.from(new Set((raw || []).map((b: any) => b.room_id)));
+
+        const [customersRes, packagesRes, roomsRes] = await Promise.all([
+          customerIds.length ? supabase.from("customers").select("id,name").in("id", customerIds) : Promise.resolve({ data: [] as any[] }),
+          packageIds.length ? supabase.from("packages").select("id,name").in("id", packageIds) : Promise.resolve({ data: [] as any[] }),
+          roomIds.length ? supabase.from("rooms").select("id,name").in("id", roomIds) : Promise.resolve({ data: [] as any[] }),
+        ]);
+
+        const customers = new Map((customersRes.data || []).map((c: any) => [c.id, c.name]));
+        const packages = new Map((packagesRes.data || []).map((p: any) => [p.id, p.name]));
+        const rooms = new Map((roomsRes.data || []).map((r: any) => [r.id, r.name]));
+
+        const colorForStatus = (status: string) => {
+          if (status === "confirmed") return "bg-green-500";
+          if (status === "pending" || status === "pending_payment") return "bg-yellow-500";
+          if (status === "cancelled") return "bg-red-500";
+          return "bg-blue-500";
+        };
+
+        const mapped: UIEvent[] = (raw || []).map((b: any) => {
+          const start = new Date(b.start_time);
+          const end = new Date(b.end_time);
+          const date = start.toISOString().split("T")[0];
+          const startTime = `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`;
+          const endTime = `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`;
+          const customerName = customers.get(b.customer_id) || "Customer";
+          const pkgName = packages.get(b.package_id) || "Package";
+          const roomName = rooms.get(b.room_id) || "Room";
+          return {
+            id: b.id,
+            title: `${customerName} - ${pkgName}`,
+            customerName,
+            date,
+            startTime,
+            endTime,
+            room: roomName,
+            package: pkgName,
+            status: b.status,
+            kidsCount: Number(b.kids_count || 0),
+            color: colorForStatus(b.status),
+          };
+        });
+
+        setEvents(mapped);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [tenant, currentDate]);
 
   const navigatePrevious = () => {
     const newDate = new Date(currentDate);
@@ -610,12 +618,12 @@ export default function CalendarView({ params }: CalendarProps) {
     setCurrentDate(new Date());
   };
 
-  const handleBookingClick = (booking: (typeof mockCalendarBookings)[0]) => {
+  const handleBookingClick = (booking: UIEvent) => {
     setSelectedBooking(booking);
     setIsDetailModalOpen(true);
   };
 
-  if (!resolvedParams) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -627,7 +635,7 @@ export default function CalendarView({ params }: CalendarProps) {
   }
 
   return (
-    <AdminLayout tenant={resolvedParams.tenant}>
+    <AdminLayout tenant={tenant}>
       <div className="space-y-6">
         <CalendarHeader
           currentDate={currentDate}
@@ -658,21 +666,21 @@ export default function CalendarView({ params }: CalendarProps) {
         {view === "month" && (
           <MonthView
             currentDate={currentDate}
-            bookings={mockCalendarBookings}
+            bookings={events}
             onBookingClick={handleBookingClick}
           />
         )}
         {view === "week" && (
           <WeekView
             currentDate={currentDate}
-            bookings={mockCalendarBookings}
+            bookings={events}
             onBookingClick={handleBookingClick}
           />
         )}
         {view === "day" && (
           <DayView
             currentDate={currentDate}
-            bookings={mockCalendarBookings}
+            bookings={events}
             onBookingClick={handleBookingClick}
           />
         )}

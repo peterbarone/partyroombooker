@@ -14,7 +14,11 @@ Customers (parents/guardians) – want a simple online flow to choose date/time,
 2. Core Requirements
    Booking Flow
 
-Customer selects:
+Customer Steps to book a party:
+
+childs name
+
+childs age
 
 Date
 

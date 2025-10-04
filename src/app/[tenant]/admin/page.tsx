@@ -1,54 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AdminLayout from "../../../components/AdminLayout";
+import { supabase } from "@/lib/supabase";
 
 interface AdminDashboardProps {
-  params: Promise<{ tenant: string }>;
+  params: { tenant: string };
 }
 
-// Mock data - in production this would come from your database
-const mockStats = {
-  todayBookings: 5,
-  weekRevenue: 2450,
-  monthBookings: 23,
-  activeRooms: 4,
-  pendingPayments: 3,
-  upcomingEvents: 8,
+type RecentBooking = {
+  id: string;
+  customerName: string;
+  date: string;
+  time: string;
+  package: string;
+  room: string;
+  status: string;
+  amount: number; // deposit or total depending on your reporting; using deposit here if available
 };
-
-const mockRecentBookings = [
-  {
-    id: "BK001",
-    customerName: "Sarah Johnson",
-    date: "2025-10-03",
-    time: "2:00 PM",
-    package: "Birthday Bash",
-    room: "Party Room A",
-    status: "confirmed",
-    amount: 299,
-  },
-  {
-    id: "BK002",
-    customerName: "Mike Chen",
-    date: "2025-10-03",
-    time: "4:30 PM",
-    package: "Ultimate Celebration",
-    room: "Sports Arena",
-    status: "pending_payment",
-    amount: 459,
-  },
-  {
-    id: "BK003",
-    customerName: "Lisa Rodriguez",
-    date: "2025-10-04",
-    time: "11:00 AM",
-    package: "Mini Party",
-    room: "Craft Corner",
-    status: "confirmed",
-    amount: 199,
-  },
-];
 
 const StatCard = ({
   title,
@@ -90,11 +59,7 @@ const StatCard = ({
   );
 };
 
-const BookingRow = ({
-  booking,
-}: {
-  booking: (typeof mockRecentBookings)[0];
-}) => {
+const BookingRow = ({ booking }: { booking: RecentBooking }) => {
   const statusColors = {
     confirmed: "bg-green-100 text-green-800",
     pending_payment: "bg-yellow-100 text-yellow-800",
@@ -137,15 +102,154 @@ const BookingRow = ({
 };
 
 export default function AdminDashboard({ params }: AdminDashboardProps) {
-  const [resolvedParams, setResolvedParams] = useState<{
-    tenant: string;
-  } | null>(null);
+  const tenant = params.tenant;
+
+  const [loading, setLoading] = useState(true);
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    todayBookings: 0,
+    weekRevenue: 0,
+    monthBookings: 0,
+    activeRooms: 0,
+    pendingPayments: 0,
+    upcomingEvents: 0,
+  });
+  const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
 
   useEffect(() => {
-    params.then(setResolvedParams);
-  }, [params]);
+    const load = async () => {
+      try {
+        setLoading(true);
+        // resolve tenant id
+        const { data: tenantRow } = await supabase
+          .from("tenants")
+          .select("id")
+          .eq("slug", tenant)
+          .eq("active", true)
+          .single();
+        if (!tenantRow?.id) {
+          setLoading(false);
+          return;
+        }
+        setTenantId(tenantRow.id);
 
-  if (!resolvedParams) {
+        const now = new Date();
+        const startOfToday = new Date(now);
+        startOfToday.setHours(0, 0, 0, 0);
+        const endOfToday = new Date(now);
+        endOfToday.setHours(23, 59, 59, 999);
+
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - 7);
+
+        // today bookings count
+        const { data: todayBookings } = await supabase
+          .from("bookings")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantRow.id)
+          .gte("start_time", startOfToday.toISOString())
+          .lte("start_time", endOfToday.toISOString());
+
+        // month bookings count
+        const { data: monthBookings } = await supabase
+          .from("bookings")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantRow.id)
+          .gte("start_time", startOfMonth.toISOString());
+
+        // active rooms count
+        const { data: activeRooms } = await supabase
+          .from("rooms")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantRow.id)
+          .eq("active", true);
+
+        // pending payments count (bookings pending)
+        const { data: pendingBookings } = await supabase
+          .from("bookings")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantRow.id)
+          .eq("status", "pending");
+
+        // upcoming confirmed events next 7 days
+        const { data: upcoming } = await supabase
+          .from("bookings")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantRow.id)
+          .eq("status", "confirmed")
+          .gte("start_time", now.toISOString())
+          .lte("start_time", new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString());
+
+        // week revenue = sum of payments in last 7 days with status succeeded and type deposit
+        const { data: recentPayments } = await supabase
+          .from("payments")
+          .select("amount, status, type, created_at")
+          .eq("tenant_id", tenantRow.id)
+          .gte("created_at", startOfWeek.toISOString());
+        const weekRevenue = (recentPayments || [])
+          .filter((p: any) => (p.status === "succeeded" || p.status === "paid") && p.type === "deposit")
+          .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+
+        setStats({
+          todayBookings: (todayBookings as any)?.length ?? (todayBookings as any)?.count ?? 0,
+          monthBookings: (monthBookings as any)?.length ?? (monthBookings as any)?.count ?? 0,
+          activeRooms: (activeRooms as any)?.length ?? (activeRooms as any)?.count ?? 0,
+          pendingPayments: (pendingBookings as any)?.length ?? (pendingBookings as any)?.count ?? 0,
+          upcomingEvents: (upcoming as any)?.length ?? (upcoming as any)?.count ?? 0,
+          weekRevenue,
+        });
+
+        // recent bookings list (latest 10)
+        const { data: bookings } = await supabase
+          .from("bookings")
+          .select("id, customer_id, package_id, room_id, start_time, status, deposit_due")
+          .eq("tenant_id", tenantRow.id)
+          .order("start_time", { ascending: false })
+          .limit(10);
+
+        const customerIds = Array.from(new Set((bookings || []).map((b: any) => b.customer_id)));
+        const packageIds = Array.from(new Set((bookings || []).map((b: any) => b.package_id)));
+        const roomIds = Array.from(new Set((bookings || []).map((b: any) => b.room_id)));
+
+        const [customersRes, packagesRes, roomsRes] = await Promise.all([
+          customerIds.length
+            ? supabase.from("customers").select("id,name").in("id", customerIds)
+            : Promise.resolve({ data: [] as any[] }),
+          packageIds.length
+            ? supabase.from("packages").select("id,name").in("id", packageIds)
+            : Promise.resolve({ data: [] as any[] }),
+          roomIds.length
+            ? supabase.from("rooms").select("id,name").in("id", roomIds)
+            : Promise.resolve({ data: [] as any[] }),
+        ]);
+
+        const customersMap = new Map((customersRes.data || []).map((c: any) => [c.id, c.name]));
+        const packagesMap = new Map((packagesRes.data || []).map((p: any) => [p.id, p.name]));
+        const roomsMap = new Map((roomsRes.data || []).map((r: any) => [r.id, r.name]));
+
+        const recent: RecentBooking[] = (bookings || []).map((b: any) => {
+          const dt = new Date(b.start_time);
+          return {
+            id: b.id,
+            customerName: customersMap.get(b.customer_id) || "Customer",
+            date: dt.toISOString().split("T")[0],
+            time: dt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+            package: packagesMap.get(b.package_id) || "Package",
+            room: roomsMap.get(b.room_id) || "Room",
+            status: b.status,
+            amount: Number(b.deposit_due ?? 0),
+          };
+        });
+        setRecentBookings(recent);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [tenant]);
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -157,34 +261,34 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
   }
 
   return (
-    <AdminLayout tenant={resolvedParams.tenant}>
+    <AdminLayout tenant={tenant}>
       <div className="space-y-6">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Today's Bookings"
-            value={mockStats.todayBookings}
+            value={stats.todayBookings}
             icon="📅"
             trend="+2 from yesterday"
             color="blue"
           />
           <StatCard
             title="This Week Revenue"
-            value={`$${mockStats.weekRevenue.toLocaleString()}`}
+            value={`$${stats.weekRevenue.toLocaleString()}`}
             icon="💰"
             trend="+15% from last week"
             color="green"
           />
           <StatCard
             title="Monthly Bookings"
-            value={mockStats.monthBookings}
+            value={stats.monthBookings}
             icon="📊"
             trend="+8% from last month"
             color="purple"
           />
           <StatCard
             title="Active Rooms"
-            value={mockStats.activeRooms}
+            value={stats.activeRooms}
             icon="🏢"
             color="orange"
           />
@@ -264,7 +368,7 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {mockRecentBookings.map((booking) => (
+                {recentBookings.map((booking) => (
                   <BookingRow key={booking.id} booking={booking} />
                 ))}
               </tbody>
