@@ -55,7 +55,7 @@ const AdminSidebar = ({ tenant }: { tenant: string }) => {
     },
     {
       name: "Availability",
-      href: `/${tenant}/admin/availability`,
+      href: `/${tenant}/admin/slots`,
       icon: "⏰",
       description: "Slot Templates",
     },

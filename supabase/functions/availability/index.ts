@@ -1,17 +1,13 @@
-// Supabase Edge Function: availability
-// Runtime: Deno
-// Purpose: Return available time slots for a given tenant/date/package/kids
-// Response shape: Array<{ timeStart: string; timeEnd: string; rooms: Array<{ roomId: string; roomName: string; maxKids: number; eligible: boolean; available: boolean }> }>
+// Runtime: Deno (Supabase Edge Functions)
+// Purpose: Return available time slots for a given tenant/date (packageId, kids optional)
+// Response: Array<{
+//   timeStart: string;
+//   timeEnd: string;
+//   rooms: Array<{ roomId: string; roomName: string; maxKids: number; eligible: boolean; available: boolean }>;
+// }>
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
 
 // Helper: add minutes to ISO string
 function addMinutes(iso: string, minutes: number) {
@@ -20,90 +16,142 @@ function addMinutes(iso: string, minutes: number) {
   return d.toISOString();
 }
 
-serve(async (req) => {
-  try {
-    if (req.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
-    }
+function buildCorsHeaders(origin?: string | null) {
+  const allowOrigin =
+    origin && /^https?:\/\/(localhost:3000|127\.0\.0\.1:3000)$/i.test(origin)
+      ? origin
+      : "*";
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Max-Age": "86400",
+    Vary: "Origin",
+  } as Record<string, string>;
+}
 
-    const { tenantSlug, date, packageId, kids } = await req.json();
-    if (!tenantSlug || !date || !packageId || !kids) {
+Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req.headers.get("Origin"));
+
+  // Preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!SUPABASE_URL || !SERVICE_KEY) {
       return new Response(
-        JSON.stringify({ error: "Missing required body fields: tenantSlug, date, packageId, kids" }),
-        { status: 400 },
+        JSON.stringify({ error: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Resolve tenant
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
+      auth: { persistSession: false },
+    });
+
+    const { tenantSlug, date, packageId, kids } = await req.json();
+    if (!tenantSlug || !date) {
+      return new Response(
+        JSON.stringify({ error: "Missing required body fields: tenantSlug, date" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Tenant
     const { data: tenantRow, error: tenantErr } = await supabase
       .from("tenants")
-      .select("id, timezone")
+      .select("id, active, timezone")
       .eq("slug", tenantSlug)
-      .eq("active", true)
-      .single();
-    if (tenantErr || !tenantRow) throw tenantErr ?? new Error("tenant not found");
+      .maybeSingle();
+    if (tenantErr || !tenantRow || tenantRow.active === false) {
+      return new Response(JSON.stringify({ error: "tenant not found or inactive" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const tenantId = tenantRow.id as string;
 
-    const tenantId = tenantRow.id;
-
-    // Load tenant policies (buffer)
-    const { data: policy, error: polErr } = await supabase
+    // Policy (buffer)
+    const { data: policy } = await supabase
       .from("tenant_policies")
       .select("buffer_minutes")
       .eq("tenant_id", tenantId)
-      .single();
+      .maybeSingle();
     const bufferMinutes = Number(policy?.buffer_minutes ?? 30);
 
-    // Load package duration and eligibility
-    const { data: pkg, error: pkgErr } = await supabase
-      .from("packages")
-      .select("id, duration_min, duration_minutes")
-      .eq("tenant_id", tenantId)
-      .eq("id", packageId)
-      .single();
-    if (pkgErr || !pkg) throw pkgErr ?? new Error("package not found");
-    const durationMin: number = Number(pkg.duration_min ?? pkg.duration_minutes ?? 120);
+    // Package (optional)
+    let durationMin = 120;
+    let eligibleRoomIds: Set<string> | null = null;
+    if (packageId) {
+      const { data: pkg, error: pkgErr } = await supabase
+        .from("packages")
+        .select("id, duration_minutes")
+        .eq("tenant_id", tenantId)
+        .eq("id", packageId)
+        .maybeSingle();
+      if (pkgErr || !pkg) {
+        return new Response(JSON.stringify({ error: "package not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      durationMin = Number((pkg as any).duration_minutes ?? 120);
 
-    // Rooms eligible for this package
-    const { data: eligibleRooms, error: eligErr } = await supabase
-      .from("package_rooms")
-      .select("room_id")
-      .eq("tenant_id", tenantId)
-      .eq("package_id", packageId);
-    if (eligErr) throw eligErr;
-    const eligibleRoomIds = new Set((eligibleRooms ?? []).map((r: any) => r.room_id));
+      const { data: eligibleRooms, error: eligErr } = await supabase
+        .from("package_rooms")
+        .select("room_id")
+        .eq("tenant_id", tenantId)
+        .eq("package_id", packageId);
+      if (eligErr) throw eligErr;
+      eligibleRoomIds = new Set((eligibleRooms ?? []).map((r: any) => r.room_id));
+    }
 
-    // Load rooms for tenant (active and capacity >= kids)
-    const { data: rooms, error: roomErr } = await supabase
+    // Rooms (capacity optional)
+    let roomsQuery = supabase
       .from("rooms")
       .select("id, name, max_kids, active")
       .eq("tenant_id", tenantId)
-      .eq("active", true)
-      .gte("max_kids", kids);
+      .eq("active", true);
+    if (typeof kids === "number" && kids > 0) {
+      roomsQuery = roomsQuery.gte("max_kids", kids);
+    }
+    const { data: rooms, error: roomErr } = await roomsQuery;
     if (roomErr) throw roomErr;
 
-    // Load slot templates for date's day-of-week
-    const dow = new Date(date + "T00:00:00").getDay(); // 0..6
+    // Slot templates (schema: day_of_week, start_times_json)
+    const dow = new Date(`${date}T00:00:00`).getDay();
     const { data: slotsTemplate, error: slotErr } = await supabase
       .from("slot_templates")
-      .select("start_times")
+      .select("start_times_json, day_of_week")
       .eq("tenant_id", tenantId)
-      .eq("dow", dow)
+      .eq("day_of_week", dow)
       .maybeSingle();
+    if (slotErr) throw slotErr;
 
-    const startTimes: string[] = Array.isArray(slotsTemplate?.start_times) ? slotsTemplate!.start_times : [];
+    const startTimes: string[] = Array.isArray(slotsTemplate?.start_times_json)
+      ? (slotsTemplate!.start_times_json as string[])
+      : [];
 
-    // Build candidate slots as ISO ranges on the chosen date
     const slots = startTimes.map((start: string) => {
       const timeStart = new Date(`${date}T${start}:00`).toISOString();
       const timeEnd = addMinutes(timeStart, durationMin);
       return { timeStart, timeEnd };
     });
 
-    // Get existing bookings overlapping (with buffer) for that date
-    // We check all rooms at once to minimize roundtrips
+    // Bookings for the date
     const dayStart = new Date(`${date}T00:00:00`).toISOString();
     const dayEnd = new Date(`${date}T23:59:59`).toISOString();
-
     const { data: existingBookings, error: bookErr } = await supabase
       .from("bookings")
       .select("room_id, start_time, end_time, status")
@@ -116,14 +164,12 @@ serve(async (req) => {
       return new Date(aStart) < new Date(bEnd) && new Date(bStart) < new Date(aEnd);
     }
 
-    // Construct response with room eligibility and availability
     const response = slots.map(({ timeStart, timeEnd }) => {
       const timeStartWithBuffer = addMinutes(timeStart, -bufferMinutes);
       const timeEndWithBuffer = addMinutes(timeEnd, bufferMinutes);
 
       const roomsForSlot = (rooms ?? []).map((r: any) => {
-        const eligible = eligibleRoomIds.has(r.id);
-        // room is available if no existing booking overlaps the buffer-adjusted window
+        const eligible = eligibleRoomIds ? eligibleRoomIds.has(r.id) : true;
         const roomBookings = (existingBookings ?? []).filter((b: any) => b.room_id === r.id);
         const available = roomBookings.every((b: any) => {
           const bStart = addMinutes(b.start_time, -bufferMinutes);
@@ -143,10 +189,14 @@ serve(async (req) => {
     });
 
     return new Response(JSON.stringify(response), {
-      headers: { "Content-Type": "application/json" },
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error("availability error", error);
-    return new Response(JSON.stringify({ error: String(error) }), { status: 500 });
+  } catch (err) {
+    console.error("availability error", err);
+    return new Response(JSON.stringify({ error: String(err) }), {
+      status: 500,
+      headers: { ...buildCorsHeaders(req.headers.get("Origin")), "Content-Type": "application/json" },
+    });
   }
 });

@@ -63,7 +63,9 @@ interface Addon {
   name: string;
   description: string;
   price: number;
-  category: string;
+  unit?: string | null;
+  taxable?: boolean;
+  category?: string | null;
 }
 
 interface BookingData {
@@ -98,10 +100,13 @@ const STEPS = [
   "child-name",
   "child-age",
   "party-date",
-  "package-choice",
-  "guest-count",
+  // Option A: show availability immediately after date
   "time-slot",
   "room-choice",
+  // Choose package after room
+  "package-choice",
+  // Then guest count and the rest
+  "guest-count",
   "add-ons",
   "parent-info",
   "special-notes",
@@ -176,7 +181,7 @@ export default function FamilyFunBookingWizard({
         // Load packages (map to UI shape)
         const { data: packagesData } = await supabase
           .from("packages")
-          .select("id,name,description,base_price,base_kids,extra_kid_price,duration_min,duration_minutes,includes_json")
+          .select("id,name,description,base_price,base_kids,extra_kid_price,duration_minutes,includes_json,active")
           .eq("tenant_id", tenantRow.id)
           .eq("active", true);
 
@@ -190,12 +195,12 @@ export default function FamilyFunBookingWizard({
         // Load addons
         const { data: addonsData } = await supabase
           .from("addons")
-          .select("id,name,description,price,category,active")
+          .select("id,name,description,unit,price,price_cents,taxable,active")
           .eq("tenant_id", tenantRow.id)
           .eq("active", true);
 
         const mappedPackages: Package[] = (packagesData || []).map((p: any) => {
-          const minutes = p.duration_min ?? p.duration_minutes ?? 120;
+          const minutes = p.duration_minutes ?? 120;
           let includes: string[] | undefined = undefined;
           if (Array.isArray(p.includes_json)) {
             includes = p.includes_json;
@@ -223,7 +228,15 @@ export default function FamilyFunBookingWizard({
 
         setPackages(mappedPackages);
         setRooms(mappedRooms);
-        setAddons(addonsData || []);
+        const mappedAddons: Addon[] = (addonsData || []).map((a: any) => ({
+          id: a.id,
+          name: a.name,
+          description: a.description ?? "",
+          price: a.price ?? (a.price_cents ? a.price_cents / 100 : 0),
+          unit: a.unit ?? null,
+          taxable: a.taxable ?? false,
+        }));
+        setAddons(mappedAddons);
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
@@ -234,11 +247,9 @@ export default function FamilyFunBookingWizard({
     loadData();
   }, [tenant]);
 
-  // Fetch availability when date/package/guestCount are set and when entering time-slot step
+  // Fetch availability as soon as a date is chosen (Option A)
   useEffect(() => {
-    const needsAvailability =
-      bookingData.selectedDate && bookingData.selectedPackage && bookingData.guestCount > 0;
-    if (!needsAvailability) return;
+    if (!bookingData.selectedDate) return;
 
     const fetchAvailability = async () => {
       try {
@@ -246,6 +257,7 @@ export default function FamilyFunBookingWizard({
           body: {
             tenantSlug: tenant,
             date: bookingData.selectedDate,
+            // packageId and kids are optional in Option A
             packageId: bookingData.selectedPackage?.id,
             kids: bookingData.guestCount,
           },
@@ -263,7 +275,7 @@ export default function FamilyFunBookingWizard({
     };
 
     fetchAvailability();
-  }, [tenant, bookingData.selectedDate, bookingData.selectedPackage, bookingData.guestCount]);
+  }, [tenant, bookingData.selectedDate]);
 
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
@@ -650,12 +662,10 @@ export default function FamilyFunBookingWizard({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {(availableRoomsForSelectedSlot
-          ? availableRoomsForSelectedSlot.filter(r => r.available && r.eligible && r.maxKids >= (bookingData.guestCount || 0)).map(r => ({
-              id: r.roomId,
-              name: r.roomName,
-              max_kids: r.maxKids,
-            }))
-          : rooms.filter(r => r.max_kids >= (bookingData.guestCount || 0))
+          ? availableRoomsForSelectedSlot
+              .filter(r => r.available && r.eligible)
+              .map(r => ({ id: r.roomId, name: r.roomName, max_kids: r.maxKids }))
+          : rooms
         ).map((room) => (
           <motion.div
             key={room.id}
