@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface BlackoutsPageProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type UIBlackout = {
   id: string;
@@ -16,8 +15,9 @@ type UIBlackout = {
   active: boolean;
 };
 
-export default function BlackoutsPage({ params }: BlackoutsPageProps) {
-  const tenant = params.tenant;
+export default function BlackoutsPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

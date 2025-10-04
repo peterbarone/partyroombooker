@@ -88,6 +88,122 @@ const StatusBadge = ({
 };
 
 /* =======================
+ * Edit Package Modal
+ * ======================= */
+
+const EditPackageModal = ({
+  isOpen,
+  onClose,
+  pkg,
+  onUpdated,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  pkg: UIPackage | null;
+  onUpdated: () => void;
+}) => {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [durationHours, setDurationHours] = useState<number>(2);
+  const [maxGuests, setMaxGuests] = useState<number>(10);
+  const [basePrice, setBasePrice] = useState<number>(0);
+  const [active, setActive] = useState<boolean>(true);
+  const [includesText, setIncludesText] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (pkg) {
+      setName(pkg.name || "");
+      setDescription(pkg.description || "");
+      setDurationHours(Number(pkg.duration || 2));
+      setMaxGuests(Number(pkg.maxGuests || 0));
+      setBasePrice(Number(pkg.basePrice || 0));
+      setActive(pkg.status === "active");
+      setIncludesText((pkg.includes || []).join("\n"));
+    }
+  }, [pkg]);
+
+  const submit = async () => {
+    if (!pkg) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("packages")
+        .update({
+          name,
+          description: description || null,
+          duration_minutes: Math.max(60, Math.round(durationHours * 60)),
+          base_kids: maxGuests,
+          base_price: basePrice,
+          active,
+          includes_json: includesText
+            .split(/\r?\n/)
+            .map((s) => s.trim())
+            .filter(Boolean),
+        })
+        .eq("id", pkg.id);
+      if (error) throw error;
+      onUpdated();
+      onClose();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to update package.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen || !pkg) return null;
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Edit Package</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="px-6 py-4 space-y-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Description</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-20" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Duration (hours)</label>
+              <input type="number" min={1} value={durationHours} onChange={(e) => setDurationHours(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Max Guests</label>
+              <input type="number" min={0} value={maxGuests} onChange={(e) => setMaxGuests(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Base Price</label>
+            <input type="number" min={0} step={1} value={basePrice} onChange={(e) => setBasePrice(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Includes (one per line)</label>
+            <textarea value={includesText} onChange={(e) => setIncludesText(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-24" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <input id="pkgActiveEdit" type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
+            <label htmlFor="pkgActiveEdit" className="text-sm text-gray-700">Active</label>
+          </div>
+          <div>
+            <button onClick={submit} disabled={saving || !name} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50">
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* =======================
  * Create Room Modal
  * ======================= */
 
@@ -687,6 +803,7 @@ export default function RoomManagement({ params }: RoomManagementProps) {
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
   const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
   const [isEditRoomOpen, setIsEditRoomOpen] = useState(false);
+  const [isEditPackageOpen, setIsEditPackageOpen] = useState(false);
 
   // Initial load
   useEffect(() => {
@@ -837,6 +954,73 @@ export default function RoomManagement({ params }: RoomManagementProps) {
     }
   };
 
+  // Reload packages (after edit)
+  const reloadPackages = async () => {
+    setLoading(true);
+    try {
+      const { data: tenantRow } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("slug", tenant)
+        .eq("active", true)
+        .single();
+      if (!tenantRow?.id) {
+        setPackages([]);
+        setFilteredPackages([]);
+        return;
+      }
+      const [{ data: packagesData, error: pkgErr }, { data: mappings }] = await Promise.all([
+        supabase
+          .from("packages")
+          .select(
+            "id,name,description,base_price,base_kids,duration_min,duration_minutes,includes_json,active"
+          )
+          .eq("tenant_id", tenantRow.id),
+        supabase
+          .from("package_rooms")
+          .select("package_id,room_id")
+          .eq("tenant_id", tenantRow.id),
+      ]);
+      if (pkgErr) throw pkgErr;
+
+      const packageToRooms = new Map<string, string[]>();
+      (mappings || []).forEach((m: any) => {
+        const arr = packageToRooms.get(m.package_id) || [];
+        arr.push(m.room_id);
+        packageToRooms.set(m.package_id, arr);
+      });
+
+      const mappedPkgs: UIPackage[] = (packagesData || []).map((p: any) => {
+        const minutes = Number(p?.duration_min ?? p?.duration_minutes ?? 120);
+        let includes: string[] = [];
+        if (Array.isArray(p?.includes_json)) includes = p.includes_json;
+        else if (p?.includes_json?.includes) includes = p.includes_json.includes;
+        return {
+          id: p.id,
+          name: p.name,
+          description: p.description || "",
+          duration: Math.max(1, Math.round(minutes / 60)),
+          maxGuests: Number(p.base_kids || 0),
+          basePrice: Number(p.base_price || 0),
+          includes,
+          addOns: [],
+          availableRooms: packageToRooms.get(p.id) || [],
+          status: p.active ? "active" : "inactive",
+          bookingCount: 0,
+          revenue: 0,
+          popularity: 0,
+        };
+      });
+      setPackages(mappedPkgs);
+      setFilteredPackages(mappedPkgs);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to reload packages.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filters
   useEffect(() => {
     let filtered = [...rooms];
@@ -885,6 +1069,11 @@ export default function RoomManagement({ params }: RoomManagementProps) {
   const handlePackageView = (pkg: UIPackage) => {
     setSelectedPackage(pkg);
     setIsPackageModalOpen(true);
+  };
+
+  const handlePackageEdit = (pkg: UIPackage) => {
+    setSelectedPackage(pkg);
+    setIsEditPackageOpen(true);
   };
 
   const handleRoomEdit = (room: UIRoom) => {
@@ -1000,7 +1189,7 @@ export default function RoomManagement({ params }: RoomManagementProps) {
             <PackageCard
               key={pkg.id}
               pkg={pkg}
-              onEdit={() => alert("Edit package not implemented")}
+              onEdit={handlePackageEdit}
               onViewDetails={handlePackageView}
             />
           ))}
@@ -1023,7 +1212,15 @@ export default function RoomManagement({ params }: RoomManagementProps) {
         onClose={() => setIsPackageModalOpen(false)}
       />
 
-      {/* Create / Edit Modals */}
+      {/* Edit Package Modal */}
+      <EditPackageModal
+        isOpen={isEditPackageOpen}
+        onClose={() => setIsEditPackageOpen(false)}
+        pkg={selectedPackage}
+        onUpdated={reloadPackages}
+      />
+
+      {/* Create / Edit Room Modals */}
       <CreateRoomModal
         tenant={tenant}
         isOpen={isCreateRoomOpen}

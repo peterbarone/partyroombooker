@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface CalendarProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type UIEvent = {
   id: string;
@@ -500,8 +499,9 @@ const BookingDetailModal = ({
   );
 };
 
-export default function CalendarView({ params }: CalendarProps) {
-  const tenant = params.tenant;
+export default function CalendarView() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>("month");

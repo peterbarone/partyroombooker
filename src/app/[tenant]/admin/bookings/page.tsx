@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface BookingManagementProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type UIBooking = {
   id: string;
@@ -148,10 +147,9 @@ const BookingDetailModal = ({
   onClose: () => void;
   onUpdated: () => void;
 }) => {
-  if (!isOpen || !booking) return null;
-
-  const [status, setStatus] = useState<string>(booking.status);
-  const [notes, setNotes] = useState<string>(booking.notes || "");
+  // Hooks must be called unconditionally at top level
+  const [status, setStatus] = useState<string>("confirmed");
+  const [notes, setNotes] = useState<string>("");
 
   useEffect(() => {
     if (booking) {
@@ -159,6 +157,8 @@ const BookingDetailModal = ({
       setNotes(booking.notes || "");
     }
   }, [booking]);
+
+  if (!isOpen || !booking) return null;
 
   const saveChanges = async () => {
     await supabase
@@ -547,8 +547,9 @@ const CreateBookingModal = ({
   );
 };
 
-export default function BookingManagement({ params }: BookingManagementProps) {
-  const tenant = params.tenant;
+export default function BookingManagement() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<UIBooking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<UIBooking[]>([]);

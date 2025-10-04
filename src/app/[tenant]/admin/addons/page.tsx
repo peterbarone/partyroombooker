@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface AddonsPageProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in a client component
 
 type UIAddon = {
   id: string;
@@ -18,8 +17,9 @@ type UIAddon = {
   active: boolean;
 };
 
-export default function AddonsPage({ params }: AddonsPageProps) {
-  const tenant = params.tenant;
+export default function AddonsPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
 
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

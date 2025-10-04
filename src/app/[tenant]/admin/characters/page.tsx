@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface CharactersPageProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type UICharacter = {
   id: string;
@@ -16,8 +15,9 @@ type UICharacter = {
   is_active: boolean;
 };
 
-export default function CharactersPage({ params }: CharactersPageProps) {
-  const tenant = params.tenant;
+export default function CharactersPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
 
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

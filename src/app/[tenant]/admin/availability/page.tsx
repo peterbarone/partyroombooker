@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface AvailabilityPageProps {
-  params: { tenant: string };
-}
+// params are accessed with useParams() in client components
 
 type TemplateRow = {
   id: string;
@@ -44,8 +43,9 @@ function toTimesInput(arr: any): string {
   }
 }
 
-export default function AvailabilityPage({ params }: AvailabilityPageProps) {
-  const tenant = params.tenant;
+export default function AvailabilityPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
   const [tenantId, setTenantId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
