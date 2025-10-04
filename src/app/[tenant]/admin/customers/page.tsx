@@ -244,10 +244,12 @@ const CustomerRow = ({
   customer,
   onEdit,
   onViewDetails,
+  onDelete,
 }: {
   customer: UICustomer;
   onEdit: (customer: UICustomer) => void;
   onViewDetails: (customer: UICustomer) => void;
+  onDelete: (customer: UICustomer) => void;
 }) => {
   return (
     <tr className="hover:bg-gray-50">
@@ -304,9 +306,164 @@ const CustomerRow = ({
           >
             Edit
           </button>
+          <button
+            onClick={() => onDelete(customer)}
+            className="text-red-600 hover:text-red-900"
+          >
+            Delete
+          </button>
         </div>
       </td>
     </tr>
+  );
+};
+
+// Create Customer Modal
+const CreateCustomerModal = ({
+  tenant,
+  isOpen,
+  onClose,
+  onCreated,
+}: {
+  tenant: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}) => {
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const load = async () => {
+      const { data: t } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("slug", tenant)
+        .eq("active", true)
+        .single();
+      setTenantId(t?.id || null);
+    };
+    load();
+  }, [isOpen, tenant]);
+
+  const submit = async () => {
+    if (!tenantId || !name) return;
+    setSaving(true);
+    try {
+      await supabase
+        .from("customers")
+        .insert({ tenant_id: tenantId, name, email: email || null, phone: phone || null });
+      onCreated();
+      onClose();
+      setName("");
+      setEmail("");
+      setPhone("");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Add Customer</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="px-6 py-4 space-y-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Full Name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Phone</label>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <button onClick={submit} disabled={saving || !name} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">{saving ? "Saving..." : "Create"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Edit Customer Modal
+const EditCustomerModal = ({
+  isOpen,
+  onClose,
+  customer,
+  onUpdated,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  customer: UICustomer | null;
+  onUpdated: () => void;
+}) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (customer) {
+      setName(`${customer.firstName} ${customer.lastName}`.trim());
+      setEmail(customer.email || "");
+      setPhone(customer.phone || "");
+    }
+  }, [customer]);
+
+  const submit = async () => {
+    if (!customer) return;
+    setSaving(true);
+    try {
+      await supabase
+        .from("customers")
+        .update({ name, email: email || null, phone: phone || null })
+        .eq("id", customer.id);
+      onUpdated();
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen || !customer) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Edit Customer</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="px-6 py-4 space-y-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Full Name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Phone</label>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <button onClick={submit} disabled={saving || !name} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50">{saving ? "Saving..." : "Save"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -621,6 +778,8 @@ export default function CustomerManagement({ params }: CustomerManagementProps) 
     null
   );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -765,7 +924,99 @@ export default function CustomerManagement({ params }: CustomerManagementProps) 
   };
 
   const handleEdit = (customer: UICustomer) => {
-    console.log("Edit customer:", customer.id);
+    setSelectedCustomer(customer);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = async (customer: UICustomer) => {
+    await supabase.from("customers").delete().eq("id", customer.id);
+    await reload();
+  };
+
+  const reload = async () => {
+    setLoading(true);
+    try {
+      const { data: tenantRow } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("slug", tenant)
+        .eq("active", true)
+        .single();
+      if (!tenantRow?.id) {
+        setCustomers([]);
+        setFilteredCustomers([]);
+        return;
+      }
+      const { data: custs } = await supabase
+        .from("customers")
+        .select("id,name,email,phone")
+        .eq("tenant_id", tenantRow.id)
+        .order("name", { ascending: true });
+      const customerIds = (custs || []).map((c: any) => c.id);
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("id,customer_id,package_id,room_id,start_time,status,deposit_due,kids_count")
+        .eq("tenant_id", tenantRow.id)
+        .in("customer_id", customerIds);
+      const pkgIds = Array.from(new Set((bookings || []).map((b: any) => b.package_id)));
+      const roomIds = Array.from(new Set((bookings || []).map((b: any) => b.room_id)));
+      const [packagesRes, roomsRes] = await Promise.all([
+        pkgIds.length ? supabase.from("packages").select("id,name").in("id", pkgIds) : Promise.resolve({ data: [] as any[] }),
+        roomIds.length ? supabase.from("rooms").select("id,name").in("id", roomIds) : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const pkgMap = new Map((packagesRes.data || []).map((p: any) => [p.id, p.name]));
+      const roomMap = new Map((roomsRes.data || []).map((r: any) => [r.id, r.name]));
+      const byCustomer = new Map<string, any[]>();
+      (bookings || []).forEach((b: any) => {
+        const arr = byCustomer.get(b.customer_id) || [];
+        arr.push(b);
+        byCustomer.set(b.customer_id, arr);
+      });
+      const ui: UICustomer[] = (custs || []).map((c: any) => {
+        const [firstName, ...rest] = String(c.name || "Customer").split(" ");
+        const lastName = rest.join(" ");
+        const list = byCustomer.get(c.id) || [];
+        const totalBookings = list.length;
+        const lastBooking = list.length
+          ? new Date(Math.max(...list.map((b: any) => new Date(b.start_time).getTime())))
+              .toISOString()
+              .split("T")[0]
+          : "";
+        const status = totalBookings > 0 ? "active" : "inactive";
+        const bookingHistory = list.slice(0, 5).map((b: any) => ({
+          id: b.id,
+          date: new Date(b.start_time).toISOString().split("T")[0],
+          package: pkgMap.get(b.package_id) || "Package",
+          room: roomMap.get(b.room_id) || "Room",
+          amount: Number(b.deposit_due || 0) * 2,
+          status: b.status,
+          kidsCount: Number(b.kids_count || 0),
+        }));
+        return {
+          id: c.id,
+          firstName,
+          lastName,
+          email: c.email,
+          phone: c.phone,
+          address: "",
+          dateOfBirth: "",
+          joinDate: "",
+          totalBookings,
+          totalSpent: bookingHistory.reduce((s: number, x: any) => s + x.amount, 0),
+          lastBooking,
+          status,
+          loyaltyPoints: 0,
+          notes: "",
+          emergencyContact: "",
+          bookingHistory,
+          communications: [],
+        } as UICustomer;
+      });
+      setCustomers(ui);
+      setFilteredCustomers(ui);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -787,7 +1038,7 @@ export default function CustomerManagement({ params }: CustomerManagementProps) 
           <h1 className="text-2xl font-bold text-gray-900">
             Customer Management
           </h1>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <button onClick={() => setIsCreateOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
             + Add Customer
           </button>
         </div>
@@ -893,6 +1144,7 @@ export default function CustomerManagement({ params }: CustomerManagementProps) 
                     customer={customer}
                     onEdit={handleEdit}
                     onViewDetails={handleViewDetails}
+                    onDelete={handleDelete}
                   />
                 ))}
               </tbody>
@@ -914,6 +1166,22 @@ export default function CustomerManagement({ params }: CustomerManagementProps) 
         customer={selectedCustomer}
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
+      />
+
+      {/* Create Customer Modal */}
+      <CreateCustomerModal
+        tenant={tenant}
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onCreated={reload}
+      />
+
+      {/* Edit Customer Modal */}
+      <EditCustomerModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        customer={selectedCustomer}
+        onUpdated={reload}
       />
     </AdminLayout>
   );

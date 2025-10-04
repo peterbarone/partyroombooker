@@ -68,10 +68,12 @@ const BookingRow = ({
   booking,
   onEdit,
   onViewDetails,
+  onDelete,
 }: {
   booking: UIBooking;
   onEdit: (booking: UIBooking) => void;
   onViewDetails: (booking: UIBooking) => void;
+  onDelete: (booking: UIBooking) => void;
 }) => {
   return (
     <tr className="hover:bg-gray-50">
@@ -121,6 +123,12 @@ const BookingRow = ({
           >
             Edit
           </button>
+          <button
+            onClick={() => onDelete(booking)}
+            className="text-red-600 hover:text-red-900"
+          >
+            Delete
+          </button>
         </div>
       </td>
     </tr>
@@ -132,13 +140,34 @@ const BookingDetailModal = ({
   addons,
   isOpen,
   onClose,
+  onUpdated,
 }: {
   booking: UIBooking | null;
   addons: UIAddonLine[];
   isOpen: boolean;
   onClose: () => void;
+  onUpdated: () => void;
 }) => {
   if (!isOpen || !booking) return null;
+
+  const [status, setStatus] = useState<string>(booking.status);
+  const [notes, setNotes] = useState<string>(booking.notes || "");
+
+  useEffect(() => {
+    if (booking) {
+      setStatus(booking.status);
+      setNotes(booking.notes || "");
+    }
+  }, [booking]);
+
+  const saveChanges = async () => {
+    await supabase
+      .from("bookings")
+      .update({ status, notes: notes || null })
+      .eq("id", booking.id);
+    onUpdated();
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -223,7 +252,16 @@ const BookingDetailModal = ({
                 <label className="block text-sm font-medium text-gray-700">
                   Status
                 </label>
-                <StatusBadge status={booking.status} />
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="mt-1 px-2 py-1 border border-gray-300 rounded"
+                >
+                  <option value="confirmed">Confirmed</option>
+                  <option value="pending_payment">Pending Payment</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="completed">Completed</option>
+                </select>
               </div>
             </div>
           </div>
@@ -266,9 +304,13 @@ const BookingDetailModal = ({
             <h3 className="text-lg font-medium text-gray-900 mb-3">
               Special Notes
             </h3>
-            <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">
-              {booking.notes || "No special notes"}
-            </p>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full text-sm text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-200"
+              rows={3}
+              placeholder="Add notes..."
+            />
           </div>
 
           {/* Add-ons */}
@@ -315,11 +357,188 @@ const BookingDetailModal = ({
             <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
               Send Confirmation Email
             </button>
-            <button className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-              Mark as Paid
+            <button
+              onClick={saveChanges}
+              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Save Changes
             </button>
             <button className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">
               Print Details
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Create Booking Modal
+const CreateBookingModal = ({
+  tenant,
+  isOpen,
+  onClose,
+  onCreated,
+}: {
+  tenant: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}) => {
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [customerId, setCustomerId] = useState<string>("");
+  const [pkgId, setPkgId] = useState<string>("");
+  const [roomId, setRoomId] = useState<string>("");
+  const [date, setDate] = useState<string>("");
+  const [time, setTime] = useState<string>("");
+  const [kids, setKids] = useState<number>(10);
+  const [status, setStatus] = useState<string>("confirmed");
+  const [notes, setNotes] = useState<string>("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data: t } = await supabase
+          .from("tenants")
+          .select("id")
+          .eq("slug", tenant)
+          .eq("active", true)
+          .single();
+        if (!t?.id) return;
+        setTenantId(t.id);
+        const [cRes, pRes, rRes] = await Promise.all([
+          supabase.from("customers").select("id,name,email").eq("tenant_id", t.id).order("created_at", { ascending: false }).limit(200),
+          supabase.from("packages").select("id,name,duration_minutes").eq("tenant_id", t.id).eq("active", true).order("name"),
+          supabase.from("rooms").select("id,name").eq("tenant_id", t.id).eq("active", true).order("name"),
+        ]);
+        setCustomers(cRes.data || []);
+        setPackages(pRes.data || []);
+        setRooms(rRes.data || []);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [isOpen, tenant]);
+
+  const submit = async () => {
+    if (!tenantId || !customerId || !pkgId || !roomId || !date || !time) return;
+    setSaving(true);
+    try {
+      const pkg = packages.find((p) => p.id === pkgId);
+      const duration = Number(pkg?.duration_minutes || 120);
+      const start = new Date(`${date}T${time}:00`);
+      const end = new Date(start.getTime() + duration * 60000);
+      await supabase.from("bookings").insert({
+        tenant_id: tenantId,
+        customer_id: customerId,
+        package_id: pkgId,
+        room_id: roomId,
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
+        kids_count: kids,
+        status,
+        notes: notes || null,
+      });
+      onCreated();
+      onClose();
+      // reset
+      setCustomerId("");
+      setPkgId("");
+      setRoomId("");
+      setDate("");
+      setTime("");
+      setKids(10);
+      setStatus("confirmed");
+      setNotes("");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-gray-900">New Booking</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="px-6 py-4 space-y-4">
+          {loading ? (
+            <p className="text-gray-600">Loading...</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Customer</label>
+                <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                  <option value="">Select customer</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name || c.email || c.id}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Package</label>
+                <select value={pkgId} onChange={(e) => setPkgId(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                  <option value="">Select package</option>
+                  {packages.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Room</label>
+                <select value={roomId} onChange={(e) => setRoomId(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                  <option value="">Select room</option>
+                  {rooms.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Date</label>
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Time</label>
+                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Kids</label>
+                <input type="number" value={kids} onChange={(e) => setKids(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                  <option value="confirmed">Confirmed</option>
+                  <option value="pending_payment">Pending Payment</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">Notes</label>
+                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+              </div>
+            </div>
+          )}
+          <div className="pt-2">
+            <button
+              onClick={submit}
+              disabled={saving || !customerId || !pkgId || !roomId || !date || !time}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Create Booking"}
             </button>
           </div>
         </div>
@@ -338,6 +557,7 @@ export default function BookingManagement({ params }: BookingManagementProps) {
   const [selectedBooking, setSelectedBooking] = useState<UIBooking | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [bookingAddons, setBookingAddons] = useState<UIAddonLine[]>([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -499,8 +719,82 @@ export default function BookingManagement({ params }: BookingManagementProps) {
   }, [isDetailModalOpen, selectedBooking]);
 
   const handleEdit = (booking: UIBooking) => {
-    // In a real app, this would open an edit modal or navigate to edit page
-    console.log("Edit booking:", booking.id);
+    setSelectedBooking(booking);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleDelete = async (booking: UIBooking) => {
+    await supabase.from("bookings").delete().eq("id", booking.id);
+    // reload
+    const b = bookings.filter((x) => x.id !== booking.id);
+    setBookings(b);
+    setFilteredBookings(b);
+  };
+
+  const reloadAfterChange = async () => {
+    // simple reload by re-running the effect body
+    // trigger through tenant dependency by toggling a local flag if needed
+    // For simplicity, call load logic inline:
+    const { data: tenantRow } = await supabase
+      .from("tenants")
+      .select("id")
+      .eq("slug", tenant)
+      .eq("active", true)
+      .single();
+    if (!tenantRow?.id) return;
+    const { data: rawBookings } = await supabase
+      .from("bookings")
+      .select("id, customer_id, package_id, room_id, start_time, end_time, kids_count, status, deposit_due, notes, created_at")
+      .eq("tenant_id", tenantRow.id)
+      .order("start_time", { ascending: false })
+      .limit(100);
+    const customerIds = Array.from(new Set((rawBookings || []).map(b => b.customer_id)));
+    const packageIds = Array.from(new Set((rawBookings || []).map(b => b.package_id)));
+    const roomIds = Array.from(new Set((rawBookings || []).map(b => b.room_id)));
+    const [customersRes, packagesRes, roomsRes, paymentsRes] = await Promise.all([
+      customerIds.length ? supabase.from("customers").select("id,name,email,phone").in("id", customerIds) : Promise.resolve({ data: [] as any[] }),
+      packageIds.length ? supabase.from("packages").select("id,name,duration_min,duration_minutes,base_price,base_kids,extra_kid_price").in("id", packageIds) : Promise.resolve({ data: [] as any[] }),
+      roomIds.length ? supabase.from("rooms").select("id,name").in("id", roomIds) : Promise.resolve({ data: [] as any[] }),
+      supabase.from("payments").select("booking_id, amount, status, type"),
+    ]);
+    const customers = new Map((customersRes.data || []).map((c: any) => [c.id, c]));
+    const packages = new Map((packagesRes.data || []).map((p: any) => [p.id, p]));
+    const rooms = new Map((roomsRes.data || []).map((r: any) => [r.id, r]));
+    const payments = paymentsRes.data || [];
+    const ui: UIBooking[] = (rawBookings || []).map((b: any) => {
+      const cust = customers.get(b.customer_id) || {};
+      const pkg = packages.get(b.package_id) || {};
+      const room = rooms.get(b.room_id) || {};
+      const start = new Date(b.start_time);
+      const end = new Date(b.end_time);
+      const base = Number(pkg.base_price || 0);
+      const baseKids = Number(pkg.base_kids || 0);
+      const extraPrice = Number(pkg.extra_kid_price || 0);
+      const extraKids = Math.max(0, Number(b.kids_count || 0) - baseKids);
+      const totalAmount = base + extraKids * extraPrice;
+      const paid = payments
+        .filter((p: any) => p.booking_id === b.id && p.status === "completed")
+        .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+      return {
+        id: b.id,
+        customerName: cust.name || "Customer",
+        customerEmail: cust.email,
+        customerPhone: cust.phone,
+        date: start.toISOString().split("T")[0],
+        time: `${start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} - ${end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`,
+        package: pkg.name || "Package",
+        room: room.name || "Room",
+        kidsCount: Number(b.kids_count || 0),
+        status: b.status,
+        depositPaid: paid,
+        totalAmount: totalAmount || Number(b.deposit_due || 0) * 2,
+        balanceDue: Math.max(0, (totalAmount || Number(b.deposit_due || 0) * 2) - paid),
+        notes: b.notes || undefined,
+        createdAt: new Date(b.created_at).toISOString().split("T")[0],
+      };
+    });
+    setBookings(ui);
+    setFilteredBookings(ui);
   };
 
   if (loading) {
@@ -522,7 +816,7 @@ export default function BookingManagement({ params }: BookingManagementProps) {
           <h1 className="text-2xl font-bold text-gray-900">
             Booking Management
           </h1>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
             + New Booking
           </button>
         </div>
@@ -635,6 +929,7 @@ export default function BookingManagement({ params }: BookingManagementProps) {
                     booking={booking}
                     onEdit={handleEdit}
                     onViewDetails={handleViewDetails}
+                    onDelete={handleDelete}
                   />
                 ))}
               </tbody>
@@ -657,6 +952,15 @@ export default function BookingManagement({ params }: BookingManagementProps) {
         addons={bookingAddons}
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
+        onUpdated={reloadAfterChange}
+      />
+
+      {/* Create Booking Modal */}
+      <CreateBookingModal
+        tenant={tenant}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreated={reloadAfterChange}
       />
     </AdminLayout>
   );

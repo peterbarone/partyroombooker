@@ -6,6 +6,176 @@ import { supabase } from "@/lib/supabase";
 
 interface RoomManagementProps {
   params: { tenant: string };
+
+// Create Room Modal
+const CreateRoomModal = ({
+  tenant,
+  isOpen,
+  onClose,
+  onCreated,
+}: {
+  tenant: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}) => {
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [capacity, setCapacity] = useState<number>(0);
+  const [active, setActive] = useState<boolean>(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const load = async () => {
+      const { data: t } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("slug", tenant)
+        .eq("active", true)
+        .single();
+      setTenantId(t?.id || null);
+    };
+    load();
+  }, [isOpen, tenant]);
+
+  const submit = async () => {
+    if (!tenantId || !name) return;
+    setSaving(true);
+    try {
+      await supabase.from("rooms").insert({
+        tenant_id: tenantId,
+        name,
+        description: description || null,
+        max_kids: capacity,
+        active,
+      });
+      onCreated();
+      onClose();
+      setName("");
+      setDescription("");
+      setCapacity(0);
+      setActive(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Add Room</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="px-6 py-4 space-y-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Description</label>
+            <input value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Capacity (max kids)</label>
+            <input type="number" value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <input id="roomActive" type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
+            <label htmlFor="roomActive" className="text-sm text-gray-700">Active</label>
+          </div>
+          <div>
+            <button onClick={submit} disabled={saving || !name} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">{saving ? "Saving..." : "Create"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Edit Room Modal
+const EditRoomModal = ({
+  isOpen,
+  onClose,
+  room,
+  onUpdated,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  room: (typeof mockRooms)[0] | null;
+  onUpdated: () => void;
+}) => {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [capacity, setCapacity] = useState<number>(0);
+  const [active, setActive] = useState<boolean>(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (room) {
+      setName(room.name || "");
+      setDescription(room.description || "");
+      setCapacity(Number(room.capacity || 0));
+      setActive(room.status === "active");
+    }
+  }, [room]);
+
+  const submit = async () => {
+    if (!room) return;
+    setSaving(true);
+    try {
+      await supabase
+        .from("rooms")
+        .update({
+          name,
+          description: description || null,
+          max_kids: capacity,
+          active,
+        })
+        .eq("id", room.id);
+      onUpdated();
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen || !room) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Edit Room</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="px-6 py-4 space-y-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Description</label>
+            <input value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Capacity (max kids)</label>
+            <input type="number" value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div className="flex items-center space-x-2">
+            <input id="roomActiveEdit" type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
+            <label htmlFor="roomActiveEdit" className="text-sm text-gray-700">Active</label>
+          </div>
+          <div>
+            <button onClick={submit} disabled={saving || !name} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50">{saving ? "Saving..." : "Save"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 }
 
 // Mock room data
@@ -273,10 +443,12 @@ const RoomCard = ({
   room,
   onEdit,
   onViewDetails,
+  onDelete,
 }: {
   room: (typeof mockRooms)[0];
   onEdit: (room: (typeof mockRooms)[0]) => void;
   onViewDetails: (room: (typeof mockRooms)[0]) => void;
+  onDelete: (room: (typeof mockRooms)[0]) => void;
 }) => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -348,6 +520,12 @@ const RoomCard = ({
             className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm"
           >
             Edit Room
+          </button>
+          <button
+            onClick={() => onDelete(room)}
+            className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm"
+          >
+            Delete
           </button>
         </div>
       </div>
@@ -814,6 +992,8 @@ export default function RoomManagement({ params }: RoomManagementProps) {
   >(null);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
+  const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
+  const [isEditRoomOpen, setIsEditRoomOpen] = useState(false);
 
   const [rooms, setRooms] = useState<(typeof mockRooms)[0][]>([]);
   const [packages, setPackages] = useState<(typeof mockPackages)[0][]>([]);
@@ -920,6 +1100,51 @@ export default function RoomManagement({ params }: RoomManagementProps) {
     load();
   }, [tenant]);
 
+  const reloadRooms = async () => {
+    setLoading(true);
+    try {
+      const { data: tenantRow } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("slug", tenant)
+        .eq("active", true)
+        .single();
+      if (!tenantRow?.id) {
+        setRooms([]);
+        setFilteredRooms([]);
+        return;
+      }
+      const { data: roomsData } = await supabase
+        .from("rooms")
+        .select("id,name,description,max_kids,active")
+        .eq("tenant_id", tenantRow.id)
+        .order("name");
+      const mappedRooms: (typeof mockRooms)[0][] = (roomsData || []).map(
+        (r: any) => ({
+          id: r.id,
+          name: r.name,
+          description: r.description || "",
+          capacity: Number(r.max_kids || 0),
+          size: "",
+          amenities: [],
+          hourlyRate: 0,
+          status: r.active ? "active" : "inactive",
+          availability: "weekdays_weekends",
+          images: [],
+          bookingCount: 0,
+          revenue: 0,
+          rating: 5,
+          lastMaintenance: "",
+          nextMaintenance: "",
+        })
+      );
+      setRooms(mappedRooms);
+      setFilteredRooms(mappedRooms);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filter rooms
   useEffect(() => {
     let filtered = rooms;
@@ -958,173 +1183,58 @@ export default function RoomManagement({ params }: RoomManagementProps) {
     setFilteredPackages(filtered);
   }, [searchTerm, packageStatusFilter, packages]);
 
-  const handleRoomViewDetails = (room: (typeof mockRooms)[0]) => {
-    setSelectedRoom(room);
-    setIsRoomModalOpen(true);
-  };
-
-  const handlePackageViewDetails = (pkg: (typeof mockPackages)[0]) => {
-    setSelectedPackage(pkg);
-    setIsPackageModalOpen(true);
-  };
 
   const handleRoomEdit = (room: (typeof mockRooms)[0]) => {
-    console.log("Edit room:", room.id);
+    setSelectedRoom(room);
+    setIsEditRoomOpen(true);
   };
 
-  const handlePackageEdit = (pkg: (typeof mockPackages)[0]) => {
-    console.log("Edit package:", pkg.id);
+  const handleRoomDelete = async (r: (typeof mockRooms)[0]) => {
+    await supabase.from("rooms").delete().eq("id", r.id);
+    await reloadRooms();
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading rooms and packages...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <AdminLayout tenant={tenant}>
-      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">
             Room & Package Management
           </h1>
-          <div className="flex space-x-2">
-            <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-              + Add Room
-            </button>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-              + Add Package
-            </button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            {[
-              { id: "rooms", label: "Rooms", count: rooms.length },
-              { id: "packages", label: "Packages", count: packages.length },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {tab.label} ({tab.count})
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder={`Search ${activeTab}...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
-              {activeTab === "rooms" ? (
-                <select
-                  value={roomStatusFilter}
-                  onChange={(e) =>
-                    setRoomStatusFilter(e.target.value as RoomStatus)
-                  }
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              ) : (
-                <select
-                  value={packageStatusFilter}
-                  onChange={(e) =>
-                    setPackageStatusFilter(e.target.value as PackageStatus)
-                  }
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="seasonal">Seasonal</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              )}
-            </div>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              📊 Export
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        {activeTab === "rooms" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredRooms.map((room) => (
-              <RoomCard
-                key={room.id}
-                room={room}
-                onEdit={handleRoomEdit}
-                onViewDetails={handleRoomViewDetails}
+          <button onClick={() => setIsCreateRoomOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">+ Add Room</button>
+{{ ... }}
+                onDelete={handleRoomDelete}
               />
             ))}
-            {filteredRooms.length === 0 && (
-              <div className="col-span-full text-center py-12">
-                <p className="text-gray-500">
-                  No rooms found matching your criteria.
-                </p>
-              </div>
-            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredPackages.map((pkg) => (
-              <PackageCard
-                key={pkg.id}
-                package={pkg}
-                onEdit={handlePackageEdit}
-                onViewDetails={handlePackageViewDetails}
-              />
-            ))}
-            {filteredPackages.length === 0 && (
-              <div className="col-span-full text-center py-12">
-                <p className="text-gray-500">
-                  No packages found matching your criteria.
-                </p>
-              </div>
-            )}
+          <div className="col-span-full text-center py-12">
+            <p className="text-gray-500">No rooms found matching your criteria.</p>
           </div>
         )}
-      </div>
-
-      {/* Modals */}
-      <RoomDetailModal
+<RoomDetailModal
         room={selectedRoom}
         isOpen={isRoomModalOpen}
         onClose={() => setIsRoomModalOpen(false)}
       />
-
       <PackageDetailModal
-        package={selectedPackage}
+{{ ... }}
         isOpen={isPackageModalOpen}
         onClose={() => setIsPackageModalOpen(false)}
+      />
+
+      {/* Create Room Modal */}
+      <CreateRoomModal
+        tenant={tenant}
+        isOpen={isCreateRoomOpen}
+        onClose={() => setIsCreateRoomOpen(false)}
+        onCreated={reloadRooms}
+      />
+
+      {/* Edit Room Modal */}
+      <EditRoomModal
+        isOpen={isEditRoomOpen}
+        onClose={() => setIsEditRoomOpen(false)}
+        room={selectedRoom}
+        onUpdated={reloadRooms}
       />
     </AdminLayout>
   );
