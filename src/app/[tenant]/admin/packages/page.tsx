@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface PackagesPageProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type UIPackage = {
   id: string;
@@ -20,8 +19,9 @@ type UIPackage = {
   active: boolean;
 };
 
-export default function PackagesPage({ params }: PackagesPageProps) {
-  const tenant = params.tenant;
+export default function PackagesPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
 
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -258,7 +258,7 @@ export default function PackagesPage({ params }: PackagesPageProps) {
             </div>
           </div>
           <div>
-            <button onClick={createPackage} disabled={saving || !name || (includes && parseIncludes(includes) === null)} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">{saving ? "Saving..." : "+ Add Package"}</button>
+            <button onClick={createPackage} disabled={saving || !name || (!!includes && parseIncludes(includes) === null)} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">{saving ? "Saving..." : "+ Add Package"}</button>
           </div>
         </div>
 

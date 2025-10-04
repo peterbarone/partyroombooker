@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface WaiversPageProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type UIWaiver = {
   id: string;
@@ -18,8 +17,9 @@ type UIWaiver = {
   file_url?: string | null;
 };
 
-export default function WaiversPage({ params }: WaiversPageProps) {
-  const tenant = params.tenant;
+export default function WaiversPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
 
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

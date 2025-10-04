@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
@@ -778,8 +779,9 @@ const PackageDetailModal = ({
  * Page Component
  * ======================= */
 
-export default function RoomManagement({ params }: RoomManagementProps) {
-  const tenant = params.tenant;
+export default function RoomManagement() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
 
   const [activeTab, setActiveTab] = useState<"rooms" | "packages">("rooms");
 

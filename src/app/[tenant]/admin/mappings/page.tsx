@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface MappingPageProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type UIPackage = { id: string; name: string };
 type UIRoom = { id: string; name: string; active: boolean };
@@ -15,8 +14,9 @@ type PackageRooms = {
   [packageId: string]: Set<string>; // room ids
 };
 
-export default function MappingsPage({ params }: MappingPageProps) {
-  const tenant = params.tenant;
+export default function MappingsPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
   const [tenantId, setTenantId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);

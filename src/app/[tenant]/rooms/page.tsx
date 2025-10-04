@@ -1,7 +1,7 @@
 import RoomCard from "@/components/RoomCard";
 import { supabase } from "@/lib/supabase";
 
-export default async function TenantRoomsPage({ params }: { params: { tenant: string } }) {
+export default async function TenantRoomsPage({ params }: any) {
   const tenant = params.tenant;
 
   // Resolve tenant id from slug

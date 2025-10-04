@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface ReportsProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type Analytics = {
   revenue: {
@@ -433,8 +432,9 @@ const CustomersReport = ({ analytics }: { analytics: Analytics }) => (
   </div>
 );
 
-export default function ReportsAnalytics({ params }: ReportsProps) {
-  const tenant = params.tenant;
+export default function ReportsAnalytics() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
   const [activeReport, setActiveReport] = useState<ReportType>("overview");
   const [dateRange, setDateRange] = useState("last_30_days");
   const [loading, setLoading] = useState(true);

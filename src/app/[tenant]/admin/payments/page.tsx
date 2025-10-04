@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface PaymentsPageProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type PaymentStatus = "pending" | "completed" | "failed" | "refunded" | "all";
 type PaymentType = "deposit" | "balance" | "refund" | "all";
@@ -37,8 +36,9 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-export default function PaymentsPage({ params }: PaymentsPageProps) {
-  const tenant = params.tenant;
+export default function PaymentsPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
 
   const [loading, setLoading] = useState(true);
   const [payments, setPayments] = useState<UIPayment[]>([]);

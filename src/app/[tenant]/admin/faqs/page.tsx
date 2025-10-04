@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface FaqsPageProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type UIFaq = {
   id: string;
@@ -15,8 +14,9 @@ type UIFaq = {
   sort_order: number;
 };
 
-export default function FaqsPage({ params }: FaqsPageProps) {
-  const tenant = params.tenant;
+export default function FaqsPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
 
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

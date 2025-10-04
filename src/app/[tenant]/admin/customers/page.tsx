@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface CustomerManagementProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 // Mock customer data with booking history
 const mockCustomers = [
@@ -767,8 +766,9 @@ const CustomerDetailModal = ({
   );
 };
 
-export default function CustomerManagement({ params }: CustomerManagementProps) {
-  const tenant = params.tenant;
+export default function CustomerManagement() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<UICustomer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<UICustomer[]>([]);

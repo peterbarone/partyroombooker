@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface SettingsPageProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type TenantRow = {
   id: string;
@@ -34,8 +33,9 @@ type IntegrationRow = {
   clover_webhook_secret: string | null;
 };
 
-export default function SettingsPage({ params }: SettingsPageProps) {
-  const tenantSlug = params.tenant;
+export default function SettingsPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenantSlug = (params?.tenant as string) || "";
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 

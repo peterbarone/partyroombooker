@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import AdminLayout from "../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-interface AdminDashboardProps {
-  params: { tenant: string };
-}
+// params are accessed via useParams() in client components
 
 type RecentBooking = {
   id: string;
@@ -101,8 +100,9 @@ const BookingRow = ({ booking }: { booking: RecentBooking }) => {
   );
 };
 
-export default function AdminDashboard({ params }: AdminDashboardProps) {
-  const tenant = params.tenant;
+export default function AdminDashboard() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = (params?.tenant as string) || "";
 
   const [loading, setLoading] = useState(true);
   const [tenantId, setTenantId] = useState<string | null>(null);
