@@ -17,9 +17,9 @@ const inputBaseClass =
 const headingStackClass =
   "space-y-1 font-extrabold tracking-tight drop-shadow-sm";
 const headingLinePrimary =
-  "text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-amber-800 leading-tight";
+  "text-xl sm:text-4xl md:text-5xl lg:text-6xl text-amber-800 leading-tight";
 const headingLineAccent =
-  "text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-pink-600 leading-tight";
+  "text-xl sm:text-4xl md:text-5xl lg:text-6xl text-pink-600 leading-tight";
 const subheadingClass =
   "text-base sm:text-lg md:text-xl font-semibold tracking-wide text-amber-700";
 
