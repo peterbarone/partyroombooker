@@ -1030,15 +1030,17 @@ export default function FamilyFunBookingWizard({
             const { data, error } = await supabase.functions.invoke("createBooking", {
               body: {
                 tenantSlug: tenant,
-                customer: {
-                  name: bookingData.customerInfo.parentName,
-                  email: bookingData.customerInfo.parentEmail,
-                  phone: bookingData.customerInfo.parentPhone,
-                },
-                packageId: bookingData.selectedPackage?.id,
                 roomId: bookingData.selectedRoom?.id,
+                packageId: bookingData.selectedPackage?.id,
                 startTime: bookingData.selectedSlot?.timeStart,
-                kidsCount: bookingData.guestCount,
+                endTime: bookingData.selectedSlot?.timeEnd,
+                childName: bookingData.customerInfo.childName,
+                childAge: bookingData.customerInfo.childAge,
+                parentName: bookingData.customerInfo.parentName,
+                email: bookingData.customerInfo.parentEmail,
+                phone: bookingData.customerInfo.parentPhone,
+                kids: bookingData.guestCount,
+                notes: bookingData.specialNotes,
               },
             });
             if (error) {

@@ -94,8 +94,9 @@ export default function SlotsAdminPage() {
     return () => {
       cancelled = true;
     };
+  }, [tenantSlug]);
 
-  // Helpers for friendlier time editing
+  // Helpers for friendlier time editing (component scope)
   const normalizeHHMM = (v: string) => v.trim();
   const addTime = (dow: number, v: string) => {
     const hhmm = normalizeHHMM(v);
@@ -174,7 +175,6 @@ export default function SlotsAdminPage() {
       return next;
     });
   };
-  }, [tenantSlug]);
 
   const handleTimesChange = (dow: number, value: string) => {
     const parts = value
