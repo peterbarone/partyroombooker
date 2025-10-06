@@ -397,12 +397,12 @@ export default function FamilyFunBookingWizard({
       <div className="text-8xl mb-6 select-none">🎈</div>
 
       <div className="space-y-1 font-extrabold tracking-tight drop-shadow-sm">
-        <h2 className="text-6xl font-bold-display text-amber-800 leading-[0.95]">
+        <h2 className="text-3xl sm:text-6xl font-bold-display text-amber-800 leading-[0.95]">
           WHO&apos;S THE
         </h2>
-        <h2 className="text-6xl text-amber-800 leading-[0.95]">LUCKY KID</h2>
-        <h2 className="text-6xl text-pink-600 leading-[0.95]">WE&apos;RE</h2>
-        <h2 className="text-6xl text-pink-600 leading-[0.95]">CELEBRATING?</h2>
+        <h2 className="text-3xl sm:text-6xl text-amber-800 leading-[0.95]">LUCKY KID</h2>
+        <h2 className="text-3xl sm:text-6xl text-pink-600 leading-[0.95]">WE&apos;RE</h2>
+        <h2 className="text-3xl sm:text-6xl text-pink-600 leading-[0.95]">CELEBRATING?</h2>
       </div>
 
       <p className="text-xl text-amber-700 font-semibold mb-10 tracking-wide">
