@@ -1,7 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  // Fail fast in dev/browser if envs aren’t wired up so we don’t call placeholder.supabase.co
+  const msg = 'Supabase env missing: ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.'
+  // eslint-disable-next-line no-console
+  console.error(msg, { supabaseUrlPresent: !!supabaseUrl, supabaseAnonKeyPresent: !!supabaseAnonKey })
+  throw new Error(msg)
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
