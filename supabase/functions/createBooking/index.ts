@@ -141,26 +141,54 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Insert booking
-    const insertPayload = {
-      tenant_id: tenant.id,
-      room_id: roomId,
-      package_id: packageId ?? null,
-      child_name: childName ?? null,
-      child_age: childAge ?? null,
-      parent_name: parentName ?? null,
-      email: email ?? null,
-      phone: phone ?? null,
-      start_time: startTime,
-      end_time: endTime,
-      notes: notes ?? null,
-      kids: typeof kids === "number" ? kids : null,
-      status: "pending", // or 'confirmed' per your flow
-    };
+    // Upsert/find customer (store parent info in customers)
+    let customerId: string | null = null;
+    if (email) {
+      const { data: existingCustomer } = await db
+        .from("customers")
+        .select("id")
+        .eq("tenant_id", tenant.id)
+        .eq("email", email)
+        .maybeSingle();
+      customerId = existingCustomer?.id ?? null;
+    }
+    if (!customerId) {
+      const { data: newCust } = await db
+        .from("customers")
+        .insert({
+          tenant_id: tenant.id,
+          name: parentName ?? null,
+          email: email ?? null,
+          phone: phone ?? null,
+        })
+        .select("id")
+        .single();
+      customerId = newCust?.id ?? null;
+    }
 
+    // Compose notes with child details (schema has no child columns)
+    const notesCombined = [
+      notes && String(notes).trim() ? String(notes).trim() : null,
+      childName ? `Child: ${childName}` : null,
+      (typeof childAge === "number" && childAge > 0) ? `Age: ${childAge}` : null,
+    ]
+      .filter(Boolean)
+      .join(" | ") || null;
+
+    // Insert booking with supported columns
     const { data: booking, error: bErr } = await db
       .from("bookings")
-      .insert(insertPayload)
+      .insert({
+        tenant_id: tenant.id,
+        customer_id: customerId,
+        room_id: roomId,
+        package_id: packageId ?? null,
+        start_time: startTime,
+        end_time: endTime,
+        kids_count: typeof kids === "number" ? kids : null,
+        notes: notesCombined,
+        status: "pending",
+      })
       .select("id, status")
       .single();
 
@@ -172,7 +200,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, booking }), {
+    return new Response(JSON.stringify({ ok: true, booking, bookingId: booking?.id }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
