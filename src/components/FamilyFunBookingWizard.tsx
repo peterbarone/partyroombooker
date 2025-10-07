@@ -68,6 +68,13 @@ interface Addon {
   category?: string | null;
 }
 
+interface PartyCharacter {
+  id: string;
+  slug?: string;
+  name: string;
+  price: number; // dollars
+}
+
 interface BookingData {
   step: number;
   selectedDate: string;
@@ -85,6 +92,7 @@ interface BookingData {
     emergencyContact: string;
   };
   selectedAddons: Array<{ addon: Addon; quantity: number }>;
+  selectedCharacters?: Array<{ character: PartyCharacter; quantity: number }>;
   specialNotes: string;
   paymentStatus: "pending" | "processing" | "completed" | "failed";
   paymentId?: string;
@@ -121,6 +129,7 @@ export default function FamilyFunBookingWizard({
   const [packages, setPackages] = useState<Package[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [addons, setAddons] = useState<Addon[]>([]);
+  const [characters, setCharacters] = useState<PartyCharacter[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
   const [tenantId, setTenantId] = useState<string | null>(null);
@@ -146,6 +155,7 @@ export default function FamilyFunBookingWizard({
       emergencyContact: "",
     },
     selectedAddons: [],
+    selectedCharacters: [],
     specialNotes: "",
     paymentStatus: "pending",
   });
@@ -237,6 +247,21 @@ export default function FamilyFunBookingWizard({
           taxable: a.taxable ?? false,
         }));
         setAddons(mappedAddons);
+
+        // Load party characters (active)
+        const { data: charsData } = await supabase
+          .from("party_characters")
+          .select("id,slug,name,price_cents,is_active")
+          .eq("tenant_id", tenantRow.id)
+          .eq("is_active", true)
+          .order("name");
+        const mappedChars: PartyCharacter[] = (charsData || []).map((c: any) => ({
+          id: c.id,
+          slug: c.slug || undefined,
+          name: c.name || "",
+          price: c.price_cents ? c.price_cents / 100 : 0,
+        }));
+        setCharacters(mappedChars);
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {
@@ -302,6 +327,9 @@ export default function FamilyFunBookingWizard({
     }
     bookingData.selectedAddons.forEach(({ addon, quantity }) => {
       total += (addon.price || 0) * quantity;
+    });
+    (bookingData.selectedCharacters || []).forEach(({ character, quantity }) => {
+      total += (character.price || 0) * quantity;
     });
     return total;
   };
@@ -633,6 +661,51 @@ export default function FamilyFunBookingWizard({
         ))}
       </div>
 
+      {/* Party Characters */}
+      {characters.length > 0 && (
+        <div className="space-y-4 mt-8">
+          <div className={headingStackClass}>
+            <h3 className={headingLinePrimary}>PARTY</h3>
+            <h3 className={headingLineAccent}>CHARACTERS</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {characters.map((ch) => {
+              const selected = (bookingData.selectedCharacters || []).some((s) => s.character.id === ch.id);
+              return (
+                <motion.div
+                  key={ch.id}
+                  className={`p-6 rounded-3xl border-4 transition-all cursor-pointer ${
+                    selected ? "border-party-yellow bg-white shadow-xl scale-105" : "border-transparent bg-white/80 hover:scale-105"
+                  }`}
+                  onClick={() => {
+                    const list = bookingData.selectedCharacters || [];
+                    if (selected) {
+                      updateBookingData({
+                        selectedCharacters: list.filter((s) => s.character.id !== ch.id),
+                      });
+                    } else {
+                      updateBookingData({
+                        selectedCharacters: [...list, { character: ch, quantity: 1 }],
+                      });
+                    }
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="text-5xl mb-4">{selected ? "✅" : "🎭"}</div>
+                  <div className="text-2xl font-bold text-gray-800 mb-2">{ch.name}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-xl font-semibold text-party-pink">${ch.price.toFixed(2)}</div>
+                    <div className="text-sm text-gray-500">Character appearance</div>
+                  </div>
+                  {/* No quantity needed for characters */}
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Inline nav removed; using global nav */}
     </motion.div>
   );
@@ -832,6 +905,35 @@ export default function FamilyFunBookingWizard({
               </div>
               <div className="text-sm text-gray-500">{addon.category}</div>
             </div>
+
+            {(() => {
+              const selected = bookingData.selectedAddons.find((a) => a.addon.id === addon.id);
+              if (!selected) return null;
+              return (
+                <div className="mt-4 flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                  <label htmlFor={`qty-${addon.id}`} className="text-sm font-medium text-gray-700">
+                    Qty
+                  </label>
+                  <select
+                    id={`qty-${addon.id}`}
+                    value={selected.quantity ?? 1}
+                    onChange={(e) => {
+                      const qty = Math.max(1, Math.min(5, parseInt(e.target.value) || 1));
+                      updateBookingData({
+                        selectedAddons: bookingData.selectedAddons.map((sa) =>
+                          sa.addon.id === addon.id ? { ...sa, quantity: qty } : sa
+                        ),
+                      });
+                    }}
+                    className="border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  >
+                    {[1,2,3,4,5].map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+              );
+            })()}
           </motion.div>
         ))}
       </div>
