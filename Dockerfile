@@ -16,10 +16,8 @@ COPY . .
 # Next.js collects completely anonymous telemetry data about general usage.
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Set placeholder values for required environment variables during build
-ENV NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder-key
-ENV NEXT_PUBLIC_BASE_URL=http://localhost:3000
+# Note: NEXT_PUBLIC_* envs must be provided by the deploy platform at build time
+# (Coolify → Application → Environment). Do not hardcode placeholders here.
 
 RUN npm run build
 
