@@ -17,10 +17,9 @@ function addMinutes(iso: string, minutes: number) {
 }
 
 function buildCorsHeaders(origin?: string | null) {
-  const allowOrigin =
-    origin && /^https?:\/\/(localhost:3000|127\.0\.0\.1:3000)$/i.test(origin)
-      ? origin
-      : "*";
+  const allowlist =
+    /^(https?:\/\/(localhost:3000|127\.0\.0\.1:3000|localhost:3001|127\.0\.0\.1:3001|partybookingwizard\.com|www\.partybookingwizard\.com))$/i;
+  const allowOrigin = origin && allowlist.test(origin) ? origin : "*";
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",

@@ -3,10 +3,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 function cors(origin?: string | null) {
-  const allow =
-    origin && /^https?:\/\/(localhost:3000|127\.0\.0\.1:3000)$/i.test(origin)
-      ? origin
-      : "*";
+  const allowlist = /^(https?:\/\/(localhost:3000|127\.0\.0\.1:3000|localhost:3001|127\.0\.0\.1:3001|partybookingwizard\.com|www\.partybookingwizard\.com))$/i;
+  const allow = origin && allowlist.test(origin) ? origin : "*";
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
