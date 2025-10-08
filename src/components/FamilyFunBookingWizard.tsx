@@ -313,6 +313,46 @@ export default function FamilyFunBookingWizard({
     fetchAvailability();
   }, [tenant, bookingData.selectedDate]);
 
+  // Hold creation is handled on room selection click to start timer immediately
+
+  // Heartbeat: extend hold periodically on payment step
+  useEffect(() => {
+    const stepName = STEPS[currentStep];
+    if (stepName !== "payment" || !hold?.id) return;
+    const interval = setInterval(() => {
+      supabase.functions.invoke("extendHold", { body: { holdId: hold.id, extendMinutes: 5 } }).catch(() => {});
+    }, 180000); // 3 minutes
+    return () => clearInterval(interval);
+  }, [currentStep, hold?.id]);
+
+  // Countdown: update remaining seconds every second while a hold exists
+  useEffect(() => {
+    if (!hold?.expiresAt) {
+      setHoldRemaining(null);
+      return;
+    }
+    const tick = () => {
+      const diffMs = new Date(hold.expiresAt).getTime() - Date.now();
+      const secs = Math.max(0, Math.floor(diffMs / 1000));
+      setHoldRemaining(secs);
+      if (secs <= 0) {
+        setHold(null);
+      }
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [hold?.expiresAt]);
+
+  // Cleanup: release hold on unmount
+  useEffect(() => {
+    return () => {
+      if (hold?.id) {
+        supabase.functions.invoke("releaseHold", { body: { holdId: hold.id } }).catch(() => {});
+      }
+    };
+  }, [hold?.id]);
+
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -540,12 +580,12 @@ export default function FamilyFunBookingWizard({
         <p className={`${subheadingClass} mb-8 mt-6`}>Select your party day!</p>
       </div>
 
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md w-full mx-auto px-4">
         <input
           type="date"
           value={bookingData.selectedDate}
           onChange={(e) => updateBookingData({ selectedDate: e.target.value })}
-          className={`${inputBaseClass}`}
+          className={`${inputBaseClass} w-full max-w-full min-w-0`}
         />
       </div>
 
@@ -596,7 +636,7 @@ export default function FamilyFunBookingWizard({
                 updateBookingData({ selectedTime: label, selectedSlot: { timeStart: slot.timeStart, timeEnd: slot.timeEnd } });
                 setAvailableRoomsForSelectedSlot(slot.rooms || []);
               }}
-              className={`w-full max-w-md p-6 rounded-3xl border-4 transition-all ${
+              className={`relative w-full max-w-md p-6 rounded-3xl border-4 transition-all ${
                 isSelected ? "border-party-yellow bg-white shadow-xl scale-105" : "border-transparent bg-white/80 hover:scale-105"
               }`}
               whileHover={{ scale: 1.02 }}
@@ -753,14 +793,46 @@ export default function FamilyFunBookingWizard({
         ).map((room) => (
           <motion.div
             key={room.id}
-            className={`p-6 rounded-3xl border-4 transition-all cursor-pointer
+            className={`relative p-6 rounded-3xl border-4 transition-all cursor-pointer
               ${
                 bookingData.selectedRoom?.id === room.id
                   ? "border-party-yellow bg-white shadow-xl scale-105"
                   : "border-transparent bg-white/80 hover:scale-105"
               }
             `}
-            onClick={() => updateBookingData({ selectedRoom: room as any })}
+            onClick={async () => {
+              // Set selected room
+              updateBookingData({ selectedRoom: room as any });
+              // Only create a hold if we have a selected time slot
+              const slot = bookingData.selectedSlot;
+              if (!tenant || !slot?.timeStart || !slot?.timeEnd) return;
+              // Release any previous hold
+              if (hold?.id) {
+                try { await supabase.functions.invoke("releaseHold", { body: { holdId: hold.id } }); } catch {}
+                setHold(null);
+              }
+              try {
+                const { data, error } = await supabase.functions.invoke("createHold", {
+                  body: {
+                    tenantSlug: tenant,
+                    roomId: room.id,
+                    startTime: slot.timeStart,
+                    endTime: slot.timeEnd,
+                    packageId: bookingData.selectedPackage?.id,
+                    kids: bookingData.guestCount,
+                  },
+                });
+                if (!error) {
+                  const holdId = (data as any)?.holdId as string | undefined;
+                  const expiresAt = (data as any)?.expiresAt as string | undefined;
+                  if (holdId && expiresAt) setHold({ id: holdId, expiresAt });
+                } else {
+                  console.error("createHold error", error);
+                }
+              } catch (e) {
+                console.error("createHold exception", e);
+              }
+            }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -1345,7 +1417,7 @@ export default function FamilyFunBookingWizard({
           </div>
 
           {/* Hold countdown banner (prominent, sticky) */}
-          {hold?.id && ["time-slot", "room-choice", "payment"].includes(STEPS[currentStep]) && (
+          {hold?.id && (
             <div
               className={`mt-3 rounded-xl px-4 py-3 text-center border ${
                 (holdRemaining ?? 0) <= 60
@@ -1354,7 +1426,7 @@ export default function FamilyFunBookingWizard({
               }`}
             >
               <div className="text-sm sm:text-base font-bold">
-                Your selected time is reserved for {fmtMMSS(holdRemaining ?? 0)}
+                We are holding your date, time, and room for {fmtMMSS(holdRemaining ?? 0)}
               </div>
               <div className="text-[11px] sm:text-xs opacity-80">
                 Please complete checkout or change your selection before it expires.
