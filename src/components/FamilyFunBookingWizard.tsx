@@ -115,7 +115,6 @@ const STEPS = [
   "package-choice",
   // Then guest count and the rest
   "guest-count",
-  "add-ons",
   "parent-info",
   "special-notes",
   "payment",
@@ -421,8 +420,6 @@ export default function FamilyFunBookingWizard({
         return renderRoomChoiceStep();
       case "guest-count":
         return renderGuestCountStep();
-      case "add-ons":
-        return renderAddOnsStep();
       case "parent-info":
         return renderParentInfoStep();
       case "special-notes":
@@ -757,6 +754,83 @@ export default function FamilyFunBookingWizard({
         </div>
       )}
 
+      {/* Add-ons moved here: selectable in Package step */}
+      {addons.length > 0 && (
+        <div className="space-y-4 mt-8">
+          <div className={headingStackClass}>
+            <h3 className={headingLinePrimary}>FUN</h3>
+            <h3 className={headingLineAccent}>ADD-ONS</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {addons.map((addon) => {
+              const selected = (bookingData.selectedAddons || []).find(
+                (a) => a.addon.id === addon.id
+              );
+              const quantity = selected?.quantity ?? 0;
+              return (
+                <motion.div
+                  key={addon.id}
+                  className={`p-6 rounded-3xl border-4 transition-all ${
+                    quantity > 0
+                      ? "border-party-yellow bg-white shadow-xl scale-105"
+                      : "border-transparent bg-white/80 hover:scale-105"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-xl font-bold text-gray-800">
+                        {addon.name}
+                      </div>
+                      {!!addon.description && (
+                        <div className="text-gray-600 mt-1 text-sm">{addon.description}</div>
+                      )}
+                    </div>
+                    <div className="text-lg font-semibold text-party-pink">
+                      ${addon.price.toFixed(2)}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <label className="text-sm text-gray-700">Quantity</label>
+                    <select
+                      value={quantity}
+                      onChange={(e) => {
+                        const qty = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
+                        const list = bookingData.selectedAddons || [];
+                        const exists = list.find((sa) => sa.addon.id === addon.id);
+                        if (qty === 0) {
+                          // remove if exists
+                          updateBookingData({
+                            selectedAddons: list.filter((sa) => sa.addon.id !== addon.id),
+                          });
+                        } else if (exists) {
+                          updateBookingData({
+                            selectedAddons: list.map((sa) =>
+                              sa.addon.id === addon.id ? { ...sa, quantity: qty } : sa
+                            ),
+                          });
+                        } else {
+                          updateBookingData({
+                            selectedAddons: [...list, { addon, quantity: qty }],
+                          });
+                        }
+                      }}
+                      className="border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                    >
+                      {[0,1,2,3,4,5,6,7,8,9,10].map((n) => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Inline nav removed; using global nav */}
     </motion.div>
   );
@@ -917,113 +991,6 @@ export default function FamilyFunBookingWizard({
     </motion.div>
   );
 
-  const renderAddOnsStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -50 }}
-      className="space-y-8"
-    >
-      <div className="text-center">
-        <motion.div
-          animate={{ rotate: [0, 10, -10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="text-6xl mb-6"
-        >
-          🎈
-        </motion.div>
-
-        <div className={headingStackClass}>
-          <h2 className={headingLinePrimary}>FUN</h2>
-          <h2 className={headingLineAccent}>ADD-ONS</h2>
-        </div>
-        <p className={`${subheadingClass} mb-8 mt-6`}>Boost the celebration!</p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {addons.map((addon) => (
-          <motion.div
-            key={addon.id}
-            className={`p-6 rounded-3xl border-4 transition-all cursor-pointer
-              ${
-                bookingData.selectedAddons.some((a) => a.addon.id === addon.id)
-                  ? "border-party-yellow bg-white shadow-xl scale-105"
-                  : "border-transparent bg-white/80 hover:scale-105"
-              }
-            `}
-            onClick={() => {
-              const exists = bookingData.selectedAddons.find(
-                (a) => a.addon.id === addon.id
-              );
-              if (exists) {
-                updateBookingData({
-                  selectedAddons: bookingData.selectedAddons.filter(
-                    (a) => a.addon.id !== addon.id
-                  ),
-                });
-              } else {
-                updateBookingData({
-                  selectedAddons: [
-                    ...bookingData.selectedAddons,
-                    { addon, quantity: 1 },
-                  ],
-                });
-              }
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <div className="text-5xl mb-4">
-              {bookingData.selectedAddons.some((a) => a.addon.id === addon.id)
-                ? "✅"
-                : "➕"}
-            </div>
-            <div className="text-2xl font-bold text-gray-800 mb-2">
-              {addon.name}
-            </div>
-            <div className="text-gray-600 mb-4">{addon.description}</div>
-            <div className="flex items-center justify-between">
-              <div className="text-xl font-semibold text-party-pink">
-                ${addon.price.toFixed(2)}
-              </div>
-              <div className="text-sm text-gray-500">{addon.category}</div>
-            </div>
-
-            {(() => {
-              const selected = bookingData.selectedAddons.find((a) => a.addon.id === addon.id);
-              if (!selected) return null;
-              return (
-                <div className="mt-4 flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                  <label htmlFor={`qty-${addon.id}`} className="text-sm font-medium text-gray-700">
-                    Qty
-                  </label>
-                  <select
-                    id={`qty-${addon.id}`}
-                    value={selected.quantity ?? 1}
-                    onChange={(e) => {
-                      const qty = Math.max(1, Math.min(5, parseInt(e.target.value) || 1));
-                      updateBookingData({
-                        selectedAddons: bookingData.selectedAddons.map((sa) =>
-                          sa.addon.id === addon.id ? { ...sa, quantity: qty } : sa
-                        ),
-                      });
-                    }}
-                    className="border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
-                  >
-                    {[1,2,3,4,5].map((n) => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
-                </div>
-              );
-            })()}
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Inline nav removed; using global nav */}
-    </motion.div>
-  );
 
   const renderParentInfoStep = () => (
     <motion.div
@@ -1227,6 +1194,9 @@ export default function FamilyFunBookingWizard({
                 kids: bookingData.guestCount,
                 notes: bookingData.specialNotes,
                 holdId: hold?.id,
+                addons: (bookingData.selectedAddons || [])
+                  .filter(({ quantity }) => quantity > 0)
+                  .map(({ addon, quantity }) => ({ addonId: addon.id, quantity })),
               },
             });
             if (error) {

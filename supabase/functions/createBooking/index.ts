@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
       notes,
       kids,
       holdId,
+      addons,
     } = body;
 
     // Basic input validation
@@ -182,6 +183,50 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Resolve and validate addons (optional)
+    type AddonInput = { addonId: string; quantity: number };
+    const addonsInput: AddonInput[] = Array.isArray(addons)
+      ? (addons as any[])
+          .map((a) => ({ addonId: String(a?.addonId ?? ''), quantity: Number(a?.quantity ?? 0) }))
+          .filter((a) => a.addonId && Number.isInteger(a.quantity) && a.quantity > 0)
+      : [];
+    if (addonsInput.some((a) => a.quantity < 1 || a.quantity > 10)) {
+      return new Response(JSON.stringify({ error: "Addon quantity must be between 1 and 10" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let addonsResolved: Array<{ id: string; price_cents: number; taxable: boolean } & AddonInput> = [];
+    if (addonsInput.length > 0) {
+      const addonIds = [...new Set(addonsInput.map((a) => a.addonId))];
+      const { data: addonRows, error: addErr } = await db
+        .from("addons")
+        .select("id, price_cents, taxable, active")
+        .eq("tenant_id", tenant.id)
+        .in("id", addonIds);
+      if (addErr) {
+        return new Response(JSON.stringify({ error: `Failed to load addons: ${addErr.message}` }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const activeMap = new Map((addonRows ?? []).filter((r: any) => r.active !== false).map((r: any) => [r.id, r]));
+      for (const a of addonsInput) {
+        const row = activeMap.get(a.addonId);
+        if (!row) {
+          return new Response(JSON.stringify({ error: "One or more addons are not available" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+      addonsResolved = addonsInput.map((a) => {
+        const row = activeMap.get(a.addonId)!;
+        return { ...a, id: a.addonId, price_cents: Number(row.price_cents ?? 0), taxable: true };
+      });
+    }
+
     // Upsert/find customer (store parent info in customers)
     let customerId: string | null = null;
     if (email) {
@@ -234,11 +279,29 @@ Deno.serve(async (req) => {
       .single();
 
     if (bErr) {
-      // Return Postgres error to the client for fast debugging
       return new Response(JSON.stringify({ error: bErr.message, details: bErr.details }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Insert selected addons linked to booking (if any)
+    if (booking?.id && addonsResolved.length > 0) {
+      const rows = addonsResolved.map((a) => ({
+        tenant_id: tenant.id,
+        booking_id: booking.id,
+        addon_id: a.id,
+        quantity: a.quantity,
+        unit_price_cents: a.price_cents,
+        taxable: true,
+      }));
+      const { error: baErr } = await db.from("booking_addons").insert(rows);
+      if (baErr) {
+        return new Response(JSON.stringify({ error: `Failed to add addons: ${baErr.message}` }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Release hold after successful booking insert
