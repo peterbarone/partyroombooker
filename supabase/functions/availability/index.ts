@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
     const dow = new Date(`${date}T00:00:00`).getDay();
     const { data: slotsTemplate, error: slotErr } = await supabase
       .from("slot_templates")
-      .select("start_times_json, day_of_week")
+      .select("start_times_json, day_of_week, open_time, close_time")
       .eq("tenant_id", tenantId)
       .eq("day_of_week", dow)
       .maybeSingle();
@@ -142,7 +142,35 @@ Deno.serve(async (req) => {
       ? (slotsTemplate!.start_times_json as string[])
       : [];
 
-    const slots = startTimes.map((start: string) => {
+    // Respect open/close window if set on template
+    const open = (slotsTemplate as any)?.open_time as string | null;
+    const close = (slotsTemplate as any)?.close_time as string | null;
+    const hhmm = (s: string) => (s ? s.slice(0, 5) : s);
+    const filteredStartTimes = open && close
+      ? startTimes.filter((t) => {
+          const tt = hhmm(t);
+          return tt >= hhmm(open!) && tt <= hhmm(close!);
+        })
+      : startTimes;
+
+    // Blackouts: if date is within any blackout range, no slots
+    const { data: blackout, error: boErr } = await supabase
+      .from("blackouts")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("active", true)
+      .lte("start_date", date)
+      .gte("end_date", date)
+      .maybeSingle();
+    if (boErr) throw boErr;
+    if (blackout) {
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const slots = filteredStartTimes.map((start: string) => {
       const timeStart = new Date(`${date}T${start}:00`).toISOString();
       const timeEnd = addMinutes(timeStart, durationMin);
       return { timeStart, timeEnd };
@@ -159,6 +187,17 @@ Deno.serve(async (req) => {
       .lte("start_time", dayEnd);
     if (bookErr) throw bookErr;
 
+    // Active holds for the date (unexpired only)
+    const nowIso = new Date().toISOString();
+    const { data: activeHolds, error: holdErr } = await supabase
+      .from("booking_holds")
+      .select("room_id, start_time, end_time, expires_at")
+      .eq("tenant_id", tenantId)
+      .gt("expires_at", nowIso)
+      .gte("start_time", dayStart)
+      .lte("start_time", dayEnd);
+    if (holdErr) throw holdErr;
+
     function overlaps(aStart: string, aEnd: string, bStart: string, bEnd: string) {
       return new Date(aStart) < new Date(bEnd) && new Date(bStart) < new Date(aEnd);
     }
@@ -170,11 +209,18 @@ Deno.serve(async (req) => {
       const roomsForSlot = (rooms ?? []).map((r: any) => {
         const eligible = eligibleRoomIds ? eligibleRoomIds.has(r.id) : true;
         const roomBookings = (existingBookings ?? []).filter((b: any) => b.room_id === r.id);
-        const available = roomBookings.every((b: any) => {
+        const roomHolds = (activeHolds ?? []).filter((h: any) => h.room_id === r.id);
+        const bookingsClear = roomBookings.every((b: any) => {
           const bStart = addMinutes(b.start_time, -bufferMinutes);
           const bEnd = addMinutes(b.end_time, bufferMinutes);
           return !overlaps(timeStartWithBuffer, timeEndWithBuffer, bStart, bEnd);
         });
+        const holdsClear = roomHolds.every((h: any) => {
+          const hStart = addMinutes(h.start_time, -bufferMinutes);
+          const hEnd = addMinutes(h.end_time, bufferMinutes);
+          return !overlaps(timeStartWithBuffer, timeEndWithBuffer, hStart, hEnd);
+        });
+        const available = bookingsClear && holdsClear;
         return {
           roomId: r.id,
           roomName: r.name,

@@ -47,23 +47,23 @@ Deno.serve(async (req) => {
       parentName,
       email,
       phone,
-      startTime, // expected ISO string with Z, e.g. 2025-10-18T14:00:00.000Z
-      endTime,   // ISO
+      startTime, // optional once holdId provided
+      endTime,   // optional once holdId provided
       notes,
       kids,
+      holdId,
     } = body;
 
     // Basic input validation
-    const missing = ["tenantSlug", "roomId", "startTime", "endTime"].filter((k) => !body?.[k]);
+    const missing = ["tenantSlug", "roomId"].filter((k) => !body?.[k]);
     if (missing.length) {
       return new Response(JSON.stringify({ error: `Missing: ${missing.join(", ")}` }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const s = new Date(startTime), e = new Date(endTime);
-    if (isNaN(+s) || isNaN(+e) || s >= e) {
-      return new Response(JSON.stringify({ error: "Invalid startTime/endTime" }), {
+    if (!holdId) {
+      return new Response(JSON.stringify({ error: "Missing: holdId (createHold must be called first)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -117,17 +117,58 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      // If package selected, ensure room is eligible
+      const { data: pr } = await db
+        .from("package_rooms")
+        .select("room_id")
+        .eq("tenant_id", tenant.id)
+        .eq("package_id", packageId)
+        .eq("room_id", roomId);
+      if (!pr || pr.length === 0) {
+        return new Response(JSON.stringify({ error: "Selected room is not eligible for the chosen package" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
-    // Conflict/overlap check (server-side)
+    // Validate hold
+    const { data: hold, error: hErr } = await db
+      .from("booking_holds")
+      .select("id, tenant_id, room_id, start_time, end_time, expires_at")
+      .eq("id", holdId)
+      .maybeSingle();
+    if (hErr || !hold) {
+      return new Response(JSON.stringify({ error: "Hold not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (hold.tenant_id !== tenant.id || hold.room_id !== roomId) {
+      return new Response(JSON.stringify({ error: "Hold does not match tenant/room selection" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (new Date(hold.expires_at).getTime() <= Date.now()) {
+      return new Response(JSON.stringify({ error: "Hold has expired" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Buffer-aware overlap check against bookings using hold window
+    const { data: pol } = await db
+      .from("tenant_policies")
+      .select("buffer_minutes")
+      .eq("tenant_id", tenant.id)
+      .maybeSingle();
+    const bufferMinutes = Number(pol?.buffer_minutes ?? 30);
+
+    const holdStart = new Date(hold.start_time).toISOString();
+    const holdEnd = new Date(hold.end_time).toISOString();
+    const bufferedStart = new Date(new Date(holdStart).getTime() - bufferMinutes * 60000).toISOString();
+    const bufferedEnd = new Date(new Date(holdEnd).getTime() + bufferMinutes * 60000).toISOString();
+
     const { data: overlapping, error: oErr } = await db
       .from("bookings")
       .select("id")
       .eq("tenant_id", tenant.id)
       .eq("room_id", roomId)
-      .or("status.eq.confirmed,status.eq.pending") // adjust to your statuses
-      .lt("start_time", endTime)
-      .gt("end_time", startTime);
+      .or("status.eq.confirmed,status.eq.pending")
+      .lt("start_time", bufferedEnd)
+      .gt("end_time", bufferedStart);
     if (oErr) {
       return new Response(JSON.stringify({ error: `Overlap check failed: ${oErr.message}` }), {
         status: 500,
@@ -183,8 +224,8 @@ Deno.serve(async (req) => {
         customer_id: customerId,
         room_id: roomId,
         package_id: packageId ?? null,
-        start_time: startTime,
-        end_time: endTime,
+        start_time: holdStart,
+        end_time: holdEnd,
         kids_count: typeof kids === "number" ? kids : null,
         notes: notesCombined,
         status: "pending",
@@ -198,6 +239,11 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Release hold after successful booking insert
+    if (booking?.id) {
+      await db.from("booking_holds").delete().eq("id", holdId);
     }
 
     return new Response(JSON.stringify({ ok: true, booking, bookingId: booking?.id }), {

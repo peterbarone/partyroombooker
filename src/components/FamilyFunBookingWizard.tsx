@@ -139,6 +139,17 @@ export default function FamilyFunBookingWizard({
     Array<{ left: number; top: number; duration: number; delay: number }>
   >([]);
 
+  // Hold state: id and expiry for soft reservation
+  const [hold, setHold] = useState<{ id: string; expiresAt: string } | null>(null);
+  const [holdRemaining, setHoldRemaining] = useState<number | null>(null); // seconds
+
+  // Format seconds as MM:SS
+  const fmtMMSS = (secs: number) => {
+    const m = Math.max(0, Math.floor(secs / 60));
+    const s = Math.max(0, secs % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
   const [bookingData, setBookingData] = useState<BookingData>({
     step: 0,
     selectedDate: "",
@@ -1143,6 +1154,7 @@ export default function FamilyFunBookingWizard({
                 phone: bookingData.customerInfo.parentPhone,
                 kids: bookingData.guestCount,
                 notes: bookingData.specialNotes,
+                holdId: hold?.id,
               },
             });
             if (error) {
@@ -1153,6 +1165,8 @@ export default function FamilyFunBookingWizard({
             const checkoutUrl = (data as any)?.checkoutUrl;
             const bookingId = (data as any)?.bookingId;
             updateBookingData({ bookingId, paymentId: (data as any)?.paymentId });
+            // Clear client hold state (server already deletes the hold)
+            setHold(null);
             if (checkoutUrl) {
               window.location.href = checkoutUrl;
             } else {
@@ -1253,6 +1267,7 @@ export default function FamilyFunBookingWizard({
                 specialNotes: "",
                 paymentStatus: "pending",
               });
+              setHold(null);
             }}
             className="btn-fun"
           >
@@ -1308,7 +1323,7 @@ export default function FamilyFunBookingWizard({
       <div className="w-full lg:w-1/2 flex flex-col relative bg-transparent lg:bg-gradient-to-b lg:from-white/10 lg:to-white/10 lg:backdrop-blur supports-[backdrop-filter]:backdrop-blur-md">
         {showCelebration && <ConfettiAnimation />}
 
-        {/* Sticky progress */}
+        {/* Sticky progress + hold banner */}
         <div className="sticky top-0 z-20 px-4 pt-4 pb-3 bg-white/80 backdrop-blur-md shadow-sm border-b border-amber-100">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] sm:text-xs font-semibold text-amber-700 uppercase tracking-wide">
@@ -1328,6 +1343,24 @@ export default function FamilyFunBookingWizard({
               transition={{ duration: 0.45, ease: "easeInOut" }}
             />
           </div>
+
+          {/* Hold countdown banner (prominent, sticky) */}
+          {hold?.id && ["time-slot", "room-choice", "payment"].includes(STEPS[currentStep]) && (
+            <div
+              className={`mt-3 rounded-xl px-4 py-3 text-center border ${
+                (holdRemaining ?? 0) <= 60
+                  ? "border-red-500 bg-red-50 text-red-700"
+                  : "border-amber-500 bg-amber-50 text-amber-800"
+              }`}
+            >
+              <div className="text-sm sm:text-base font-bold">
+                Your selected time is reserved for {fmtMMSS(holdRemaining ?? 0)}
+              </div>
+              <div className="text-[11px] sm:text-xs opacity-80">
+                Please complete checkout or change your selection before it expires.
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Scrollable content */}

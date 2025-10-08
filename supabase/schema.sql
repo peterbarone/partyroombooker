@@ -1,9 +1,8 @@
 -- schema.sql
+-- Full DDL for public schema (derived from current DB)
 -- Generated: 2025-10-03
--- Family Fun Factory — Full schema and relations
--- Assumes Postgres and public schema. Uses gen_random_uuid() (pgcrypto).
+-- Requires: pgcrypto (gen_random_uuid())
 
--- Ensure pgcrypto for gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- TENANTS
@@ -18,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.tenants (
   updated_at timestamptz DEFAULT now()
 );
 
--- TENANT POLICIES (one row per tenant)
+-- TENANT POLICIES
 CREATE TABLE IF NOT EXISTS public.tenant_policies (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL UNIQUE,
@@ -35,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.tenant_policies (
   CONSTRAINT tenant_policies_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants (id) ON DELETE CASCADE
 );
 
--- TENANT INTEGRATIONS (optional)
+-- TENANT INTEGRATIONS
 CREATE TABLE IF NOT EXISTS public.tenant_integrations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL UNIQUE,
@@ -63,7 +62,7 @@ CREATE TABLE IF NOT EXISTS public.rooms (
   CONSTRAINT rooms_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants (id) ON DELETE CASCADE
 );
 
--- PACKAGES (party packages)
+-- PACKAGES
 CREATE TABLE IF NOT EXISTS public.packages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
@@ -84,7 +83,7 @@ CREATE TABLE IF NOT EXISTS public.packages (
   CONSTRAINT packages_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants (id) ON DELETE CASCADE
 );
 
--- PACKAGE_ROOMS (join table: which rooms a package can use)
+-- PACKAGE_ROOMS
 CREATE TABLE IF NOT EXISTS public.package_rooms (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
@@ -96,7 +95,7 @@ CREATE TABLE IF NOT EXISTS public.package_rooms (
   CONSTRAINT package_rooms_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants (id) ON DELETE CASCADE
 );
 
--- SLOT TEMPLATES (recurring open slots)
+-- SLOT_TEMPLATES
 CREATE TABLE IF NOT EXISTS public.slot_templates (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
@@ -110,7 +109,7 @@ CREATE TABLE IF NOT EXISTS public.slot_templates (
   CONSTRAINT slot_templates_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants (id) ON DELETE CASCADE
 );
 
--- BLACKOUTS (closed date ranges)
+-- BLACKOUTS
 CREATE TABLE IF NOT EXISTS public.blackouts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
@@ -123,7 +122,7 @@ CREATE TABLE IF NOT EXISTS public.blackouts (
   CONSTRAINT blackouts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants (id) ON DELETE CASCADE
 );
 
--- ADDONS (extras)
+-- ADDONS
 CREATE TABLE IF NOT EXISTS public.addons (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
@@ -141,7 +140,7 @@ CREATE TABLE IF NOT EXISTS public.addons (
   CONSTRAINT addons_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants (id) ON DELETE CASCADE
 );
 
--- CUSTOMERS (people booking)
+-- CUSTOMERS
 CREATE TABLE IF NOT EXISTS public.customers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
@@ -224,7 +223,7 @@ CREATE TABLE IF NOT EXISTS public.waivers (
   CONSTRAINT waivers_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings (id) ON DELETE SET NULL
 );
 
--- PARTY CHARACTERS
+-- PARTY_CHARACTERS
 CREATE TABLE IF NOT EXISTS public.party_characters (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
@@ -254,7 +253,7 @@ CREATE TABLE IF NOT EXISTS public.party_faqs (
 
 CREATE INDEX IF NOT EXISTS idx_party_faqs_tenant_sort ON public.party_faqs (tenant_id, sort_order);
 
--- Helpful indexes for common queries
+-- Indexes
 CREATE INDEX IF NOT EXISTS idx_rooms_tenant_active ON public.rooms (tenant_id, active);
 CREATE INDEX IF NOT EXISTS idx_packages_tenant_active ON public.packages (tenant_id, active);
 CREATE INDEX IF NOT EXISTS idx_bookings_tenant_start ON public.bookings (tenant_id, start_time);
