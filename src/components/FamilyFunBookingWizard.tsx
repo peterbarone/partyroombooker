@@ -17,9 +17,9 @@ const inputBaseClass =
 const headingStackClass =
   "space-y-1 font-extrabold tracking-tight drop-shadow-sm";
 const headingLinePrimary =
-  "text-xl sm:text-4xl md:text-5xl lg:text-6xl text-amber-800 leading-tight";
+  "text-amber-800 leading-tight";
 const headingLineAccent =
-  "text-xl sm:text-4xl md:text-5xl lg:text-6xl text-pink-600 leading-tight";
+  "text-pink-600 leading-tight";
 const subheadingClass =
   "text-base sm:text-lg md:text-xl font-semibold tracking-wide text-amber-700";
 
@@ -520,11 +520,11 @@ export default function FamilyFunBookingWizard({
           🎂
         </motion.div>
         <div className={headingStackClass}>
-          <h2 className={headingLinePrimary}>HOW OLD IS</h2>
-          <h2 className={headingLinePrimary}>
+          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>HOW OLD IS</h2>
+          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>
             {bookingData.customerInfo.childName?.toUpperCase() || "THE STAR"}
           </h2>
-          <h2 className={headingLineAccent}>TURNING?</h2>
+          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>TURNING?</h2>
         </div>
         <p className={`${subheadingClass} mb-8 mt-6 text-amber-700`}>
           Helps us plan age-perfect fun!
@@ -571,8 +571,8 @@ export default function FamilyFunBookingWizard({
         </motion.div>
 
         <div className={headingStackClass}>
-          <h2 className={headingLinePrimary}>PICK THE</h2>
-          <h2 className={headingLineAccent}>MAGICAL DATE</h2>
+          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>PICK THE</h2>
+          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>MAGICAL DATE</h2>
         </div>
         <p className={`${subheadingClass} mb-8 mt-6`}>Select your party day!</p>
       </div>
@@ -607,8 +607,8 @@ export default function FamilyFunBookingWizard({
         </motion.div>
 
         <div className={headingStackClass}>
-          <h2 className={headingLinePrimary}>CHOOSE YOUR</h2>
-          <h2 className={headingLineAccent}>PERFECT TIME</h2>
+          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>CHOOSE YOUR</h2>
+          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>PERFECT TIME</h2>
         </div>
         <p className={`${subheadingClass} mb-8 mt-6`}>
           When will the fun begin?
@@ -667,8 +667,8 @@ export default function FamilyFunBookingWizard({
         </motion.div>
 
         <div className={headingStackClass}>
-          <h2 className={headingLinePrimary}>SELECT A</h2>
-          <h2 className={headingLineAccent}>PARTY PACKAGE</h2>
+          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>SELECT A</h2>
+          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>PARTY PACKAGE</h2>
         </div>
         <p className={`${subheadingClass} mb-8 mt-6`}>
           Pick the bundle of joy!
@@ -713,8 +713,8 @@ export default function FamilyFunBookingWizard({
       {characters.length > 0 && (
         <div className="space-y-4 mt-8">
           <div className={headingStackClass}>
-            <h3 className={headingLinePrimary}>PARTY</h3>
-            <h3 className={headingLineAccent}>CHARACTERS</h3>
+            <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>ADD A PARTY</h2>
+            <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>CHARACTERS</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {characters.map((ch) => {
@@ -758,8 +758,8 @@ export default function FamilyFunBookingWizard({
       {addons.length > 0 && (
         <div className="space-y-4 mt-8">
           <div className={headingStackClass}>
-            <h3 className={headingLinePrimary}>FUN</h3>
-            <h3 className={headingLineAccent}>ADD-ONS</h3>
+            <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>FUN</h2>
+            <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>ADD-ONS</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {addons.map((addon) => {
@@ -852,8 +852,8 @@ export default function FamilyFunBookingWizard({
         </motion.div>
 
         <div className={headingStackClass}>
-          <h2 className={headingLinePrimary}>CHOOSE YOUR</h2>
-          <h2 className={headingLineAccent}>EPIC ROOM</h2>
+          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>CHOOSE YOUR</h2>
+          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>EPIC ROOM</h2>
         </div>
         <p className={`${subheadingClass} mb-8 mt-6`}>Fit the vibe & size.</p>
       </div>
@@ -949,8 +949,8 @@ export default function FamilyFunBookingWizard({
         </motion.div>
 
         <div className={headingStackClass}>
-          <h2 className={headingLinePrimary}>GUEST</h2>
-          <h2 className={headingLineAccent}>COUNT</h2>
+          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>GUEST</h2>
+          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>COUNT</h2>
         </div>
         <p className={`${subheadingClass} mb-8 mt-6`}>How many party pals?</p>
       </div>
@@ -1009,8 +1009,8 @@ export default function FamilyFunBookingWizard({
         </motion.div>
 
         <div className={headingStackClass}>
-          <h2 className={headingLinePrimary}>YOUR</h2>
-          <h2 className={headingLineAccent}>CONTACT INFO</h2>
+          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>YOUR</h2>
+          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>CONTACT INFO</h2>
         </div>
         <p className={`${subheadingClass} mb-8 mt-6`}>Stay in the loop!</p>
       </div>
@@ -1083,8 +1083,8 @@ export default function FamilyFunBookingWizard({
         </motion.div>
 
         <div className={headingStackClass}>
-          <h2 className={headingLinePrimary}>SPECIAL</h2>
-          <h2 className={headingLineAccent}>REQUESTS</h2>
+          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>SPECIAL</h2>
+          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>REQUESTS</h2>
         </div>
         <p className={`${subheadingClass} mb-8 mt-6`}>
           Anything we should know?
@@ -1121,8 +1121,8 @@ export default function FamilyFunBookingWizard({
         </motion.div>
 
         <div className={headingStackClass}>
-          <h1 className={`${headingLinePrimary} text-5xl sm:text-6xl`}>SECURE</h1>
-          <h1 className={`${headingLineAccent} text-5xl sm:text-6xl`}>YOUR PARTY</h1>
+          <h1 className={`${headingLinePrimary} text-6xl sm:text-7xl`}>SECURE</h1>
+          <h1 className={`${headingLineAccent} text-6xl sm:text-7xl`}>YOUR PARTY</h1>
         </div>
         <p className={`${subheadingClass} mb-4 mt-6`}>
           Pay a 50% deposit to lock in your date and time!
@@ -1326,8 +1326,8 @@ export default function FamilyFunBookingWizard({
         </motion.div>
 
         <div className={headingStackClass}>
-          <h2 className={headingLineAccent}>WOOHOO!</h2>
-          <h2 className={headingLinePrimary}>YOU&apos;RE BOOKED 🎊</h2>
+          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>WOOHOO!</h2>
+          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>YOU&apos;RE BOOKED 🎊</h2>
         </div>
         <p className={`${subheadingClass} mb-8 mt-6 text-amber-700`}>
           Party locked in! Watch your inbox for details. Can&apos;t wait to
@@ -1430,18 +1430,12 @@ export default function FamilyFunBookingWizard({
 
   return (
     <div className="min-h-[100dvh] flex flex-col lg:flex-row relative">
-      {/* Mobile full background */}
-      <div className="absolute inset-0 lg:hidden bg-[url('/newmobilebackgroundimage.png')] bg-top bg-cover bg-no-repeat" />
-      <div className="absolute inset-0 lg:hidden" />
+      {/* Mobile full background removed intentionally for cleaner mobile UI */}
 
-      {/* Desktop visual panel */}
-      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/party-background.png')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10" />
-      </div>
+      {/* Desktop visual panel removed intentionally for cleaner desktop UI */}
 
       {/* Content panel */}
-      <div className="w-full lg:w-1/2 flex flex-col relative bg-transparent lg:bg-gradient-to-b lg:from-white/10 lg:to-white/10 lg:backdrop-blur supports-[backdrop-filter]:backdrop-blur-md">
+      <div className="w-full flex flex-col relative bg-transparent">
         {showCelebration && <ConfettiAnimation />}
 
         {/* Sticky progress + hold banner */}
