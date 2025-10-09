@@ -1121,112 +1121,191 @@ export default function FamilyFunBookingWizard({
         </motion.div>
 
         <div className={headingStackClass}>
-          <h2 className={headingLinePrimary}>SECURE</h2>
-          <h2 className={headingLineAccent}>YOUR PARTY</h2>
+          <h1 className={`${headingLinePrimary} text-5xl sm:text-6xl`}>SECURE</h1>
+          <h1 className={`${headingLineAccent} text-5xl sm:text-6xl`}>YOUR PARTY</h1>
         </div>
-        <p className={`${subheadingClass} mb-8 mt-6`}>
-          Lock it in with a deposit.
+        <p className={`${subheadingClass} mb-4 mt-6`}>
+          Pay a 50% deposit to lock in your date and time!
         </p>
+        {typeof holdRemaining === "number" && holdRemaining > 0 && (
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-yellow-800 text-sm font-semibold">
+            ⏳ Hold expires in <span className="tabular-nums">{fmtMMSS(holdRemaining)}</span>
+          </div>
+        )}
       </div>
 
-      <div className="bg-white/90 rounded-3xl p-8 max-w-md mx-auto mb-8">
-        <h3 className="font-party text-2xl text-brown-700 mb-6">
-          Party Summary 🎉
-        </h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+        {/* Summary (left) */}
+        <div className="lg:col-span-2 bg-white/90 rounded-3xl p-8 shadow-lg">
+          <h3 className="text-2xl text-brown-700 font-bold mb-2">
+            Party Summary 🎉
+          </h3>
+          <p className="text-sm text-brown-700 mb-6">Ready to lock it in? Review your details and secure your reservation.</p>
 
-        <div className="text-left space-y-3 mb-6">
+          <div className="text-left space-y-3 mb-6">
           <div className="flex justify-between">
-            <span className="font-playful">Birthday Star:</span>
+            <span className="text-brown-700">Birthday Star:</span>
             <span className="font-bold">
               {bookingData.customerInfo.childName} (turning{" "}
               {bookingData.customerInfo.childAge}!)
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="font-playful">Date & Time:</span>
+            <span className="text-brown-700">Date & Time:</span>
             <span className="font-bold">
               {bookingData.selectedDate} • {bookingData.selectedTime}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="font-playful">Package:</span>
+            <span className="text-brown-700">Package:</span>
             <span className="font-bold">
               {bookingData.selectedPackage?.name}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="font-playful">Room:</span>
+            <span className="text-brown-700">Room:</span>
             <span className="font-bold">{bookingData.selectedRoom?.name}</span>
           </div>
           <div className="flex justify-between">
-            <span className="font-playful">Guest Count:</span>
+            <span className="text-brown-700">Guest Count:</span>
             <span className="font-bold">{bookingData.guestCount} kids</span>
           </div>
-        </div>
-
-        <div className="border-t border-gray-200 pt-6">
-          <div className="flex justify-between text-xl font-party text-brown-700">
-            <span>Deposit Required:</span>
-            <span className="text-party-pink">${calculateDeposit().toFixed(2)}</span>
           </div>
-          <p className="text-sm text-brown-600 font-playful mt-2">
-            Remaining balance due on party day
-          </p>
-        </div>
-      </div>
 
-      <motion.button
-        onClick={async () => {
-          try {
-            updateBookingData({ paymentStatus: "processing" });
-            const { data, error } = await supabase.functions.invoke("createBooking", {
-              body: {
-                tenantSlug: tenant,
-                roomId: bookingData.selectedRoom?.id,
-                packageId: bookingData.selectedPackage?.id,
-                startTime: bookingData.selectedSlot?.timeStart,
-                endTime: bookingData.selectedSlot?.timeEnd,
-                childName: bookingData.customerInfo.childName,
-                childAge: bookingData.customerInfo.childAge,
-                parentName: bookingData.customerInfo.parentName,
-                email: bookingData.customerInfo.parentEmail,
-                phone: bookingData.customerInfo.parentPhone,
-                kids: bookingData.guestCount,
-                notes: bookingData.specialNotes,
-                holdId: hold?.id,
-                addons: (bookingData.selectedAddons || [])
-                  .filter(({ quantity }) => quantity > 0)
-                  .map(({ addon, quantity }) => ({ addonId: addon.id, quantity })),
-              },
-            });
-            if (error) {
-              console.error("createBooking error", error);
-              updateBookingData({ paymentStatus: "failed" });
-              return;
-            }
-            const checkoutUrl = (data as any)?.checkoutUrl;
-            const bookingId = (data as any)?.bookingId;
-            updateBookingData({ bookingId, paymentId: (data as any)?.paymentId });
-            // Clear client hold state (server already deletes the hold)
-            setHold(null);
-            if (checkoutUrl) {
-              window.location.href = checkoutUrl;
-            } else {
-              // Fallback advance if no URL (dev mode)
-              setShowCelebration(true);
-              setTimeout(() => nextStep(), 500);
-            }
-          } catch (e) {
-            console.error("createBooking exception", e);
-            updateBookingData({ paymentStatus: "failed" });
-          }
-        }}
-        className="btn-party text-xl px-12 py-4"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        🚀 Secure My Party Spot! 🚀
-      </motion.button>
+          {/* Line items */}
+          {bookingData.selectedPackage && (
+            <div className="mt-2 space-y-2 text-sm text-brown-700">
+              <div className="flex justify-between">
+                <span>Package ({bookingData.selectedPackage.base_kids} kids)</span>
+                <span>${(bookingData.selectedPackage.base_price || 0).toFixed(2)}</span>
+              </div>
+              {Math.max(0, (bookingData.guestCount || 0) - (bookingData.selectedPackage.base_kids || 0)) > 0 && (
+                <div className="flex justify-between">
+                  <span>
+                    Extra kids × {Math.max(0, (bookingData.guestCount || 0) - (bookingData.selectedPackage.base_kids || 0))}
+                  </span>
+                  <span>
+                    ${(
+                      Math.max(0, (bookingData.guestCount || 0) - (bookingData.selectedPackage.base_kids || 0)) *
+                      (bookingData.selectedPackage.extra_kid_price || 0)
+                    ).toFixed(2)}
+                  </span>
+                </div>
+              )}
+              {(bookingData.selectedAddons || []).filter(a => a.quantity > 0).length > 0 && (
+                <div className="pt-2">
+                  <div className="font-semibold mb-1">Add-ons</div>
+                  {(bookingData.selectedAddons || []).filter(a => a.quantity > 0).map(({ addon, quantity }) => (
+                    <div key={addon.id} className="flex justify-between">
+                      <span>{addon.name} × {quantity}</span>
+                      <span>${((addon.price || 0) * quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {(bookingData.selectedCharacters || []).filter(c => (c.quantity ?? 1) > 0).length > 0 && (
+                <div className="pt-2">
+                  <div className="font-semibold mb-1">Party Characters</div>
+                  {(bookingData.selectedCharacters || []).filter(c => (c.quantity ?? 1) > 0).map(({ character, quantity }) => (
+                    <div key={character.id} className="flex justify-between">
+                      <span>{character.name} × {quantity ?? 1}</span>
+                      <span>${(((character.price || 0)) * (quantity ?? 1)).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="border-t border-dashed border-gray-300 pt-3 flex justify-between text-base">
+                <span className="font-semibold">Estimated Total</span>
+                <span className="font-bold">${calculateTotal().toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="border-t border-gray-200 pt-6">
+            <div className="flex justify-between text-xl text-brown-700">
+              <span>Deposit Required:</span>
+              <span className="text-party-pink">${calculateDeposit().toFixed(2)}</span>
+            </div>
+            <p className="text-sm text-brown-600 mt-2">
+              Remaining balance due on party day
+            </p>
+          </div>
+
+          {/* Actions moved under summary */}
+          <div className="mt-6 flex flex-col gap-4">
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={prevStep}
+                className="px-5 py-3 rounded-full border border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100 transition"
+              >
+                ← Back
+              </button>
+              <motion.button
+                onClick={async () => {
+                  try {
+                    updateBookingData({ paymentStatus: "processing" });
+                    const { data, error } = await supabase.functions.invoke("createBooking", {
+                      body: {
+                        tenantSlug: tenant,
+                        roomId: bookingData.selectedRoom?.id,
+                        packageId: bookingData.selectedPackage?.id,
+                        startTime: bookingData.selectedSlot?.timeStart,
+                        endTime: bookingData.selectedSlot?.timeEnd,
+                        childName: bookingData.customerInfo.childName,
+                        childAge: bookingData.customerInfo.childAge,
+                        parentName: bookingData.customerInfo.parentName,
+                        email: bookingData.customerInfo.parentEmail,
+                        phone: bookingData.customerInfo.parentPhone,
+                        kids: bookingData.guestCount,
+                        notes: bookingData.specialNotes,
+                        holdId: hold?.id,
+                        addons: (bookingData.selectedAddons || [])
+                          .filter(({ quantity }) => quantity > 0)
+                          .map(({ addon, quantity }) => ({ addonId: addon.id, quantity })),
+                      },
+                    });
+                    if (error) {
+                      console.error("createBooking error", error);
+                      updateBookingData({ paymentStatus: "failed" });
+                      return;
+                    }
+                    const checkoutUrl = (data as any)?.checkoutUrl;
+                    const bookingId = (data as any)?.bookingId;
+                    updateBookingData({ bookingId, paymentId: (data as any)?.paymentId });
+                    // Clear client hold state (server already deletes the hold)
+                    setHold(null);
+                    if (checkoutUrl) {
+                      window.location.href = checkoutUrl;
+                    } else {
+                      // Fallback advance if no URL (dev mode)
+                      setShowCelebration(true);
+                      setTimeout(() => nextStep(), 500);
+                    }
+                  } catch (e) {
+                    console.error("createBooking exception", e);
+                    updateBookingData({ paymentStatus: "failed" });
+                  }
+                }}
+                className={`btn-party text-xl px-6 py-3 ${bookingData.paymentStatus === "processing" ? "opacity-70 cursor-not-allowed" : ""}`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={
+                  bookingData.paymentStatus === "processing" ||
+                  !bookingData.selectedPackage || !bookingData.selectedRoom || !bookingData.selectedSlot || !hold?.id
+                }
+              >
+                {bookingData.paymentStatus === "processing" ? "Processing…" : "🚀 Secure My Party Spot! 🚀"}
+              </motion.button>
+            </div>
+            <p className="text-xs text-brown-600">
+              By paying the 50% deposit you agree to our cancellation and refund policy. Deposits are refundable up to 7 days before the event and transferable subject to availability.
+            </p>
+          </div>
+        </div>
+
+        {/* Right column unused after moving actions under summary */}
+        <div className="bg-transparent" />
+      </div>
     </motion.div>
   );
 
