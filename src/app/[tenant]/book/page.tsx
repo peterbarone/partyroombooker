@@ -1,7 +1,7 @@
 "use client";
 
 // Family Fun Factory Booking Experience
-import FamilyFunBookingWizard from "../../../components/FamilyFunBookingWizard";
+import FamilyFunBookingWizard from "../../../components/BookingWizard";
 import { useParams } from "next/navigation";
 
 export default function BookingPage() {

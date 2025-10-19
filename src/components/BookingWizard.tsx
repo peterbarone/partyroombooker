@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import ResponsiveBackground from "./ResponsiveBackground";
-import ConfettiAnimation from "./ConfettiAnimation";
 
 // Shared style tokens (add near top after imports and before component)
 // If already present, skip duplication.
@@ -438,8 +437,16 @@ export default function FamilyFunBookingWizard({
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -50 }}
-      className="text-center space-y-6 md:space-y-8"
+      className="relative min-h-[70vh] md:min-h-[75vh] text-center space-y-6 md:space-y-8 flex flex-col items-center justify-center px-4 py-10 overflow-hidden rounded-3xl"
     >
+      <Image
+        src="/greetingbackground.png"
+        alt="Party scene background"
+        fill
+        priority
+        className="object-cover -z-10"
+      />
+
       <motion.div
         animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
@@ -448,11 +455,11 @@ export default function FamilyFunBookingWizard({
         🎉
       </motion.div>
 
-      <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent mb-2 md:mb-4 leading-tight">
+      <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent mb-2 md:mb-4 leading-tight drop-shadow">
         Welcome to the Party Palace!
       </h2>
 
-      <p className="text-lg sm:text-xl text-gray-700 mb-6 md:mb-8">
+      <p className="text-lg sm:text-xl text-gray-800 mb-6 md:mb-8">
         Let&apos;s plan the most AMAZING party ever! 🎈
       </p>
 
@@ -468,38 +475,44 @@ export default function FamilyFunBookingWizard({
   );
 
   const renderChildNameStep = () => (
-    <div className="space-y-8 text-center">
-      {/* Static emoji (animation removed for mobile stability) */}
-      <div className="text-8xl mb-6 select-none">🎈</div>
-
-      <div className="space-y-1 font-extrabold tracking-tight drop-shadow-sm">
-        <h2 className="text-3xl sm:text-6xl font-bold-display text-amber-800 leading-[0.95]">
-          WHO&apos;S THE
-        </h2>
-        <h2 className="text-3xl sm:text-6xl text-amber-800 leading-[0.95]">LUCKY KID</h2>
-        <h2 className="text-3xl sm:text-6xl text-pink-600 leading-[0.95]">WE&apos;RE</h2>
-        <h2 className="text-3xl sm:text-6xl text-pink-600 leading-[0.95]">CELEBRATING?</h2>
+    <div className="relative pb-24">
+      {/* Wizzy mascot on mobile (smaller, anchored) */}
+      <div className="md:hidden wizzy-mobile select-none pointer-events-none">
+        <Image src="/wizzy.png" alt="Wizzy the party mascot" width={180} height={180} priority />
+      </div>
+      {/* Wizzy mascot on the right */}
+      <div className="hidden md:block absolute -bottom-2 right-2 select-none pointer-events-none">
+        <Image src="/wizzy.png" alt="Wizzy the party mascot" width={340} height={340} priority />
       </div>
 
-      <p className="text-xl text-amber-700 font-semibold mb-10 tracking-wide">
-        Enter the birthday child&apos;s name below to get started!
-      </p>
+      {/* Hero title images */}
+      <div className="mt-3 mb-1 flex flex-col items-center gap-1">
+        <Image src={'/Who Are We.png'} alt="Who are we" width={340} height={80} priority />
+        <Image src={'/CELEBRATING_.png'} alt="Celebrating?" width={340} height={80} priority />
+      </div>
 
-      <div className="max-w-sm mx-auto">
-        <input
-          type="text"
-          placeholder="Enter the birthday child's name"
-          value={bookingData.customerInfo.childName}
-          onChange={(e) =>
-            updateBookingData({
-              customerInfo: {
-                ...bookingData.customerInfo,
-                childName: e.target.value,
-              },
-            })
-          }
-          className={`${inputBaseClass} text-amber-800 placeholder-amber-600 bg-amber-50 focus:border-pink-500`}
-        />
+      {/* Sign-board input */}
+      <div className="sign-wrap mt-4 mb-10">
+        <div className="sign-board">
+          <input
+            type="text"
+            placeholder="Enter your child’s name"
+            value={bookingData.customerInfo.childName}
+            onChange={(e) =>
+              updateBookingData({
+                customerInfo: {
+                  ...bookingData.customerInfo,
+                  childName: e.target.value,
+                },
+              })
+            }
+          />
+        </div>
+      </div>
+
+      {/* Summary card image */}
+      <div className="mt-2 flex">
+        <Image src={'/summary-card.png'} alt="Party summary" width={300} height={240} />
       </div>
     </div>
   );
@@ -1436,7 +1449,7 @@ export default function FamilyFunBookingWizard({
 
       {/* Content panel */}
       <div className="w-full flex flex-col relative bg-transparent">
-        {showCelebration && <ConfettiAnimation />}
+       
 
         {/* Sticky progress + hold banner */}
         <div className="sticky top-0 z-20 px-4 pt-4 pb-3 bg-white/80 backdrop-blur-md shadow-sm border-b border-amber-100">
@@ -1489,19 +1502,19 @@ export default function FamilyFunBookingWizard({
             <div className="px-4 pt-2 pb-4 bg-white/10 backdrop-blur-md border-t border-amber-200 flex items-center justify-between gap-3">
               <button
                 onClick={prevStep}
+                aria-label="Back"
                 disabled={currentStep === 0}
-                className="flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold border-[3px] border-amber-800 text-amber-800 bg-amber-50 hover:bg-amber-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="nav-img-btn nav-img-btn--back disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <ChevronLeft size={18} />
-                Back
+                <span className="sr-only">Back</span>
               </button>
               <button
                 onClick={nextStep}
+                aria-label="Next"
                 disabled={isNextDisabled()}
-                className="flex items-center gap-2 rounded-full px-8 py-3 text-sm font-bold text-white bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 border-[3px] border-pink-600 shadow-sm hover:shadow-md transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="nav-img-btn nav-img-btn--next disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Next
-                <ChevronRight size={18} />
+                <span className="sr-only">Next</span>
               </button>
             </div>
           )}
