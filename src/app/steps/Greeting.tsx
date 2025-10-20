@@ -8,7 +8,7 @@ export default function Greeting({ onStart }: { onStart: () => void }) {
       <img
         src="/assets/greeting/wizzygreeting.png"
         alt="Wizzy"
-        className="pointer-events-none select-none absolute bottom-20 left-[-100px] w-[80%] sm:w-[86%] md:w-[80%] max-w-[480px]"
+        className="pointer-events-none select-none absolute bottom-20 left-[-100px] w-[70%] sm:w-[80%] md:w-[80%] max-w-[480px]"
       />
       <img
         src="/assets/greeting/rufffsgreeting.png"

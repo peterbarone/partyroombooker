@@ -11,6 +11,7 @@ type Props = {
   showNav?: boolean;
   showProgress?: boolean;
   contentOverflowY?: 'auto' | 'visible';
+  showScrollBackdrop?: boolean;
   holdId?: string | null;
   holdRemaining?: number | null;
   fmtMMSS?: (secs: number) => string;
@@ -26,6 +27,7 @@ export default function HUD({
   showNav = true,
   showProgress = true,
   contentOverflowY = 'auto',
+  showScrollBackdrop = true,
   holdId,
   holdRemaining,
   fmtMMSS = (s) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.max(0, s) % 60).padStart(2, "0")}`,
@@ -74,7 +76,20 @@ export default function HUD({
 
       {/* Content */}
       <div className={`flex-1 px-2 md:px-4 py-4 ${contentOverflowY === 'visible' ? 'overflow-visible' : 'overflow-y-auto'}`}>
-        {children}
+        {showScrollBackdrop ? (
+          <div
+            className="mx-auto w-full max-w-[420px] min-h-[320px] flex items-center justify-center px-6 py-6"
+            style={{ backgroundImage: "url('/assets/rolledscroll.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
+          >
+            <div className="w-full">
+              {children}
+            </div>
+          </div>
+        ) : (
+          <div className="mx-auto w-full max-w-[420px] h-full">
+            {children}
+          </div>
+        )}
       </div>
 
       {/* Bottom nav */}
@@ -83,17 +98,19 @@ export default function HUD({
           <button
             onClick={onPrev}
             aria-label="Back"
-            className="rounded-2xl border border-amber-300 bg-white/80 text-amber-900 px-5 py-3 shadow-sm"
+            className="relative w-72 h-24 disabled:opacity-40"
+            style={{ backgroundImage: "url('/assets/backbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
           >
-            ← Back
+            <span className="sr-only">Back</span>
           </button>
           <button
             onClick={onNext}
             aria-label="Next"
             disabled={!!isNextDisabled}
-            className="rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 shadow disabled:opacity-40"
+            className="relative w-72 h-24 disabled:opacity-40"
+            style={{ backgroundImage: "url('/assets/nextbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
           >
-            Next →
+            <span className="sr-only">Next</span>
           </button>
         </div>
       )}

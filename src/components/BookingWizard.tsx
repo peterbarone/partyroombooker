@@ -1194,6 +1194,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       showNav={stepKey !== "greeting" && stepKey !== "payment" && stepKey !== "confirmation"}
       showProgress={stepKey !== "greeting"}
       contentOverflowY={stepKey === "greeting" ? 'visible' : 'auto'}
+      showScrollBackdrop={stepKey !== "greeting"}
       holdId={hold?.id ?? null}
       holdRemaining={holdRemaining}
       fmtMMSS={fmtMMSS}
