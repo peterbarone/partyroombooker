@@ -27,7 +27,7 @@ export default function HUD({
   showNav = true,
   showProgress = true,
   contentOverflowY = 'auto',
-  showScrollBackdrop = true,
+  showScrollBackdrop = false,
   holdId,
   holdRemaining,
   fmtMMSS = (s) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.max(0, s) % 60).padStart(2, "0")}`,
@@ -76,42 +76,39 @@ export default function HUD({
 
       {/* Content */}
       <div className={`flex-1 px-2 md:px-4 py-4 ${contentOverflowY === 'visible' ? 'overflow-visible' : 'overflow-y-auto'}`}>
-        {showScrollBackdrop ? (
-          <div
-            className="mx-auto w-full max-w-[420px] min-h-[320px] flex items-center justify-center px-6 py-6"
-            style={{ backgroundImage: "url('/assets/rolledscroll.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
-          >
-            <div className="w-full">
-              {children}
-            </div>
-          </div>
-        ) : (
-          <div className="mx-auto w-full max-w-[420px] h-full">
-            {children}
-          </div>
-        )}
+        <div className="mx-auto w-full max-w-[420px] h-full">
+          {children}
+        </div>
       </div>
 
       {/* Bottom nav */}
       {showNav && (
-        <div className="px-2 md:px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 flex items-center justify-between gap-3">
-          <button
-            onClick={onPrev}
-            aria-label="Back"
-            className="relative w-72 h-24 disabled:opacity-40"
-            style={{ backgroundImage: "url('/assets/backbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
-          >
-            <span className="sr-only">Back</span>
-          </button>
-          <button
-            onClick={onNext}
-            aria-label="Next"
-            disabled={!!isNextDisabled}
-            className="relative w-72 h-24 disabled:opacity-40"
-            style={{ backgroundImage: "url('/assets/nextbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
-          >
-            <span className="sr-only">Next</span>
-          </button>
+        <div className="px-2 md:px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
+          <div className="mx-auto w-full max-w-[420px] flex items-center justify-between gap-2">
+            <button
+              onClick={onPrev}
+              aria-label="Back"
+              className="relative flex-none w-24 h-24 sm:w-24 sm:h-24 md:w-24 md:h-24 disabled:opacity-40"
+              style={{ backgroundImage: "url('/assets/backbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
+            >
+              <span className="sr-only">Back</span>
+            </button>
+            {/* Center scroll image constrained to content width */}
+            <div
+              aria-hidden
+              className="flex-none w-56 h-56 sm:w-56 sm:h-56 md:w-56 md:h-56"
+              style={{ backgroundImage: "url('/assets/rolledscroll.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
+            />
+            <button
+              onClick={onNext}
+              aria-label="Next"
+              disabled={!!isNextDisabled}
+              className="relative flex-none w-24 h-24 sm:w-24 sm:h-24 md:w-24 md:h-24 disabled:opacity-40"
+              style={{ backgroundImage: "url('assets/nextbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
+            >
+              <span className="sr-only">Next</span>
+            </button>
+          </div>
         </div>
       )}
     </div>

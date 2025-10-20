@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* Fun Party Theme Custom Styles */
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700;800;900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700;800;900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 /* Global App Background */
 html, body {
@@ -17,6 +17,11 @@ body {
   background-position:  center;
   background-attachment: fixed;
   background-color: #FFEBD5; /* soft cream fallback */
+  font-family: 'Lilita One', sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+}
+
+button, input, textarea, select {
+  font-family: 'Lilita One', sans-serif system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
 }
 
 :root {
@@ -44,15 +49,26 @@ body {
 
 /* Typography matching the image */
 .font-party {
-  font-family: 'Fredoka', cursive;
+  font-family: 'Lilita One', sans-serif;
 }
 
 .font-playful {
-  font-family: 'Nunito', sans-serif;
+  font-family: 'Lilita One', sans-serif;
 }
 
 .font-bold-display {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Lilita One', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+/* App headline style */
+.app-headline {
+  color: #FEF3C6;
+  -webkit-text-stroke: 2px #36454F;
+  text-shadow: none;
+  font-size: 50px;
+  line-height: 1.1;
   font-weight: 900;
   letter-spacing: -0.02em;
 }

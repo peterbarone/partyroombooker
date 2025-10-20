@@ -3,10 +3,7 @@ export default function GreetingScene() {
     <div className="w-full h-full relative">
       {/* Headline */}
       <div className="absolute left-1/2 -translate-x-1/2 text-center px-4 top-[calc(1.25rem+env(safe-area-inset-top))] sm:top-8">
-        <div
-          className="text-white text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight drop-shadow-[0_2px_0_rgba(0,0,0,0.5)]"
-          style={{ textShadow: "0 3px 0 rgba(0,0,0,0.45), 0 0 8px rgba(0,0,0,0.35)" }}
-        >
+        <div className="app-headline font-party">
           Book a party with
         </div>
         <div className="mt-2 flex justify-center">
