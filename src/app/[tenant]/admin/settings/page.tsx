@@ -14,6 +14,10 @@ type TenantRow = {
   timezone: string;
   currency: string;
   active: boolean;
+  contact_address?: string | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
+  logo_url?: string | null;
 };
 
 type PolicyRow = {
@@ -38,6 +42,7 @@ export default function SettingsPage() {
   const tenantSlug = (params?.tenant as string) || "";
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [tenant, setTenant] = useState<TenantRow | null>(null);
   const [policies, setPolicies] = useState<PolicyRow | null>(null);
@@ -50,7 +55,7 @@ export default function SettingsPage() {
     try {
       const { data: t } = await supabase
         .from("tenants")
-        .select("id,slug,name,timezone,currency,active")
+        .select("id,slug,name,timezone,currency,active,contact_address,contact_phone,contact_email,logo_url")
         .eq("slug", tenantSlug)
         .single();
       if (!t?.id) {
@@ -105,15 +110,24 @@ export default function SettingsPage() {
     if (!tenantId || !tenant) return;
     setSaving(true);
     try {
-      await supabase
+      const { error } = await supabase
         .from("tenants")
         .update({
           name: tenant.name,
           timezone: tenant.timezone,
           currency: tenant.currency,
           active: tenant.active,
+          contact_address: tenant.contact_address ?? null,
+          contact_phone: tenant.contact_phone ?? null,
+          contact_email: tenant.contact_email ?? null,
+          logo_url: tenant.logo_url ?? null,
         })
         .eq("id", tenantId);
+      if (error) {
+        setNotice({ type: 'error', text: `Save failed: ${error.message}` });
+        return;
+      }
+      setNotice({ type: 'success', text: 'Saved successfully.' });
       await load();
     } finally {
       setSaving(false);
@@ -125,10 +139,15 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       // Upsert by tenant_id unique
-      await supabase.from("tenant_policies").upsert({
+      const { error } = await supabase.from("tenant_policies").upsert({
         tenant_id: tenantId,
         ...policies,
       }, { onConflict: "tenant_id" });
+      if (error) {
+        setNotice({ type: 'error', text: `Save policies failed: ${error.message}` });
+        return;
+      }
+      setNotice({ type: 'success', text: 'Policies saved.' });
       await load();
     } finally {
       setSaving(false);
@@ -139,10 +158,15 @@ export default function SettingsPage() {
     if (!tenantId || !integrations) return;
     setSaving(true);
     try {
-      await supabase.from("tenant_integrations").upsert({
+      const { error } = await supabase.from("tenant_integrations").upsert({
         tenant_id: tenantId,
         ...integrations,
       }, { onConflict: "tenant_id" });
+      if (error) {
+        setNotice({ type: 'error', text: `Save integrations failed: ${error.message}` });
+        return;
+      }
+      setNotice({ type: 'success', text: 'Integrations saved.' });
       await load();
     } finally {
       setSaving(false);
@@ -164,6 +188,9 @@ export default function SettingsPage() {
     <AdminLayout tenant={tenantSlug}>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+        {notice && (
+          <div className={`${notice.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'} border rounded px-3 py-2`}>{notice.text}</div>
+        )}
 
         {/* Tenant */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
@@ -214,6 +241,83 @@ export default function SettingsPage() {
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save Tenant"}
+            </button>
+          </div>
+        </div>
+
+        {/* Company Information */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">Company Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-3">
+              <label className="block text-sm text-gray-600 mb-1">Address</label>
+              <textarea
+                rows={3}
+                value={tenant.contact_address || ""}
+                onChange={(e) => setTenant({ ...tenant, contact_address: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Phone</label>
+              <input
+                type="tel"
+                value={tenant.contact_phone || ""}
+                onChange={(e) => setTenant({ ...tenant, contact_phone: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                placeholder="(555) 555-5555"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Email</label>
+              <input
+                type="email"
+                value={tenant.contact_email || ""}
+                onChange={(e) => setTenant({ ...tenant, contact_email: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                placeholder="info@company.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Logo</label>
+              <div className="flex items-center gap-4">
+                {tenant.logo_url ? (
+                  <img src={tenant.logo_url} alt="Logo" className="h-12 w-auto rounded border" />
+                ) : (
+                  <div className="h-12 w-12 rounded border flex items-center justify-center text-xs text-gray-500">No logo</div>
+                )}
+                <input
+                  type="file"
+                  accept="image/svg+xml,image/png,image/webp"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !tenantSlug) return;
+                    setSaving(true);
+                    try {
+                      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+                      const key = `${tenantSlug}/logo/logo-${Date.now()}.${ext}`;
+                      const bucket = "tennent logos"; // exact bucket name per request
+                      const { error: upErr } = await supabase.storage.from(bucket).upload(key, file, { upsert: true, cacheControl: '3600' });
+                      if (upErr) { setNotice({ type: 'error', text: `Upload failed: ${upErr.message}` }); return; }
+                      const { data } = supabase.storage.from(bucket).getPublicUrl(key);
+                      const publicUrl = data.publicUrl;
+                      setTenant({ ...tenant, logo_url: publicUrl });
+                      setNotice({ type: 'success', text: 'Logo uploaded. Click Save Company Info to persist.' });
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+          <div>
+            <button
+              onClick={saveTenant}
+              disabled={saving}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Company Info"}
             </button>
           </div>
         </div>

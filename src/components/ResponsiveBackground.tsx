@@ -11,15 +11,10 @@ export default function ResponsiveBackground({ className = '', overlay }: Respon
   return (
   <div className={`w-full h-full ${className}`}>
       <picture>
-        {/* Mobile-first source for small screens */}
-        <source media="(max-width: 640px)" srcSet="/mobilepartybackground-640.webp" type="image/webp" />
-        <source media="(max-width: 640px)" srcSet="/mobilepartybackground.png" type="image/png" />
-
-        {/* Desktop responsive sources */}
-        <source srcSet="/party-background-1600.webp 1600w, /party-background-1200.webp 1200w, /party-background-800.webp 800w, /party-background-480.webp 480w" type="image/webp" />
-        <source srcSet="/party-background-1600.png 1600w, /party-background-1200.png 1200w, /party-background-800.png 800w, /party-background-480.png 480w" type="image/png" />
-
-        <img src="/party-background-1600.png" alt="Party background" className="w-full h-full object-cover object-bottom md:object-center" />
+        {/* Use greeting assets in public/assets/greeting/ */}
+        <source media="(max-width: 640px)" srcSet="/assets/greeting/bg-mobile.png" />
+        <source media="(max-width: 1023px)" srcSet="/assets/greeting/bg-tablet.png" />
+        <img src="/assets/greeting/greeting-desktop.png" alt="Party background" className="w-full h-full object-cover object-bottom md:object-center" />
       </picture>
       {overlay}
     </div>

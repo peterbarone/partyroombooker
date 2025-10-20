@@ -1,7 +1,5 @@
-import { redirect } from "next/navigation";
+import FamilyFunBookingWizardV2 from "@/components/BookingWizard";
 
-export default function RootPage() {
-  // For demo purposes, redirect to a default tenant
-  // In production, this could show a tenant selection page or redirect based on domain
-  redirect("/thefamilyfunfactory");
+export default function Page({ params }: { params: { tenant: string } }) {
+  return <FamilyFunBookingWizardV2 tenant={params.tenant} />;
 }
