@@ -12,14 +12,15 @@ import GreetingStep from "@/app/steps/Greeting";
 import ChildNameStep from "@/app/steps/ChildInfo";
 import ChildAgeStep from "@/app/steps/ChildAge";
 import PartyDateStep from "@/app/steps/PartyDate";
-import TimeSlotStep from "@/app/steps/TimeSlot";
+// import TimeSlotStep from "@/app/steps/TimeSlot";
 import RoomChoiceStep from "@/app/steps/RoomChoice";
-import PackageChoiceStep from "@/app/steps/PackageChoice";
+// import PackageChoiceStep from "@/app/steps/PackageChoice";
 import GuestCountStep from "@/app/steps/GuestCount";
 import ParentInfoStep from "@/app/steps/ParentInfo";
 import SpecialNotesStep from "@/app/steps/SpecialNotes";
 import PaymentStep from "@/app/steps/Payment";
 import ConfirmationStep from "@/app/steps/Confirmation";
+import Calendar from "@/components/ui/Calendar";
 
 // Modular Scenes (visuals/midground)
 import GreetingScene from "@/components/scenes/GreetingScene";
@@ -125,9 +126,8 @@ interface BookingData {
     childAge: number;
     emergencyContact: string;
   };
-
   selectedAddons: Array<{ addon: Addon; quantity: number }>;
-  selectedCharacters?: Array<{ character: PartyCharacter; quantity: number }>;
+  selectedCharacters: Array<{ character: PartyCharacter; quantity: number }>;
   specialNotes: string;
   paymentStatus: "pending" | "processing" | "completed" | "failed";
   paymentId?: string;
@@ -176,6 +176,41 @@ const getBackgroundsForStep = (step: StepKey, tenant?: string) => {
         tablet: "/assets/child-name/bg-tablet.png",
         desktop: "/assets/child-name/bg-desktop.png",
       };
+    case "child-age":
+      // Backgrounds for the "HOW OLD IS ... TURNING?" step
+      return {
+        mobile: "/assets/child-age/bg-mobile.png",
+        tablet: "/assets/child-age/bg-tablet.png",
+        desktop: "/assets/child-age/bg-desktop.png",
+      };
+    case "party-date":
+      // Backgrounds for the party date selection step
+      return {
+        mobile: "/assets/date/bg-mobile.png",
+        tablet: "/assets/date/bg-tablet.png",
+        desktop: "/assets/date/bg-desktop.png",
+      };
+    case "time-slot":
+      // Backgrounds for the time slot selection step
+      return {
+        mobile: "/assets/time/bg-mobile.png",
+        tablet: "/assets/time/bg-tablet.png",
+        desktop: "/assets/time/bg-desktop.png",
+      };
+    case "room-choice":
+      // Backgrounds for the room choice step
+      return {
+        mobile: "/assets/room/bg-mobile.png",
+        tablet: "/assets/room/bg-tablet.png",
+        desktop: "/assets/room/bg-desktop.png",
+      };
+    case "guest-count":
+      // Backgrounds for the guest count step
+      return {
+        mobile: "/assets/guestcount/bg-mobile.png",
+        tablet: "/assets/guestcount/bg-tablet.png",
+        desktop: "/assets/guestcount/bg-desktop.png",
+      };
     case "greeting":
     default: {
       const base = "/assets/greeting";
@@ -214,6 +249,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [availability, setAvailability] = useState<AvailabilitySlot[] | null>(null);
   const [availableRoomsForSelectedSlot, setAvailableRoomsForSelectedSlot] = useState<AvailabilityRoom[] | null>(null);
+  const [availabilitySource, setAvailabilitySource] = useState<'edge' | 'fallback' | 'none'>('none');
 
   // Hold state
   const [hold, setHold] = useState<{ id: string; expiresAt: string } | null>(null);
@@ -383,7 +419,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     loadData();
   }, [tenant]);
 
-  // Availability fetch after date selection
+  // Availability fetch after date selection (with fallback to slot_templates)
   useEffect(() => {
     if (!bookingData.selectedDate) return;
     const fetchAvailability = async () => {
@@ -396,19 +432,72 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
             kids: bookingData.guestCount,
           },
         });
-        if (error) {
-          console.error("availability error", error);
-          setAvailability(null);
+        if (!error && Array.isArray(data) && data.length > 0) {
+          setAvailability(data as any);
+          setAvailabilitySource('edge');
           return;
         }
-        setAvailability((data as any) || null);
+        // Fallback: derive from slot_templates when function is unavailable or empty
+        if (!tenantId) {
+          setAvailability([]);
+          setAvailabilitySource('none');
+          return;
+        }
+        const jsDate = new Date(bookingData.selectedDate + "T00:00:00");
+        const dow = jsDate.getUTCDay(); // 0=Sun (UTC)
+        const { data: slotsTpl, error: tplErr } = await supabase
+          .from("slot_templates")
+          .select("start_times_json, open_time, close_time")
+          .eq("tenant_id", tenantId)
+          .eq("day_of_week", dow)
+          .eq("active", true)
+          .limit(1)
+          .maybeSingle();
+        if (tplErr || !slotsTpl) {
+          setAvailability([]);
+          setAvailabilitySource('none');
+          return;
+        }
+        let starts: string[] = [];
+        try {
+          starts = Array.isArray(slotsTpl.start_times_json)
+            ? slotsTpl.start_times_json
+            : JSON.parse(slotsTpl.start_times_json || "[]");
+        } catch {
+          starts = [];
+        }
+        // Assume 2h duration windows by default
+        const mkIso = (dateIso: string, hm: string) => `${dateIso}T${hm}:00`;
+        const addHours = (iso: string, h: number) => {
+          const d = new Date(iso);
+          d.setHours(d.getHours() + h);
+          return d.toISOString();
+        };
+        const roomList = (rooms || []).map((r) => ({
+          roomId: r.id,
+          roomName: r.name,
+          maxKids: r.max_kids,
+          eligible: true,
+          available: true,
+        }));
+        const derived = starts.map((hm) => {
+          const startIsoLocal = mkIso(bookingData.selectedDate, hm);
+          return {
+            timeStart: new Date(startIsoLocal).toISOString(),
+            timeEnd: addHours(startIsoLocal, 2),
+            rooms: roomList,
+          } as AvailabilitySlot;
+        });
+        setAvailability(derived);
+        setAvailabilitySource('fallback');
       } catch (e) {
         console.error("availability exception", e);
-        setAvailability(null);
+        setAvailability([]);
+        setAvailabilitySource('none');
       }
     };
     fetchAvailability();
-  }, [tenant, bookingData.selectedDate, bookingData.selectedPackage?.id, bookingData.guestCount]);
+  }, [tenant, tenantId, rooms, bookingData.selectedDate, bookingData.selectedPackage?.id, bookingData.guestCount]);
 
   // Heartbeat: extend hold on payment step
   useEffect(() => {
@@ -529,18 +618,17 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const PartyDate = () => (
     <div className="h-full w-full flex flex-col items-center justify-center">
-      <div className="text-center mb-8">
-        <div className={headingStackClass}>
-          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>PICK THE</h2>
-          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>MAGICAL DATE</h2>
-        </div>
+      <div className="text-center mb-6">
+        <div className="app-headline">Pick your magical date</div>
       </div>
       <div className="w-full max-w-md px-2">
-        <input
-          type="date"
-          value={bookingData.selectedDate}
-          onChange={(e) => updateBookingData({ selectedDate: e.target.value })}
-          className={`${inputBaseClass} w-full`}
+        <Calendar
+          value={bookingData.selectedDate || null}
+          onChange={(iso) => {
+            updateBookingData({ selectedDate: iso, selectedSlot: undefined, selectedTime: "" });
+          }}
+          minDate={new Date()}
+          className="w-full"
         />
       </div>
     </div>
@@ -548,12 +636,22 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const TimeSlot = () => (
     <div className="h-full w-full flex flex-col items-center justify-center">
-      <div className="text-center mb-6">
-        <div className={headingStackClass}>
-          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>CHOOSE YOUR</h2>
-          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>PERFECT TIME</h2>
-        </div>
+      <div className="text-center mb-3">
+        <div className="app-headline">Choose your perfect time</div>
       </div>
+      {!bookingData.selectedDate && (
+        <div className="mb-4 text-center text-amber-900 font-semibold">Pick a date first</div>
+      )}
+      {!!bookingData.selectedDate && (
+        <div className="mb-4 text-center">
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </span>
+        </div>
+      )}
+      {!!bookingData.selectedDate && (
+        <div className="mb-2 text-xs text-amber-700">Source: {availabilitySource}</div>
+      )}
       <div className="w-full max-w-md flex flex-col gap-3">
         {!availability && <div className="text-amber-800 text-center">Checking availability…</div>}
         {availability && availability.length === 0 && (
@@ -596,29 +694,64 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   );
 
   const RoomChoice = () => {
-    const list =
-      availableRoomsForSelectedSlot
-        ? availableRoomsForSelectedSlot
-            .filter((r) => r.available && r.eligible)
-            .map((r) => ({ id: r.roomId, name: r.roomName, max_kids: r.maxKids }))
-        : rooms;
+    const list = availableRoomsForSelectedSlot
+      ? availableRoomsForSelectedSlot.map((r) => ({
+          id: r.roomId,
+          name: r.roomName,
+          max_kids: r.maxKids,
+          available: r.available,
+          eligible: r.eligible,
+        }))
+      : (rooms || []).map((r) => ({
+          id: r.id,
+          name: r.name,
+          max_kids: r.max_kids,
+          available: true,
+          eligible: true,
+        }));
+
+    const totalRooms = rooms?.length || 0;
+    const slotRooms = availableRoomsForSelectedSlot?.length || 0;
+    const listCount = list.length;
 
     return (
       <div className="h-full w-full flex flex-col items-center justify-center">
-        <div className="text-center mb-6">
-          <div className={headingStackClass}>
-            <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>CHOOSE YOUR</h2>
-            <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>EPIC ROOM</h2>
-          </div>
+        <div className="text-center mb-3">
+          <div className="app-headline">Choose your epic room</div>
         </div>
+        {(bookingData.selectedDate || bookingData.selectedTime) && (
+          <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
+            {bookingData.selectedDate && (
+              <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+                {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              </span>
+            )}
+            {bookingData.selectedTime && (
+              <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+                {bookingData.selectedTime}
+              </span>
+            )}
+          </div>
+        )}
+        <div className="mb-2 text-xs text-amber-700">
+          Rooms loaded: {totalRooms} • Rooms for selected slot: {slotRooms}
+        </div>
+        {listCount === 0 && (
+          <div className="text-amber-800 text-center mb-4">No rooms available for this time. Try another time or date.</div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-3xl">
-          {list.map((room) => (
+          {list.map((room) => {
+            const isDisabled = !room.available || !room.eligible;
+            const selected = bookingData.selectedRoom?.id === room.id;
+            return (
             <motion.div
               key={room.id}
-              className={`relative p-6 rounded-3xl border-4 transition-all cursor-pointer ${
-                bookingData.selectedRoom?.id === room.id
+              className={`relative p-6 rounded-3xl border-4 transition-all ${
+                selected
                   ? "border-amber-400 bg-white shadow-xl scale-[1.02]"
-                  : "border-transparent bg-white/80 hover:scale-[1.01]"
+                  : isDisabled
+                  ? "border-dashed border-amber-300 bg-white/60 cursor-not-allowed"
+                  : "border-transparent bg-white/80 hover:scale-[1.01] cursor-pointer"
               }`}
               onClick={async () => {
                 updateBookingData({ selectedRoom: room as any });
@@ -652,46 +785,76 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                   console.error("createHold exception", e);
                 }
               }}
-              whileHover={{ scale: 1.01 }}
+              whileHover={{ scale: isDisabled ? 1 : 1.01 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="text-4xl mb-3">{bookingData.selectedRoom?.id === room.id ? "✅" : "🏰"}</div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-4xl">{selected ? "✅" : "🏰"}</div>
+                {!room.eligible && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 border border-red-200">Not eligible</span>
+                )}
+                {room.eligible && !room.available && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">Not available</span>
+                )}
+              </div>
               <div className="text-xl font-bold text-amber-900 mb-1">{room.name}</div>
               <div className="text-sm text-amber-700">Fits up to {room.max_kids} kids</div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
   };
 
   const PackageChoice = () => (
-    <div className="h-full w-full flex flex-col items-center justify-center">
-      <div className="text-center mb-6">
-        <div className={headingStackClass}>
-          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>SELECT A</h2>
-          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>PARTY PACKAGE</h2>
-        </div>
+    <div className="h-full w-full flex flex-col items-center justify-start pt-20">
+      <div className="text-center mb-3">
+        <div className="app-headline">Select a party package</div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-4xl">
+      {(bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom) && (
+        <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
+          {bookingData.selectedDate && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </span>
+          )}
+          {bookingData.selectedTime && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedTime}
+            </span>
+          )}
+          {bookingData.selectedRoom && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedRoom.name}
+            </span>
+          )}
+        </div>
+      )}
+      <div className="mb-2 text-xs text-amber-700">Packages loaded: {packages.length}</div>
+      <div className="text-center text-amber-900 font-bold mb-2">Packages</div>
+      {packages.length === 0 && (
+        <div className="text-amber-800 text-center mb-4">No packages available. Make sure your tenant has active packages in Supabase.</div>
+      )}
+      <div className="mt-4 grid grid-cols-1 gap-4 w-full max-w-md">
         {packages.map((pkg) => (
           <motion.div
             key={pkg.id}
-            className={`p-6 rounded-3xl border-4 transition-all cursor-pointer ${
+            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
               bookingData.selectedPackage?.id === pkg.id
-                ? "border-amber-400 bg-white shadow-xl scale-[1.02]"
-                : "border-transparent bg-white/80 hover:scale-[1.01]"
+                ? "border-amber-400 bg-white shadow-md scale-[1.01]"
+                : "border-transparent bg-white/80 hover:scale-[1.005]"
             }`}
             onClick={() => updateBookingData({ selectedPackage: pkg })}
-            whileHover={{ scale: 1.01 }}
+            whileHover={{ scale: 1.005 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="text-4xl mb-3">{bookingData.selectedPackage?.id === pkg.id ? "✅" : "🎉"}</div>
-            <div className="text-xl font-bold text-amber-900">{pkg.name}</div>
-            {!!pkg.description && <div className="text-sm text-amber-700 mt-1">{pkg.description}</div>}
-            <div className="mt-4 flex items-center justify-between">
-              <div className="text-lg font-semibold text-pink-600">${pkg.base_price.toFixed(2)}</div>
-              <div className="text-xs text-amber-700">
+            <div className="text-2xl mb-2">{bookingData.selectedPackage?.id === pkg.id ? "✅" : "🎉"}</div>
+            <div className="text-base font-bold text-amber-900">{pkg.name}</div>
+            {!!pkg.description && <div className="text-xs text-amber-700 mt-1 line-clamp-2">{pkg.description}</div>}
+            <div className="mt-3 flex items-center justify-between">
+              <div className="text-sm font-semibold text-pink-600">${pkg.base_price.toFixed(2)}</div>
+              <div className="text-[11px] text-amber-700">
                 {Math.max(1, Math.round((pkg.duration_min || 120) / 60))} hrs • up to {pkg.base_kids} kids
               </div>
             </div>
@@ -699,20 +862,21 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
         ))}
       </div>
 
-      {/* Characters */}
       {characters.length > 0 && (
-        <div className="w-full max-w-4xl mt-8">
-          <div className={headingStackClass + " text-center mb-4"}>
-            <h2 className={`${headingLinePrimary} text-3xl md:text-4xl`}>ADD A PARTY</h2>
-            <h2 className={`${headingLineAccent} text-3xl md:text-4xl`}>CHARACTER</h2>
+        <div className="w-full max-w-md mt-10">
+          <div className="text-center mb-2">
+            <div className={headingStackClass}>
+              <h3 className={`${headingLinePrimary} text-2xl sm:text-3xl`}>ADD A</h3>
+              <h3 className={`${headingLineAccent} text-2xl sm:text-3xl`}>CHARACTER</h3>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-4">
             {characters.map((ch) => {
               const selected = (bookingData.selectedCharacters || []).some((s) => s.character.id === ch.id);
               return (
                 <motion.div
                   key={ch.id}
-                  className={`p-6 rounded-3xl border-4 transition-all cursor-pointer ${
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                     selected ? "border-amber-400 bg-white shadow-xl scale-[1.02]" : "border-transparent bg-white/80 hover:scale-[1.01]"
                   }`}
                   onClick={() => {
@@ -726,9 +890,9 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="text-4xl mb-3">{selected ? "✅" : "🎭"}</div>
-                  <div className="text-xl font-bold text-amber-900">{ch.name}</div>
-                  <div className="text-lg font-semibold text-pink-600 mt-1">${ch.price.toFixed(2)}</div>
+                  <div className="text-2xl mb-2">{selected ? "✅" : "🎭"}</div>
+                  <div className="text-base font-bold text-amber-900">{ch.name}</div>
+                  <div className="text-sm font-semibold text-pink-600 mt-1">${ch.price.toFixed(2)}</div>
                 </motion.div>
               );
             })}
@@ -736,35 +900,34 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
         </div>
       )}
 
-      {/* Add-ons */}
       {addons.length > 0 && (
-        <div className="w-full max-w-4xl mt-8">
+        <div className="w-full max-w-md mt-10">
           <div className={headingStackClass + " text-center mb-4"}>
             <h2 className={`${headingLinePrimary} text-3xl md:text-4xl`}>FUN</h2>
             <h2 className={`${headingLineAccent} text-3xl md:text-4xl`}>ADD-ONS</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-4">
             {addons.map((addon) => {
               const selected = (bookingData.selectedAddons || []).find((a) => a.addon.id === addon.id);
               const quantity = selected?.quantity ?? 0;
               return (
                 <motion.div
                   key={addon.id}
-                  className={`p-6 rounded-3xl border-4 transition-all ${
-                    quantity > 0 ? "border-amber-400 bg-white shadow-xl scale-[1.02]" : "border-transparent bg-white/80 hover:scale-[1.01]"
+                  className={`p-4 rounded-2xl border-2 transition-all ${
+                    quantity > 0 ? "border-amber-400 bg-white shadow-md scale-[1.01]" : "border-transparent bg-white/80 hover:scale-[1.005]"
                   }`}
-                  whileHover={{ scale: 1.01 }}
+                  whileHover={{ scale: 1.005 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="text-lg font-bold text-amber-900">{addon.name}</div>
-                      {!!addon.description && <div className="text-sm text-amber-700 mt-1">{addon.description}</div>}
+                      <div className="text-base font-bold text-amber-900">{addon.name}</div>
+                      {!!addon.description && <div className="text-xs text-amber-700 mt-1">{addon.description}</div>}
                     </div>
-                    <div className="text-lg font-semibold text-pink-600">${addon.price.toFixed(2)}</div>
+                    <div className="text-sm font-semibold text-pink-600">${addon.price.toFixed(2)}</div>
                   </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <label className="text-sm text-amber-800">Quantity</label>
+                  <div className="mt-3 flex items-center justify-between">
+                    <label className="text-xs text-amber-800">Quantity</label>
                     <select
                       value={quantity}
                       onChange={(e) => {
@@ -781,7 +944,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                           updateBookingData({ selectedAddons: [...list, { addon, quantity: qty }] });
                         }
                       }}
-                      className="border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                      className="border rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-pink-400"
                     >
                       {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                         <option key={n} value={n}>
@@ -800,14 +963,34 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   );
 
   const GuestCount = () => (
-    <div className="h-full w-full flex flex-col items-center justify-center">
-      <div className="text-center mb-6">
-        <div className={headingStackClass}>
-          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>GUEST</h2>
-          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>COUNT</h2>
-        </div>
-        <p className={`${subheadingClass} mt-4`}>How many party pals?</p>
+    <div className="h-full w-full flex flex-col items-center justify-center pt-10">
+      <div className="text-center mb-3">
+        <div className="app-headline">How many party pals?</div>
       </div>
+      {(bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage) && (
+        <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
+          {bookingData.selectedDate && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </span>
+          )}
+          {bookingData.selectedTime && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedTime}
+            </span>
+          )}
+          {bookingData.selectedRoom && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedRoom.name}
+            </span>
+          )}
+          {bookingData.selectedPackage && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedPackage.name}
+            </span>
+          )}
+        </div>
+      )}
       <div className="flex items-center gap-6">
         <button
           onClick={() => updateBookingData({ guestCount: Math.max(1, bookingData.guestCount - 1) })}
@@ -835,13 +1018,49 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   );
 
   const ParentInfo = () => (
-    <div className="h-full w-full flex flex-col items-center justify-center">
-      <div className="text-center mb-6">
-        <div className={headingStackClass}>
-          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>YOUR</h2>
-          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>CONTACT INFO</h2>
-        </div>
+    <div className="h-full w-full flex flex-col items-center justify-center pt-10">
+      <div className="text-center mb-3">
+        <div className="app-headline">Your contact info</div>
       </div>
+      {(bookingData.customerInfo.childName || bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
+        <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
+          {bookingData.customerInfo.childName && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.customerInfo.childName}{bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge})` : ''}
+            </span>
+          )}
+          {bookingData.selectedDate && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </span>
+          )}
+          {bookingData.selectedTime && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedTime}
+            </span>
+          )}
+          {bookingData.selectedRoom && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedRoom.name}
+            </span>
+          )}
+          {bookingData.selectedPackage && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedPackage.name}
+            </span>
+          )}
+          {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length > 0 && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length} character(s)
+            </span>
+          )}
+          {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length > 0 && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length} add-on(s)
+            </span>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-5 w-full max-w-md">
         <input
           type="text"
@@ -875,13 +1094,49 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   );
 
   const SpecialNotes = () => (
-    <div className="h-full w-full flex flex-col items-center justify-center">
-      <div className="text-center mb-6">
-        <div className={headingStackClass}>
-          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>SPECIAL</h2>
-          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>REQUESTS</h2>
-        </div>
+    <div className="h-full w-full flex flex-col items-center justify-center pt-10">
+      <div className="text-center mb-3">
+        <div className="app-headline">Special requests</div>
       </div>
+      {(bookingData.customerInfo.childName || bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
+        <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
+          {bookingData.customerInfo.childName && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.customerInfo.childName}{bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge})` : ''}
+            </span>
+          )}
+          {bookingData.selectedDate && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </span>
+          )}
+          {bookingData.selectedTime && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedTime}
+            </span>
+          )}
+          {bookingData.selectedRoom && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedRoom.name}
+            </span>
+          )}
+          {bookingData.selectedPackage && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {bookingData.selectedPackage.name}
+            </span>
+          )}
+          {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length > 0 && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length} character(s)
+            </span>
+          )}
+          {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length > 0 && (
+            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+              {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length} add-on(s)
+            </span>
+          )}
+        </div>
+      )}
       <div className="w-full max-w-md">
         <textarea
           placeholder="Allergies, themes, decorations, etc."
@@ -1131,6 +1386,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                 emergencyContact: "",
               },
               selectedAddons: [],
+              selectedCharacters: [],
               specialNotes: "",
               paymentStatus: "pending",
             });
@@ -1226,12 +1482,12 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
               }
             />
           )}
-          {stepKey === "party-date" && <PartyDateStep />}
-          {stepKey === "time-slot" && <TimeSlotStep />}
-          {stepKey === "room-choice" && <RoomChoiceStep />}
-          {stepKey === "package-choice" && <PackageChoiceStep />}
-          {stepKey === "guest-count" && <GuestCountStep />}
-          {stepKey === "parent-info" && <ParentInfoStep />}
+          {stepKey === "party-date" && <PartyDate />}
+          {stepKey === "time-slot" && <TimeSlot />}
+          {stepKey === "room-choice" && <RoomChoice />}
+          {stepKey === "package-choice" && <PackageChoice />}
+          {stepKey === "guest-count" && <GuestCount />}
+          {stepKey === "parent-info" && <ParentInfo />}
           {stepKey === "special-notes" && <SpecialNotesStep />}
           {stepKey === "payment" && <PaymentStep />}
           {stepKey === "confirmation" && <ConfirmationStep />}

@@ -1,6 +1,8 @@
 import FamilyFunBookingWizardV2 from "@/components/BookingWizard";
 
-export default function Page({ params }: any) {
-  const tenant = params?.tenant as string;
+type PageProps = { params: Promise<{ tenant: string }> };
+
+export default async function Page(props: PageProps) {
+  const { tenant } = await props.params;
   return <FamilyFunBookingWizardV2 tenant={tenant} />;
 }
