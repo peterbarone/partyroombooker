@@ -88,7 +88,7 @@ export default function HUD({
             <button
               onClick={onPrev}
               aria-label="Back"
-              className="relative flex-none w-24 h-24 sm:w-24 sm:h-24 md:w-24 md:h-24 disabled:opacity-40"
+              className="relative flex-none w-24 h-24 sm:w-20 sm:h-20 md:w-24 md:h-24 disabled:opacity-40"
               style={{ backgroundImage: "url('/assets/backbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
             >
               <span className="sr-only">Back</span>
@@ -96,14 +96,14 @@ export default function HUD({
             {/* Center scroll image constrained to content width */}
             <div
               aria-hidden
-              className="flex-none w-56 h-56 sm:w-56 sm:h-56 md:w-56 md:h-56"
+              className="flex-none w-56 h-56 sm:w-48 sm:h-48 md:w-56 md:h-56"
               style={{ backgroundImage: "url('/assets/rolledscroll.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
             />
             <button
               onClick={onNext}
               aria-label="Next"
               disabled={!!isNextDisabled}
-              className="relative flex-none w-24 h-24 sm:w-24 sm:h-24 md:w-24 md:h-24 disabled:opacity-40"
+              className="relative flex-none w-24 h-24 sm:w-20 sm:h-20 md:w-24 md:h-24 disabled:opacity-40"
               style={{ backgroundImage: "url('assets/nextbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
             >
               <span className="sr-only">Next</span>
