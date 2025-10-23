@@ -1,6 +1,7 @@
 "use client";
 import { ReactNode } from "react";
 import { motion } from "framer-motion";
+import ScrollUnroll from "@/components/ScrollUnroll";
 
 type Props = {
   currentStep: number;
@@ -15,6 +16,7 @@ type Props = {
   holdId?: string | null;
   holdRemaining?: number | null;
   fmtMMSS?: (secs: number) => string;
+  title?: ReactNode;
   children?: ReactNode;
 };
 
@@ -31,6 +33,7 @@ export default function HUD({
   holdId,
   holdRemaining,
   fmtMMSS = (s) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.max(0, s) % 60).padStart(2, "0")}`,
+  title,
   children,
 }: Props) {
   return (
@@ -95,37 +98,55 @@ export default function HUD({
         </div>
       )}
 
+      {title && (
+        <div className="px-4 pt-2 pb-2 text-center">
+          <div className="hanging-sign mx-auto">
+            <div className="rope-left" />
+            <div className="rope-right" />
+            <div className="wood-sign">
+              <span className="nail nail-tl" />
+              <span className="nail nail-tr" />
+              <span className="nail nail-bl" />
+              <span className="nail nail-br" />
+              <div className="wood-grain" />
+              <div className="sign-title">{title}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
-      <div className={`flex-1 px-2 md:px-4 py-4 ${contentOverflowY === 'visible' ? 'overflow-visible' : 'overflow-y-auto'}`}>
-        <div className="mx-auto w-full max-w-[420px] h-full">
+      <div className={`flex-1 px-2 md:px-4 py-0 ${contentOverflowY === 'visible' ? 'overflow-visible' : 'overflow-y-auto'}`}>
+        <div className="mx-auto w-full max-w-[420px]">
           {children}
         </div>
       </div>
 
       {/* Bottom nav */}
       {showNav && (
-        <div className="px-2 md:px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
-          <div className="mx-auto w-full max-w-[420px] flex items-center justify-between gap-2">
+        <div className="px-2 md:px-4 pb-[calc(0px+env(safe-area-inset-bottom))] pt-0 -mt-6 md:-mt-8">
+          <div className="mx-auto w-full max-w-[420px] flex items-center justify-between gap-0">
             <button
               onClick={onPrev}
               aria-label="Back"
-              className="relative flex-none w-24 h-24 sm:w-20 sm:h-20 md:w-24 md:h-24 disabled:opacity-40"
+              className="relative flex-none w-12 h-12 sm:w-[48px] sm:h-[48px] md:w-20 md:h-20 disabled:opacity-40"
               style={{ backgroundImage: "url('/assets/backbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
             >
               <span className="sr-only">Back</span>
             </button>
-            {/* Center scroll image constrained to content width */}
-            <div
-              aria-hidden
-              className="flex-none w-56 h-56 sm:w-48 sm:h-48 md:w-56 md:h-56"
-              style={{ backgroundImage: "url('/assets/rolledscroll.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
-            />
+            {/* Center animated scroll (non-interactive here) */}
+            <div className="flex-none">
+              <ScrollUnroll
+                className="w-24 sm:w-16 md:w-28"
+                playOnMount={false}
+              />
+            </div>
             <button
               onClick={onNext}
               aria-label="Next"
               disabled={!!isNextDisabled}
-              className="relative flex-none w-24 h-24 sm:w-20 sm:h-20 md:w-24 md:h-24 disabled:opacity-40"
-              style={{ backgroundImage: "url('assets/nextbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
+              className="relative flex-none w-12 h-12 sm:w-[48px] sm:h-[48px] md:w-20 md:h-20 disabled:opacity-40"
+              style={{ backgroundImage: "url('/assets/nextbutton.png')", backgroundRepeat: 'no-repeat', backgroundSize: 'contain', backgroundPosition: 'center' }}
             >
               <span className="sr-only">Next</span>
             </button>

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* Fun Party Theme Custom Styles */
-@import url('https://fonts.googleapis.com/css2?family=Chewy&display=swap');
+
 
 /* Global App Background */
 html, body {
@@ -85,11 +85,11 @@ button, input, textarea, select {
 }
 
 .font-playful {
-  font-family: 'Bangers', sans-serif;
+  font-family: 'Chewy', sans-serif;
 }
 
 .font-bold-display {
-  font-family: 'Bangers', sans-serif;
+  font-family: 'Chewy', sans-serif;
   font-weight: 900;
   letter-spacing: -0.02em;
 }
@@ -97,10 +97,10 @@ button, input, textarea, select {
 /* App headline style */
 .app-headline {
   font-family: 'Chewy', sans-serif;
-  color: #54524b;
+  color: #FF8F1F;
   -webkit-text-stroke: 2px #36454F;
   text-shadow: none;
-  font-size: 2rem;
+  font-size: 1.5rem;
   line-height: 1.1;
   font-weight: 900;
   letter-spacing: -0.02em;
@@ -303,6 +303,33 @@ button, input, textarea, select {
   animation: spin 1s linear infinite;
 }
 
+/* Name input styling: soft cream fill, subtle inner shadow, orange→red gradient border */
+.input-name-field {
+  /* soft cream background */
+  background: linear-gradient(#FFF7EB, #FFF7EB) padding-box,
+              linear-gradient(135deg, #FF8F1F, #E63946) border-box;
+  border: 4px solid transparent; /* thicker border for definition */
+  border-radius: 9999px;
+  /* inner + outer shadow */
+  box-shadow:
+    inset 0 3px 8px rgba(0, 0, 0, 0.12),
+    0 2px 10px rgba(255, 143, 31, 0.35);
+  color: #9A4A00; /* readable orange-brown for text */
+}
+
+.input-name-field::placeholder {
+  color: #C7763A; /* subtle hint color */
+  opacity: 0.8;
+}
+
+.input-name-field:focus {
+  outline: none;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.10),
+    0 0 0 4px rgba(255, 143, 31, 0.25), /* soft glow ring */
+    0 6px 16px rgba(230, 57, 70, 0.30);
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -416,6 +443,91 @@ button, input, textarea, select {
 @media (min-width: 640px) {
   .nav-img-btn { width: 128px; height: 128px; }
 }
+
+/* Hanging wooden sign used for HUD title/subtitle */
+.hanging-sign {
+  position: relative;
+  margin-top: 12px;
+  width: 98%;
+  max-width: 800px;
+}
+
+.rope-left, .rope-right {
+  position: absolute;
+  top: -30px;
+  width: 3px;
+  height: 40px;
+  background: linear-gradient(to bottom, #4a3f35 0%, #5c4f42 50%, #4a3f35 100%);
+  box-shadow: 1px 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.rope-left { left: 15%; transform: rotate(-2deg); }
+.rope-right { right: 15%; transform: rotate(2deg); }
+
+.wood-sign {
+  background: linear-gradient(135deg, #6b4423 0%, #8b5a2b 20%, #6b4423 40%, #8b5a2b 60%, #6b4423 80%, #8b5a2b 100%);
+  padding: 16px 28px;
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), inset 0 2px 5px rgba(255, 255, 255, 0.1), inset 0 -3px 8px rgba(0, 0, 0, 0.4);
+  position: relative;
+  border: 3px solid #4a3018;
+  animation: swing 3s ease-in-out infinite;
+  transform-origin: center top;
+}
+
+@keyframes swing {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+.wood-sign::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 0, 0, 0.1) 2px, rgba(0, 0, 0, 0.1) 4px);
+  pointer-events: none;
+  border-radius: 5px;
+}
+
+.wood-grain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.15;
+  background: repeating-linear-gradient(0deg, transparent 0px, rgba(0, 0, 0, 0.2) 1px, transparent 2px, transparent 15px);
+  border-radius: 5px;
+}
+
+.sign-title {
+  color: #f5deb3;
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(245, 222, 179, 0.3);
+  font-family: 'Chewy', sans-serif;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 1px;
+}
+
+.nail {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 30% 30%, #888, #444);
+  border-radius: 50%;
+  box-shadow: inset -1px -1px 2px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.nail-tl { top: 12px; left: 18px; }
+.nail-tr { top: 12px; right: 18px; }
+.nail-bl { bottom: 12px; left: 18px; }
+.nail-br { bottom: 12px; right: 18px; }
 
 /* Mobile Responsive Fun */
 @media (max-width: 768px) {

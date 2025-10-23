@@ -564,12 +564,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const ChildName = () => (
     <div className="h-full w-full flex flex-col items-center justify-center @container">
-      <div className="mt-2 mb-6 text-center">
-        <div className={headingStackClass}>
-          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>WHO&apos;S THE</h2>
-          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>BIRTHDAY STAR?</h2>
-        </div>
-      </div>
+      {/* Title is rendered by HUD */}
       <div className="w-full max-w-md">
         <input
           type="text"
@@ -588,15 +583,9 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const ChildAge = () => (
     <div className="h-full w-full flex flex-col items-center justify-center">
-      <div className="text-center mb-8">
-        <div className={headingStackClass}>
-          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>HOW OLD IS</h2>
-          <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>
-            {bookingData.customerInfo.childName?.toUpperCase() || "THE STAR"}
-          </h2>
-          <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>TURNING?</h2>
-        </div>
-        <p className={`${subheadingClass} mt-4`}>Helps us plan age-perfect fun!</p>
+      {/* Title is rendered by HUD */}
+      <div className="text-center mb-4">
+        <p className={`${subheadingClass}`}>Helps us plan age-perfect fun!</p>
       </div>
       <div className="w-full max-w-xs">
         <input
@@ -618,9 +607,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const PartyDate = () => (
     <div className="h-full w-full flex flex-col items-center justify-center">
-      <div className="text-center mb-6">
-        <div className="app-headline">Pick your magical date</div>
-      </div>
+      {/* Title is rendered by HUD */}
       <div className="w-full max-w-md px-2">
         <Calendar
           value={bookingData.selectedDate || null}
@@ -636,9 +623,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const TimeSlot = () => (
     <div className="h-full w-full flex flex-col items-center justify-center">
-      <div className="text-center mb-3">
-        <div className="app-headline">Choose your perfect time</div>
-      </div>
+      {/* Title is rendered by HUD */}
       {!bookingData.selectedDate && (
         <div className="mb-4 text-center text-amber-900 font-semibold">Pick a date first</div>
       )}
@@ -716,9 +701,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
     return (
       <div className="h-full w-full flex flex-col items-center justify-center">
-        <div className="text-center mb-3">
-          <div className="app-headline">Choose your epic room</div>
-        </div>
+        {/* Title is rendered by HUD */}
         {(bookingData.selectedDate || bookingData.selectedTime) && (
           <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
             {bookingData.selectedDate && (
@@ -809,9 +792,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const PackageChoice = () => (
     <div className="h-full w-full flex flex-col items-center justify-start pt-20">
-      <div className="text-center mb-3">
-        <div className="app-headline">Select a party package</div>
-      </div>
+      {/* Title is rendered by HUD */}
       {(bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom) && (
         <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
           {bookingData.selectedDate && (
@@ -964,9 +945,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const GuestCount = () => (
     <div className="h-full w-full flex flex-col items-center justify-center pt-10">
-      <div className="text-center mb-3">
-        <div className="app-headline">How many party pals?</div>
-      </div>
+      {/* Title is rendered by HUD */}
       {(bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage) && (
         <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
           {bookingData.selectedDate && (
@@ -1019,9 +998,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const ParentInfo = () => (
     <div className="h-full w-full flex flex-col items-center justify-center pt-10">
-      <div className="text-center mb-3">
-        <div className="app-headline">Your contact info</div>
-      </div>
+      {/* Title is rendered by HUD */}
       {(bookingData.customerInfo.childName || bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
         <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
           {bookingData.customerInfo.childName && (
@@ -1095,9 +1072,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const SpecialNotes = () => (
     <div className="h-full w-full flex flex-col items-center justify-center pt-10">
-      <div className="text-center mb-3">
-        <div className="app-headline">Special requests</div>
-      </div>
+      {/* Title is rendered by HUD */}
       {(bookingData.customerInfo.childName || bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
         <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
           {bookingData.customerInfo.childName && (
@@ -1150,11 +1125,8 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const Payment = () => (
     <div className="h-full w-full flex flex-col items-center justify-center">
+      {/* Title is rendered by HUD */}
       <div className="text-center mb-4">
-        <div className={headingStackClass}>
-          <h1 className={`${headingLinePrimary} text-5xl sm:text-6xl`}>SECURE</h1>
-          <h1 className={`${headingLineAccent} text-5xl sm:text-6xl`}>YOUR PARTY</h1>
-        </div>
         <p className={`${subheadingClass} mt-4`}>Pay a 50% deposit to lock in your date and time.</p>
         {typeof holdRemaining === "number" && holdRemaining > 0 && (
           <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-yellow-800 text-sm font-semibold">
@@ -1333,10 +1305,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       >
         🎉
       </motion.div>
-      <div className={headingStackClass}>
-        <h2 className={`${headingLineAccent} text-3xl sm:text-4xl md:text-5xl`}>WOOHOO!</h2>
-        <h2 className={`${headingLinePrimary} text-3xl sm:text-4xl md:text-5xl`}>YOU&apos;RE BOOKED 🎊</h2>
-      </div>
+      {/* Title is rendered by HUD */}
       <p className={`${subheadingClass} mt-6`}>
         Watch your inbox for details. Can&apos;t wait to celebrate{" "}
         {bookingData.customerInfo.childName || "together"}!
@@ -1440,16 +1409,49 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   }, [stepKey]);
 
   // HUD layer using shared HUD component
+  // Dynamic single-line HUD title per step (no subtitle)
+  const hudTitle = (() => {
+    switch (stepKey) {
+      case "child-name":
+        return "WHO'S THE BIRTHDAY STAR?";
+      case "child-age": {
+        const name = (bookingData.customerInfo.childName || "THE STAR").toUpperCase();
+        return `HOW OLD IS ${name} TURNING?`;
+      }
+      case "party-date":
+        return "Pick your magical date";
+      case "time-slot":
+        return "Choose your perfect time";
+      case "room-choice":
+        return "Choose your epic room";
+      case "package-choice":
+        return "Select a party package";
+      case "guest-count":
+        return "How many party pals?";
+      case "parent-info":
+        return "Your contact info";
+      case "special-notes":
+        return "Special requests";
+      case "payment":
+        return "SECURE YOUR PARTY";
+      case "confirmation":
+        return "WOOHOO! YOU'RE BOOKED 🎊";
+      default:
+        return undefined;
+    }
+  })();
+
   const Hud = (
     <HUD
       currentStep={currentStep}
       totalSteps={STEPS.length}
       onPrev={prevStep}
       onNext={nextStep}
+      title={hudTitle}
       isNextDisabled={isNextDisabled()}
       showNav={stepKey !== "greeting" && stepKey !== "payment" && stepKey !== "confirmation"}
       showProgress={stepKey !== "greeting"}
-      contentOverflowY={stepKey === "greeting" ? 'visible' : 'auto'}
+      contentOverflowY={(stepKey === "greeting" || stepKey === "party-date") ? 'visible' : 'auto'}
       showScrollBackdrop={stepKey !== "greeting"}
       holdId={hold?.id ?? null}
       holdRemaining={holdRemaining}
@@ -1512,11 +1514,33 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const Scene = SceneByStep[stepKey];
   const bgs = getBackgroundsForStep(stepKey, tenant);
+
+  // hudChars: characters rendered within the HUD overlay (test on child-name scene)
+  const HudChars = (
+    <>
+      {stepKey === "child-name" && (
+        <>
+          <img
+            src="/assets/child-name/wizzyWho.png"
+            alt="Wizzy Who"
+            className="pointer-events-none select-none absolute bottom-20 left-[-40px] w-[60%] sm:w-[60%] md:w-[60%] max-w-[440px]"
+          />
+          <img
+            src="/assets/child-name/ruffsWho.png"
+            alt="Ruffs Who"
+            className="pointer-events-none select-none absolute bottom-24 right-0 w-[38%] max-w-[200px]"
+          />
+        </>
+      )}
+    </>
+  );
+
   return (
     <ResponsiveStage
       bgMobile={bgs.mobile}
       bgTablet={bgs.tablet}
       bgDesktop={bgs.desktop}
+      hudChars={HudChars}
       hud={Hud}
     >
       {Scene ? <Scene /> : null}
