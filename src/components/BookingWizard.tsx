@@ -1518,6 +1518,20 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   // hudChars: characters rendered within the HUD overlay (test on child-name scene)
   const HudChars = (
     <>
+      {stepKey === "greeting" && (
+        <>
+          <img
+            src="/assets/greeting/wizzygreeting.png"
+            alt="Wizzy"
+            className="pointer-events-none select-none absolute bottom-20 left-[-50px] sm:left-[-50px] w-[60%] sm:w-[60%] md:w-[60%] max-w-[480px] z-40"
+          />
+          <img
+            src="/assets/greeting/rufffsgreeting.png"
+            alt="Ruffs"
+            className="pointer-events-none select-none absolute bottom-24 right-0 w-[38%] max-w-[210px] z-40"
+          />
+        </>
+      )}
       {stepKey === "child-name" && (
         <>
           <img
