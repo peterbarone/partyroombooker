@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* Fun Party Theme Custom Styles */
-@import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700;800;900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chewy&display=swap');
 
 /* Global App Background */
 html, body {
@@ -17,11 +17,43 @@ body {
   background-position:  center;
   background-attachment: fixed;
   background-color: #FFEBD5; /* soft cream fallback */
-  font-family: 'Lilita One', sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+  font-family: 'Chewy', sans-serif,  system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+}
+
+/* Global vignette overlays at top and bottom */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 18vh;
+  pointer-events: none;
+  z-index: 20; /* above background, below UI since it's non-interactive */
+}
+
+body::before {
+  top: 0;
+  background: linear-gradient(to bottom,
+    rgba(0, 0, 0, 0.38) 0%,
+    rgba(0, 0, 0, 0.28) 25%,
+    rgba(0, 0, 0, 0.12) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+body::after {
+  bottom: 0;
+  background: linear-gradient(to top,
+    rgba(0, 0, 0, 0.38) 0%,
+    rgba(0, 0, 0, 0.28) 25%,
+    rgba(0, 0, 0, 0.12) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
 }
 
 button, input, textarea, select {
-  font-family: 'Lilita One', sans-serif system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+  font-family: 'Chewy', sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
 }
 
 :root {
@@ -49,25 +81,26 @@ button, input, textarea, select {
 
 /* Typography matching the image */
 .font-party {
-  font-family: 'Lilita One', sans-serif;
+  font-family: 'Chewy', sans-serif;
 }
 
 .font-playful {
-  font-family: 'Lilita One', sans-serif;
+  font-family: 'Bangers', sans-serif;
 }
 
 .font-bold-display {
-  font-family: 'Lilita One', sans-serif;
+  font-family: 'Bangers', sans-serif;
   font-weight: 900;
   letter-spacing: -0.02em;
 }
 
 /* App headline style */
 .app-headline {
-  color: #FEF3C6;
+  font-family: 'Chewy', sans-serif;
+  color: #54524b;
   -webkit-text-stroke: 2px #36454F;
   text-shadow: none;
-  font-size: 50px;
+  font-size: 2rem;
   line-height: 1.1;
   font-weight: 900;
   letter-spacing: -0.02em;
@@ -315,7 +348,7 @@ button, input, textarea, select {
   transform: translateY(-50%);
   background: #f4b02a;
   color: #111;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Chewy', cursive;
   font-weight: 900;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -396,8 +429,8 @@ button, input, textarea, select {
 }
 
 .child-step-hero { position: relative; }
-.child-step-hero .hero-line-1 { font-family: 'Poppins', sans-serif; font-weight: 900; color: #4b3a7a; letter-spacing: -0.02em; }
-.child-step-hero .hero-line-2 { font-family: 'Poppins', sans-serif; font-weight: 900; color: #ff6b9d; letter-spacing: -0.02em; }
+.child-step-hero .hero-line-1 { font-family: 'Chewy', cursive; font-weight: 900; color: #4b3a7a; letter-spacing: -0.02em; }
+.child-step-hero .hero-line-2 { font-family: 'Chewy', cursive; font-weight: 900; color: #ff6b9d; letter-spacing: -0.02em; }
 
 .confetti-area { position: relative; height: 120px; }
 .confetti-area .dot { position: absolute; border-radius: 9999px; opacity: 0.85; }
@@ -405,7 +438,7 @@ button, input, textarea, select {
 .sign-wrap { position: relative; display: flex; justify-content: center; }
 .sign-board { position: relative; background: #f4b02a; border: 4px solid #c78616; border-radius: 18px; padding: 14px 22px; min-width: 280px; box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
 .sign-board::after { content: ""; position: absolute; left: -10px; bottom: -80px; width: 14px; height: 90px; background: #7b4b36; border-radius: 6px; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.15); }
-.sign-board input { background: transparent; border: none; outline: none; font-family: 'Fredoka', cursive; font-size: 18px; color: #3a2d1a; width: 100%; }
+.sign-board input { background: transparent; border: none; outline: none; font-family: 'Chewy', cursive; font-size: 18px; color: #3a2d1a; width: 100%; }
 .sign-board input::placeholder { color: #7a5b3a; opacity: 1; }
 
 .summary-card { position: relative; background: #ffe1ea; border-radius: 16px; padding: 18px; box-shadow: 0 8px 16px rgba(0,0,0,0.12); border: 4px solid #ffb6c9; }
@@ -431,4 +464,124 @@ button, input, textarea, select {
   .sign-board input { font-size: 17px; }
   .summary-card { width: 100%; }
   .wizzy-mobile { width: 180px; height: auto; position: absolute; right: -16px; bottom: -10px; }
+}
+
+/* Magical progress bar effects */
+.progress-container {
+  width: 98%;
+  max-width: 800px;
+  position: relative;
+}
+
+.stone-frame {
+  background: linear-gradient(135deg, #8b7355 0%, #a89276 50%, #8b7355 100%);
+  padding: 12px;
+  border-radius: 20px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 2px 5px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.stone-frame::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 2px solid rgba(139, 115, 85, 0.5);
+  border-radius: 15px;
+  pointer-events: none;
+}
+
+.progress-bg {
+  background: linear-gradient(135deg, #0a4d68 0%, #05668d 50%, #0a4d68 100%);
+  height: 30px;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.spiral-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle at center,
+      transparent 0%,
+      rgba(255, 255, 255, 0.03) 20%,
+      transparent 40%,
+      rgba(255, 255, 255, 0.03) 60%,
+      transparent 80%);
+  animation: rotate 8s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg,
+      #00d9ff 0%,
+      #00b4d8 25%,
+      #0096c7 50%,
+      #00b4d8 75%,
+      #00d9ff 100%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+  position: relative;
+  transition: width 0.3s ease;
+  box-shadow:
+    0 0 20px rgba(0, 217, 255, 0.5),
+    inset 0 2px 10px rgba(255, 255, 255, 0.3);
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.sparkles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+  animation: sparkle 2s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  z-index: 10;
 }

@@ -11,11 +11,11 @@ export default function ChildAge({ childName, value, onChange }: Props) {
     <div className="h-full w-full flex flex-col items-center justify-center">
       <div className="text-center mb-8">
         <div className="space-y-1 font-extrabold tracking-tight drop-shadow-sm">
-          <h2 className="text-amber-800 leading-tight text-3xl sm:text-4xl md:text-5xl">HOW OLD IS</h2>
-          <h2 className="text-amber-800 leading-tight text-3xl sm:text-4xl md:text-5xl">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl">HOW OLD IS</h2>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl">
             {(childName || "THE STAR").toUpperCase()}
           </h2>
-          <h2 className="text-pink-600 leading-tight text-3xl sm:text-4xl md:text-5xl">TURNING?</h2>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl">TURNING?</h2>
         </div>
         <p className="text-base sm:text-lg md:text-xl font-semibold tracking-wide text-amber-700 mt-4">Helps us plan age-perfect fun!</p>
       </div>
