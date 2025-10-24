@@ -35,7 +35,7 @@ export default function ResponsiveStage({ bgMobile, bgTablet, bgDesktop, childre
       <div className="pointer-events-auto absolute inset-0 z-30 px-4 md:px-6 lg:px-8 pt-[calc(theme(spacing.4)+env(safe-area-inset-top))] md:pt-[calc(theme(spacing.6)+env(safe-area-inset-top))] lg:pt-[calc(theme(spacing.8)+env(safe-area-inset-top))] pb-[calc(theme(spacing.4)+env(safe-area-inset-bottom))] md:pb-[calc(theme(spacing.6)+env(safe-area-inset-bottom))] lg:pb-[calc(theme(spacing.8)+env(safe-area-inset-bottom))]">
         {/* Fixed characters layer aligned to HUD container */}
         {hudChars && (
-          <div className="pointer-events-none fixed inset-0 z-40">
+          <div className="pointer-events-none fixed inset-0 z-10001">
             <div className="w-full h-full flex justify-center">
               <div className="@container w-full h-full max-w-[420px] relative">
                 {hudChars}

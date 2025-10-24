@@ -1520,29 +1520,41 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     <>
       {stepKey === "greeting" && (
         <>
-          <img
+          <motion.img
             src="/assets/greeting/wizzygreeting.png"
             alt="Wizzy"
             className="pointer-events-none select-none absolute bottom-20 left-[-50px] sm:left-[-50px] w-[60%] sm:w-[60%] md:w-[60%] max-w-[480px] z-40"
+            initial={{ y: 0 }}
+            animate={{ y: [0, -2, 0] }}
+            transition={{ duration: 6.5, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
           />
-          <img
+          <motion.img
             src="/assets/greeting/rufffsgreeting.png"
             alt="Ruffs"
             className="pointer-events-none select-none absolute bottom-24 right-0 w-[38%] max-w-[210px] z-40"
+            initial={{ y: 0, rotate: 0 }}
+            animate={{ y: [0, -2, 0], rotate: [0, -0.5, 0.25, 0] }}
+            transition={{ duration: 7.5, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
           />
         </>
       )}
       {stepKey === "child-name" && (
         <>
-          <img
+          <motion.img
             src="/assets/child-name/wizzyWho.png"
             alt="Wizzy Who"
             className="pointer-events-none select-none absolute bottom-28 sm:bottom-32 md:bottom-36 left-[-40px] w-[60%] sm:w-[60%] md:w-[60%] max-w-[440px]"
+            initial={{ y: 0 }}
+            animate={{ y: [0, -2, 0] }}
+            transition={{ duration: 6.25, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
           />
-          <img
+          <motion.img
             src="/assets/child-name/ruffsWho.png"
             alt="Ruffs Who"
             className="pointer-events-none select-none absolute bottom-32 sm:bottom-36 md:bottom-40 right-0 w-[38%] max-w-[200px]"
+            initial={{ y: 0, rotate: 0 }}
+            animate={{ y: [0, -1.5, 0], rotate: [0, -0.4, 0.2, 0] }}
+            transition={{ duration: 7, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
           />
         </>
       )}
