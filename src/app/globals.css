@@ -295,11 +295,11 @@ button, input, textarea, select {
   animation: confetti-fall 3s linear infinite;
 }
 
-/* Party Theme for Forms 
+/* Party Theme for Forms */
 .form-party input, .form-party select, .form-party textarea {
   @apply border-2 border-pink-200 rounded-xl px-4 py-3 focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all duration-200;
 }
-*/
+
 .form-party input:focus, .form-party select:focus, .form-party textarea:focus {
   @apply transform scale-105;
 }
@@ -733,6 +733,35 @@ button, input, textarea, select {
   z-index: 10;
 }
 
+/* 1) Prevent page (root) vertical scrolling */
+html, body, #__next {
+  height: 100%;
+  overflow: hidden;               /* no vertical scroll on the page */
+  overscroll-behavior: none;      /* no bounce / pull-to-refresh */
+}
+
+/* 2) A safe full-height helper that respects mobile URL bars */
+.h-screen-safe {
+  height: 100dvh;                 /* modern dynamic viewport */
+}
+
+/* Fallback for older browsers that lack 100dvh */
+@supports not (height: 100dvh) {
+  .h-screen-safe { height: 100vh; }
+}
+
+/* 3) The only scrollable region */
+.scroll-area {
+  overflow-y: auto;
+  overflow-x: clip;
+  overscroll-behavior: contain;   /* prevent scroll chaining to body */
+  -webkit-overflow-scrolling: touch;  /* smoother iOS momentum */
+  scrollbar-gutter: stable both-edges; /* avoids layout shift when scrollbar appears */
+}
+
+/* Optional: if animated abs children exist inside scroll area */
+.scroll-area > * { max-inline-size: 100%; }
+
 /* Fluid rail tokens and helpers */
 :root {
   /* Content rail and gutters */
@@ -742,7 +771,7 @@ button, input, textarea, select {
   --nav-h: clamp(64px, 9vw, 88px);
 
   /* Control sizes and type scale */
-  --ctl: clamp(56px, 7vw, 80px);
+  --ctl: clamp(64px, 8vw, 88px);
   --fz-100: clamp(12px, 1.5vw, 14px);
   --fz-200: clamp(14px, 1.8vw, 16px);
   --fz-300: clamp(16px, 2.1vw, 18px);

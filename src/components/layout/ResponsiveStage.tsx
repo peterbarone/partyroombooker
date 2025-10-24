@@ -15,7 +15,7 @@ export default function ResponsiveStage({
   bgMobile, bgTablet, bgDesktop, children, hud, hudChars
 }: Props) {
   return (
-    <div className="relative w-full h-dvh overflow-hidden">
+    <div className="relative w-full h-screen-safe overflow-hidden">
       {/* Background (absolute fill, never impacts layout width) */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
         <picture className="block w-full h-full">

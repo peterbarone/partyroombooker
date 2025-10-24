@@ -125,8 +125,8 @@ export default function HUD({
 
       {/* Content */}
       <div
-        className={`hud-content flex-1 ${contentOverflowY === 'visible' ? 'overflow-visible' : 'overflow-y-auto'}`}
-        style={{ paddingInline: 'var(--gap)', paddingBlock: 'calc(var(--gap) / 2)', overflowX: 'hidden' }}
+        className={`hud-content scroll-area flex-1 ${contentOverflowY === 'visible' ? 'overflow-visible' : ''}`}
+        style={{ paddingInline: 'var(--gap)', paddingBlock: 'calc(var(--gap) / 2)' }}
       >
         <div className="mx-auto hud-rail">
           {children}
