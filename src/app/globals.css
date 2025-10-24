@@ -742,7 +742,7 @@ button, input, textarea, select {
   --nav-h: clamp(64px, 9vw, 88px);
 
   /* Control sizes and type scale */
-  --ctl: clamp(40px, 7vw, 80px);
+  --ctl: clamp(56px, 7vw, 80px);
   --fz-100: clamp(12px, 1.5vw, 14px);
   --fz-200: clamp(14px, 1.8vw, 16px);
   --fz-300: clamp(16px, 2.1vw, 18px);
