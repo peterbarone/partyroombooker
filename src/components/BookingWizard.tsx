@@ -53,7 +53,7 @@ import ConfirmationScene from "@/components/scenes/ConfirmationScene";
  * ──────────────────────────────────────────────────────────────────────────────
  */
 const inputBaseClass =
-  "w-full px-5 py-4 md:px-8 md:py-5 rounded-full border-[3px] font-medium tracking-wide placeholder-opacity-70 focus:outline-none transition-all duration-200 shadow-sm focus:shadow-md bg-amber-50 border-amber-800 focus:border-pink-500 text-amber-800 placeholder-amber-600 text-base md:text-lg";
+  "form-input-bg w-full px-5 py-4 md:px-8 md:py-5 rounded-full border-[3px] font-medium tracking-wide placeholder-opacity-70 focus:outline-none transition-all duration-200 shadow-sm focus:shadow-md bg-amber-50 border-amber-800 focus:border-pink-500 text-amber-800 placeholder-amber-600 text-base md:text-lg";
 
 const headingStackClass = "space-y-1 font-extrabold tracking-tight drop-shadow-sm";
 const headingLinePrimary = "text-amber-800 leading-tight";
@@ -1537,12 +1537,12 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
           <img
             src="/assets/child-name/wizzyWho.png"
             alt="Wizzy Who"
-            className="pointer-events-none select-none absolute bottom-20 left-[-40px] w-[60%] sm:w-[60%] md:w-[60%] max-w-[440px]"
+            className="pointer-events-none select-none absolute bottom-28 sm:bottom-32 md:bottom-36 left-[-40px] w-[60%] sm:w-[60%] md:w-[60%] max-w-[440px]"
           />
           <img
             src="/assets/child-name/ruffsWho.png"
             alt="Ruffs Who"
-            className="pointer-events-none select-none absolute bottom-24 right-0 w-[38%] max-w-[200px]"
+            className="pointer-events-none select-none absolute bottom-32 sm:bottom-36 md:bottom-40 right-0 w-[38%] max-w-[200px]"
           />
         </>
       )}

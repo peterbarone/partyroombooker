@@ -57,6 +57,8 @@ type Props = {
   rolledFitScale?: number;
   /** Visual fit: vertical offset in px for ROLLED image (default 0). */
   rolledYOffset?: number;
+  /** Next/Image sizes string when using fill, to match rendered width (improves perf). */
+  sizes?: string;
 };
 
 const ScrollUnroll = forwardRef<ScrollUnrollHandle, Props>(function ScrollUnroll(
@@ -75,6 +77,7 @@ const ScrollUnroll = forwardRef<ScrollUnrollHandle, Props>(function ScrollUnroll
     openYOffset = -6,
     rolledFitScale = 1.0,
     rolledYOffset = 0,
+    sizes = '100vw',
   },
   ref
 ) {
@@ -202,7 +205,7 @@ const ScrollUnroll = forwardRef<ScrollUnrollHandle, Props>(function ScrollUnroll
             src={openSrc}
             alt={alt}
             fill
-            sizes="100vw"
+            sizes={sizes}
             priority
             className="object-contain"
           />
@@ -234,7 +237,7 @@ const ScrollUnroll = forwardRef<ScrollUnrollHandle, Props>(function ScrollUnroll
                 src={rolledSrc}
                 alt={alt}
                 fill
-                sizes="100vw"
+                sizes={sizes}
                 className="object-contain"
               />
             </motion.div>
@@ -244,7 +247,7 @@ const ScrollUnroll = forwardRef<ScrollUnrollHandle, Props>(function ScrollUnroll
                 src={rolledSrc}
                 alt={alt}
                 fill
-                sizes="100vw"
+                sizes={sizes}
                 className="object-contain"
               />
             </div>

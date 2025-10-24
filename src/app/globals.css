@@ -305,9 +305,11 @@ button, input, textarea, select {
 
 /* Name input styling: soft cream fill, subtle inner shadow, orange→red gradient border */
 .input-name-field {
-  /* soft cream background */
-  background: linear-gradient(#FFF7EB, #FFF7EB) padding-box,
-              linear-gradient(135deg, #FF8F1F, #E63946) border-box;
+  /* image background with soft cream overlay + gradient border */
+  background:
+    linear-gradient(rgba(255, 247, 235, 0.5), rgba(255, 247, 235, 0.5)) padding-box,
+    url('/assets/formbackground.png') center/cover no-repeat border-box,
+    linear-gradient(135deg, #FF8F1F, #E63946) border-box;
   border: 4px solid transparent; /* thicker border for definition */
   border-radius: 9999px;
   /* inner + outer shadow */
@@ -327,6 +329,33 @@ button, input, textarea, select {
   box-shadow:
     inset 0 2px 6px rgba(0, 0, 0, 0.10),
     0 0 0 4px rgba(255, 143, 31, 0.25), /* soft glow ring */
+    0 6px 16px rgba(230, 57, 70, 0.30);
+}
+
+/* Reusable background for form inputs */
+.form-input-bg {
+  background:
+    linear-gradient(rgba(207, 146, 55, 0.977), rgba(195, 137, 51, 0.872)) padding-box,
+    url('/assets/formbackground.png') center/cover no-repeat border-box,
+    linear-gradient(135deg, #FF8F1F, #E63946) border-box;
+  border: 4px solid transparent;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 3px 8px rgba(0, 0, 0, 0.12),
+    0 2px 10px rgba(255, 143, 31, 0.35);
+  color: #9A4A00;
+}
+
+.form-input-bg::placeholder {
+  color: #C7763A;
+  opacity: 0.8;
+}
+
+.form-input-bg:focus {
+  outline: none;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.10),
+    0 0 0 4px rgba(255, 143, 31, 0.25),
     0 6px 16px rgba(230, 57, 70, 0.30);
 }
 

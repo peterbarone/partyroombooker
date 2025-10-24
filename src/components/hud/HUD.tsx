@@ -139,6 +139,7 @@ export default function HUD({
               <ScrollUnroll
                 className="w-24 sm:w-16 md:w-28"
                 playOnMount={false}
+                sizes="(min-width: 768px) 7rem, (min-width: 640px) 4rem, 6rem"
               />
             </div>
             <button
