@@ -77,7 +77,7 @@ const ScrollUnroll = forwardRef<ScrollUnrollHandle, Props>(function ScrollUnroll
     openYOffset = -6,
     rolledFitScale = 1.0,
     rolledYOffset = 0,
-    sizes = '100vw',
+    sizes = 'min(92vw, 36rem)',
   },
   ref
 ) {

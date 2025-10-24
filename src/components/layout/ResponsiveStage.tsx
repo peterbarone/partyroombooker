@@ -8,44 +8,57 @@ type Props = {
   bgDesktop: string
   children?: ReactNode          // scene midground layer (behind HUD)
   hud?: ReactNode               // main HUD: progress, nav, content
-  hudChars?: ReactNode          // new layer: characters positioned within HUD overlay
+  hudChars?: ReactNode          // characters positioned within HUD overlay
 }
 
-export default function ResponsiveStage({ bgMobile, bgTablet, bgDesktop, children, hud, hudChars }: Props) {
+export default function ResponsiveStage({
+  bgMobile, bgTablet, bgDesktop, children, hud, hudChars
+}: Props) {
   return (
     <div className="relative w-full h-dvh overflow-hidden">
-      {/* Background: art-directed sources without Next/Image optimizer */}
-      <picture>
-        <source media="(max-width: 767px)" srcSet={bgMobile} />
-        <source media="(max-width: 1023px)" srcSet={bgTablet} />
-        <img
-          src={bgDesktop}
-          alt="Background"
-          aria-hidden
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      </picture>
+      {/* Background (absolute fill, never impacts layout width) */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <picture className="block w-full h-full">
+          <source media="(max-width: 767px)" srcSet={bgMobile} />
+          <source media="(max-width: 1023px)" srcSet={bgTablet} />
+          <img
+            src={bgDesktop}
+            alt=""
+            aria-hidden
+            className="block w-full h-full object-cover"
+          />
+        </picture>
+      </div>
 
-      {/* Midground / scene visuals (behind HUD) */}
-      <div className="pointer-events-none absolute inset-0 z-30">
+      {/* Midground / scene visuals (behind HUD, non-interactive) */}
+      <div className="pointer-events-none absolute inset-0 z-20">
         {children}
       </div>
 
-      {/* HUD overlay */}
-      <div className="pointer-events-auto absolute inset-0 z-30 px-4 md:px-6 lg:px-8 pt-[calc(theme(spacing.4)+env(safe-area-inset-top))] md:pt-[calc(theme(spacing.6)+env(safe-area-inset-top))] lg:pt-[calc(theme(spacing.8)+env(safe-area-inset-top))] pb-[calc(theme(spacing.4)+env(safe-area-inset-bottom))] md:pb-[calc(theme(spacing.6)+env(safe-area-inset-bottom))] lg:pb-[calc(theme(spacing.8)+env(safe-area-inset-bottom))]">
-        {/* Fixed characters layer aligned to HUD container */}
+      {/* HUD overlay (no hard px paddings here; rail handles spacing) */}
+      <div className="absolute inset-0 z-30">
+        {/* Fixed characters aligned to the rail (overlay) */}
         {hudChars && (
-          <div className="pointer-events-none fixed inset-0 z-10001">
-            <div className="w-full h-full flex justify-center">
-              <div className="@container w-full h-full max-w-[420px] relative">
-                {hudChars}
-              </div>
+          <div className="pointer-events-none absolute inset-0 z-[10001] flex justify-center">
+            <div className="hud-rail @container w-full h-full relative">
+              {hudChars}
             </div>
           </div>
         )}
-        {/* Main HUD column (phone-sized) */}
-        <div className="w-full h-full flex justify-center relative z-50">
-          <div className="@container w-full h-full max-w-[420px]">
+
+        {/* Main HUD column centered on the rail */}
+        <div className="w-full h-full flex justify-center">
+          <div
+            className="hud-rail @container w-full h-full flex flex-col"
+            style={{
+              // Provide gentle inline padding via tokens (won’t exceed viewport)
+              paddingInline: 'var(--gap)',
+              // Top/Bottom “reserved” space; your HUD component also reserves internally,
+              // but keeping a little here adds safety on tiny phones / safe areas.
+              paddingTop: 'max(calc(var(--gap) / 2), env(safe-area-inset-top))',
+              paddingBottom: 'max(calc(var(--gap) / 2), env(safe-area-inset-bottom))',
+            }}
+          >
             {hud}
           </div>
         </div>

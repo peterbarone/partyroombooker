@@ -52,6 +52,26 @@ body::after {
   );
 }
 
+
+.hud-rail {
+  container-type: inline-size;
+  inline-size: min(100%, var(--rail));
+  max-inline-size: var(--rail);
+}
+
+/* Always box-border to avoid math surprises */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Never allow the app to scroll sideways */
+html, body, #__next { overflow-x: hidden; }
+
+/* Content scroller: clip horizontal overflow from animated abs children */
+.hud-content {
+  overflow-x: clip;       /* modern */
+  /* fallback: overflow-x: hidden; */
+}
+
+
 button, input, textarea, select {
   font-family: 'Chewy', sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
 }
@@ -711,4 +731,50 @@ button, input, textarea, select {
   font-size: 18px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   z-index: 10;
+}
+
+/* Fluid rail tokens and helpers */
+:root {
+  /* Content rail and gutters */
+  --rail: clamp(20rem, 92vw, 36rem);
+  --gap: clamp(0.75rem, 1.5vw, 1rem);
+  --hud-h: clamp(52px, 8vw, 72px);
+  --nav-h: clamp(64px, 9vw, 88px);
+
+  /* Control sizes and type scale */
+  --ctl: clamp(40px, 7vw, 80px);
+  --fz-100: clamp(12px, 1.5vw, 14px);
+  --fz-200: clamp(14px, 1.8vw, 16px);
+  --fz-300: clamp(16px, 2.1vw, 18px);
+  --fz-400: clamp(18px, 2.6vw, 22px);
+}
+
+.hud-rail {
+  container-type: inline-size;
+  inline-size: var(--rail);
+}
+
+@container (min-width: 30rem) {
+  .hud-title { font-size: var(--fz-400); }
+}
+
+.btn-icon {
+  width: var(--ctl);
+  height: var(--ctl);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+}
+
+.hud-top { height: var(--hud-h); }
+.hud-bottom { height: calc(var(--nav-h) + env(safe-area-inset-bottom)); }
+
+/* Optional aspect helper */
+.aspect-portal {
+  position: relative;
+  width: 100%;
+  padding-top: calc(100% * 9 / 3);
+}
+.aspect-portal > * {
+  position: absolute; inset: 0;
 }
