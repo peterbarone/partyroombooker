@@ -12,7 +12,7 @@ export default function ChildInfo({ value, onChange }: Props) {
         <input
           type="text"
           aria-label="Child's name"
-          placeholder="Type their name…"
+          placeholder="Type their name!!"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           autoCapitalize="words"
