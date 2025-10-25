@@ -233,9 +233,23 @@ html, body, #__next {
   /* Inputs */
   .form-label { @apply block mb-1 text-wiz-ink-700; }
   .input {
-    @apply w-full rounded-2xl px-4 py-3 bg-white/85 border-2 border-wiz-parchment-200
-           text-wiz-ink-700 placeholder:text-wiz-ink-500 outline-none
-           focus:border-wiz-purple-400 focus:shadow-glow transition;
+    @apply w-full rounded-2xl px-5 py-4 md:px-8 md:py-5
+           border border-wiz-parchment-200/60 bg-transparent
+           text-wiz-ink-700 placeholder:text-wiz-ink-500 outline-none transition
+           hover:shadow-lift focus:border-wiz-purple-400 focus:shadow-glow;
+    backdrop-filter: saturate(115%) blur(1px);
+    -webkit-appearance: none;
+    appearance: none;
+    background-clip: padding-box;
+  }
+
+  .input:-webkit-autofill,
+  .input:-webkit-autofill:hover,
+  .input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--ink-700);
+    -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+    transition: background-color 99999s ease-in-out 0s;
+    caret-color: var(--ink-700);
   }
 
   /* Capacity/Info pill */
@@ -333,28 +347,4 @@ html, body, #__next {
 /* ---------- RESPONSIVE TEXT TWEAK ---------- */
 @container (min-width: 30rem) {
   .hud-title { font-size: var(--fz-400); }
-}
-
-@layer components {
-  .input {
-    @apply w-full rounded-2xl px-4 py-3
-           border-2 border-wiz-parchment-200
-           text-wiz-ink-700 placeholder:text-wiz-ink-500
-           outline-none transition
-           focus:border-wiz-purple-400 focus:shadow-glow
-           bg-transparent;                 /* ← remove white fill */
-    -webkit-appearance: none;              /* reset iOS/Chrome */
-    appearance: none;
-    background-clip: padding-box;
-  }
-
-  /* tame iOS/Chrome autofill “yellow” and white repaint */
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover,
-  input:-webkit-autofill:focus {
-    -webkit-text-fill-color: var(--ink-700);
-    -webkit-box-shadow: 0 0 0px 1000px transparent inset; /* keep parchment visible */
-    transition: background-color 99999s ease-in-out 0s;
-    caret-color: var(--ink-700);
-  }
 }
