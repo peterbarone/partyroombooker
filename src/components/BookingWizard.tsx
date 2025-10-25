@@ -280,6 +280,12 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     paymentStatus: "pending",
   });
 
+  // Preview modal state for room images
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [previewTitle, setPreviewTitle] = useState<string>("");
+
   // Helpers
   const fmtMMSS = (secs: number) => {
     const m = Math.max(0, Math.floor(secs / 60));
@@ -349,7 +355,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
         const { data: roomsData } = await supabase
           .from("rooms")
-          .select("id,name,description,max_kids,active")
+          .select("id,name,description,max_kids,images,active")
           .eq("tenant_id", tenantRow.id)
           .eq("active", true);
 
@@ -381,6 +387,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
           name: r.name,
           description: r.description ?? undefined,
           max_kids: Number(r.max_kids ?? 0),
+          images: Array.isArray(r.images) ? r.images : (r.images ? [r.images] : []),
         }));
 
         const mappedAddons: Addon[] = (addonsData || []).map((a: any) => ({
@@ -628,16 +635,13 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
         <div className="mb-4 text-center text-amber-900 font-semibold">Pick a date first</div>
       )}
       {!!bookingData.selectedDate && (
-        <div className="mb-4 text-center">
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+        <div className="mb-5 text-center">
+          <span className="inline-block px-3 py-1 rounded-full bg-white/90 border-[3px] border-amber-400 shadow-[0_1px_2px_rgba(0,0,0,0.12)] text-amber-900 text-sm font-extrabold">
             {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </span>
         </div>
       )}
-      {!!bookingData.selectedDate && (
-        <div className="mb-2 text-xs text-amber-700">Source: {availabilitySource}</div>
-      )}
-      <div className="w-full max-w-md flex flex-col gap-3">
+      <div className="w-full max-w-md flex flex-col gap-3 -mt-2">
         {!availability && <div className="text-amber-800 text-center">Checking availability…</div>}
         {availability && availability.length === 0 && (
           <div className="text-amber-800 text-center">No time slots available. Try another date.</div>
@@ -659,17 +663,60 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                   });
                   setAvailableRoomsForSelectedSlot(slot.rooms || []);
                 }}
-                className={`relative w-full p-5 rounded-3xl border-4 transition-all ${
+                className={`relative w-full p-3.5 md:p-4 rounded-[28px] border-[5px] transition-all bg-gradient-to-b from-white to-[#FFF8E6] shadow-[0_2px_8px_rgba(0,0,0,0.16)] ${
                   isSelected
-                    ? "border-amber-400 bg-white shadow-xl scale-[1.02]"
-                    : "border-transparent bg-white/80 hover:scale-[1.01]"
+                    ? "ring-4 ring-cyan-300 border-cyan-500 shadow-[0_4px_14px_rgba(0,0,0,0.18)] scale-[1.01]"
+                    : "border-amber-400 hover:border-cyan-300 hover:ring-2 hover:ring-cyan-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.18)] hover:scale-[1.01]"
                 }`}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
+                animate={
+                  isSelected
+                    ? {
+                        boxShadow: [
+                          "0px 4px 14px rgba(0,0,0,0.18), 0 0 0 0 rgba(34,211,238,0.25)",
+                          "0px 4px 14px rgba(0,0,0,0.18), 0 0 0 10px rgba(34,211,238,0.12)",
+                          "0px 4px 14px rgba(0,0,0,0.18), 0 0 0 0 rgba(34,211,238,0.25)",
+                        ],
+                        transition: { duration: 1.6, repeat: Infinity, repeatType: "mirror" },
+                      }
+                    : undefined
+                }
               >
-                <div className="text-lg text-amber-900 font-semibold mb-1">{label}</div>
-                <div className="text-sm text-amber-700">
-                  {(slot.rooms || []).filter((r) => r.available && r.eligible).length} rooms available
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {/* Cartoon-like clock icon with thicker stroke and warm cast */
+                    }
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="faceGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#E6FBFF" />
+                          <stop offset="100%" stopColor="#DFF7FF" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="12" cy="12" r="9" fill="url(#faceGrad)" stroke="#0EA5B7" strokeWidth="2.6" />
+                      <circle cx="12" cy="12" r="1.9" fill="#0EA5B7" />
+                      <path d="M12 6.2v5.6l4 1.9" stroke="#0EA5B7" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M8.3 3.6l1.6 1.6M15.7 3.6L14.1 5.2" stroke="#0EA5B7" strokeWidth="2.4" strokeLinecap="round" />
+                    </svg>
+                    <div className="font-party text-amber-900 text-lg md:text-xl font-extrabold tracking-wide drop-shadow-sm">{label}</div>
+                  </div>
+                  <span
+                    className={`relative font-party text-xs md:text-sm px-3 py-1 rounded-full border shadow-sm ${
+                      isSelected
+                        ? "bg-gradient-to-b from-amber-100 to-amber-50 text-amber-900 border-amber-400 shadow-[inset_0_0_10px_rgba(255,245,200,0.9)]"
+                        : "bg-gradient-to-b from-amber-50 to-amber-25 text-amber-800 border-amber-400 shadow-[inset_0_0_8px_rgba(255,245,200,0.7)]"
+                    }`}
+                  >
+                    <motion.span
+                      className="mr-1 inline-block"
+                      animate={{ opacity: isSelected ? [0.7, 1, 0.7] : 0.8, rotate: isSelected ? [0, 10, -10, 0] : 0, scale: isSelected ? [0.95, 1, 0.95] : 1 }}
+                      transition={isSelected ? { duration: 1.4, repeat: Infinity } : { duration: 0.3 }}
+                    >
+                      ✨
+                    </motion.span>
+                    {(slot.rooms || []).filter((r) => r.available && r.eligible).length} rooms
+                  </span>
                 </div>
               </motion.button>
             );
@@ -686,6 +733,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
           max_kids: r.maxKids,
           available: r.available,
           eligible: r.eligible,
+          images: (rooms || []).find((rr) => rr.id === r.roomId)?.images || [],
         }))
       : (rooms || []).map((r) => ({
           id: r.id,
@@ -693,11 +741,22 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
           max_kids: r.max_kids,
           available: true,
           eligible: true,
+          images: r.images || [],
         }));
 
-    const totalRooms = rooms?.length || 0;
-    const slotRooms = availableRoomsForSelectedSlot?.length || 0;
     const listCount = list.length;
+
+    const getRoomColorClasses = (name: string) => {
+      const n = (name || "").toLowerCase();
+      if (n.includes("red")) return { ring: "ring-red-300", border: "border-red-400", glow: "shadow-[0_0_24px_rgba(239,68,68,0.35)]" };
+      if (n.includes("blue")) return { ring: "ring-blue-300", border: "border-blue-400", glow: "shadow-[0_0_24px_rgba(59,130,246,0.35)]" };
+      if (n.includes("green")) return { ring: "ring-green-300", border: "border-green-400", glow: "shadow-[0_0_24px_rgba(34,197,94,0.35)]" };
+      if (n.includes("yellow")) return { ring: "ring-yellow-300", border: "border-yellow-400", glow: "shadow-[0_0_24px_rgba(234,179,8,0.35)]" };
+      if (n.includes("purple")) return { ring: "ring-purple-300", border: "border-purple-400", glow: "shadow-[0_0_24px_rgba(168,85,247,0.35)]" };
+      if (n.includes("orange")) return { ring: "ring-orange-300", border: "border-orange-400", glow: "shadow-[0_0_24px_rgba(249,115,22,0.35)]" };
+      if (n.includes("pink")) return { ring: "ring-pink-300", border: "border-pink-400", glow: "shadow-[0_0_24px_rgba(236,72,153,0.35)]" };
+      return { ring: "ring-amber-200", border: "border-amber-300", glow: "shadow-[0_0_20px_rgba(245,158,11,0.25)]" };
+    };
 
     return (
       <div className="h-full w-full flex flex-col items-center justify-center">
@@ -716,25 +775,23 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
             )}
           </div>
         )}
-        <div className="mb-2 text-xs text-amber-700">
-          Rooms loaded: {totalRooms} • Rooms for selected slot: {slotRooms}
-        </div>
         {listCount === 0 && (
           <div className="text-amber-800 text-center mb-4">No rooms available for this time. Try another time or date.</div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-3xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-3xl max-h-[55vh] overflow-y-auto pr-1">
           {list.map((room) => {
             const isDisabled = !room.available || !room.eligible;
             const selected = bookingData.selectedRoom?.id === room.id;
+            const color = getRoomColorClasses(room.name);
             return (
             <motion.div
               key={room.id}
-              className={`relative p-6 rounded-3xl border-4 transition-all ${
+              className={`relative p-4 rounded-[28px] border-[5px] transition-all bg-gradient-to-b from-white to-[#FFF8E6] ${
                 selected
-                  ? "border-amber-400 bg-white shadow-xl scale-[1.02]"
+                  ? `bg-white ring-4 ring-cyan-300 border-cyan-500 ${color.glow} scale-[1.01]`
                   : isDisabled
                   ? "border-dashed border-amber-300 bg-white/60 cursor-not-allowed"
-                  : "border-transparent bg-white/80 hover:scale-[1.01] cursor-pointer"
+                  : `border-amber-300 hover:border-amber-400 hover:ring-2 ${color.ring} hover:shadow-[0_4px_12px_rgba(0,0,0,0.18)] cursor-pointer`
               }`}
               onClick={async () => {
                 updateBookingData({ selectedRoom: room as any });
@@ -771,8 +828,49 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
               whileHover={{ scale: isDisabled ? 1 : 1.01 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-4xl">{selected ? "✅" : "🏰"}</div>
+              {selected && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: [0, 1.15, 1] }}
+                  transition={{ duration: 0.5 }}
+                  className="absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full bg-cyan-500 text-white grid place-items-center shadow-lg"
+                >
+                  ✓
+                </motion.div>
+              )}
+              <div className="relative mb-3 rounded-2xl overflow-hidden border-2 border-amber-300">
+                <div className="aspect-[4/3] w-full bg-amber-100/40 flex items-center justify-center">
+                  {Array.isArray(room.images) && room.images.length > 0 ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-amber-700 text-sm">No photo</div>
+                  )}
+                </div>
+                {!isDisabled && (
+                  <button
+                    type="button"
+                    className="absolute bottom-2 right-2 bg-black/35 hover:bg-black/45 text-white backdrop-blur px-2 py-1 rounded-full text-xs flex items-center gap-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewImages(Array.isArray(room.images) ? room.images : []);
+                      setPreviewIndex(0);
+                      setPreviewTitle(room.name);
+                      setPreviewOpen(true);
+                    }}
+                    aria-label="Tap to preview"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="white" strokeWidth="2.2" fill="none"/>
+                      <circle cx="12" cy="12" r="3" fill="white" />
+                    </svg>
+                    <span>Preview</span>
+                  </button>
+                )}
+              </div>
+              <div className="font-party text-amber-900 text-lg font-extrabold tracking-wide mb-2">{room.name}</div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs px-3 py-1 rounded-full border border-amber-300 bg-amber-50 text-amber-800 shadow-sm">🎉 Up to {room.max_kids} kids</span>
                 {!room.eligible && (
                   <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 border border-red-200">Not eligible</span>
                 )}
@@ -780,12 +878,45 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                   <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">Not available</span>
                 )}
               </div>
-              <div className="text-xl font-bold text-amber-900 mb-1">{room.name}</div>
-              <div className="text-sm text-amber-700">Fits up to {room.max_kids} kids</div>
             </motion.div>
             );
           })}
         </div>
+        {previewOpen && (
+          <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true">
+            <div className="relative w-full max-w-3xl">
+              <button
+                type="button"
+                aria-label="Close preview"
+                className="absolute -top-3 -right-3 bg-amber-200 text-amber-900 border-2 border-amber-500 rounded-full w-10 h-10 font-extrabold shadow-lg"
+                onClick={() => setPreviewOpen(false)}
+              >
+                ×
+              </button>
+              <div className="rounded-2xl overflow-hidden border-4 border-amber-400 bg-gradient-to-b from-white to-[#FFF8E6] shadow-2xl">
+                <div className="relative aspect-[16/10] w-full">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={previewImages[previewIndex]} alt={previewTitle} className="absolute inset-0 w-full h-full object-contain bg-black/5" />
+                </div>
+                <div className="flex items-center justify-between p-2 bg-white/70">
+                  <button
+                    className="px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 shadow-sm"
+                    onClick={() => setPreviewIndex((i) => (i - 1 + previewImages.length) % previewImages.length)}
+                  >
+                    ◀ Prev
+                  </button>
+                  <div className="font-party text-amber-900 font-extrabold">{previewTitle}</div>
+                  <button
+                    className="px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 shadow-sm"
+                    onClick={() => setPreviewIndex((i) => (i + 1) % previewImages.length)}
+                  >
+                    Next ▶
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };

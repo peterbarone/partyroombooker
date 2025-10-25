@@ -1,0 +1,866 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fun Party Theme Custom Styles */
+
+
+/* Global App Background */
+html, body {
+  min-height: 100%;
+}
+
+/* Wizard Party Palette (CSS variables) */
+:root {
+  /* Core brand */
+  --wizzy-purple-50:#F1EDFF;
+  --wizzy-purple-100:#E6E0FF;
+  --wizzy-purple-200:#D4CBFF;
+  --wizzy-purple-300:#BDAEFF;
+  --wizzy-purple-400:#A695F0; /* LIGHTENED PRIMARY */
+  --wizzy-purple-500:#8E7AD9; /* anchor */
+  --wizzy-purple-600:#765FC1;
+  --wizzy-purple-700:#5E4AA7;
+
+  /* Portal accent (glows, active states) */
+  --portal-50:#EAF7FF;
+  --portal-200:#BFE6FF;
+  --portal-400:#76C7FF;
+  --portal-500:#4FAEF2;
+
+  /* Parchment + inks */
+  --parchment-50:#FFFCF6;
+  --parchment-100:#FFF8E9; /* main card */
+  --parchment-200:#F6EED9; /* borders/stripes */
+  --ink-700:#5A3F2B;       /* headings */
+  --ink-600:#6B4C34;       /* body */
+  --ink-500:#7C5A3E;       /* secondary */
+
+  /* Wood + nails (optional for headers) */
+  --wood-600:#6F4B2A;
+  --wood-700:#5D3E22;
+
+  /* Status */
+  --ok-500:#62D497;
+  --warn-500:#E6B25C;
+  --danger-500:#E06C6C;
+}
+
+/* Reusable parchment background */
+.parchment {
+  background:
+    radial-gradient(1200px 800px at 20% 0%, rgba(255,255,255,.55), transparent 60%),
+    radial-gradient(900px 700px at 100% 100%, rgba(255,244,220,.4), transparent 50%),
+    linear-gradient(180deg, var(--parchment-50) 0%, var(--parchment-100) 100%);
+}
+
+/* optional paper speckle (very subtle) */
+.parchment--texture {
+  background-image:
+    radial-gradient(rgba(0,0,0,.035) 1px, transparent 1px),
+    radial-gradient(rgba(0,0,0,.03) 1px, transparent 1px),
+    linear-gradient(180deg, var(--parchment-50), var(--parchment-100));
+  background-size: 12px 12px, 18px 18px, 100% 100%;
+  background-position: 0 0, 4px 6px, 0 0;
+  backdrop-filter: saturate(110%);
+}
+
+body {
+  background-image: url('/app-background.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position:  center;
+  background-attachment: fixed;
+  background-color: #FFEBD5; /* soft cream fallback */
+  font-family: 'Chewy', sans-serif,  system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+}
+
+/* Global vignette overlays at top and bottom */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 18vh;
+  pointer-events: none;
+  z-index: 20; /* above background, below UI since it's non-interactive */
+}
+
+body::before {
+  top: 0;
+  background: linear-gradient(to bottom,
+    rgba(0, 0, 0, 0.38) 0%,
+    rgba(0, 0, 0, 0.28) 25%,
+    rgba(0, 0, 0, 0.12) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+body::after {
+  bottom: 0;
+  background: linear-gradient(to top,
+    rgba(0, 0, 0, 0.38) 0%,
+    rgba(0, 0, 0, 0.28) 25%,
+    rgba(0, 0, 0, 0.12) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+
+.hud-rail {
+  container-type: inline-size;
+  inline-size: min(100%, var(--rail));
+  max-inline-size: var(--rail);
+}
+
+/* Always box-border to avoid math surprises */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Never allow the app to scroll sideways */
+html, body, #__next { overflow-x: hidden; }
+
+/* Content scroller: clip horizontal overflow from animated abs children */
+.hud-content {
+  overflow-x: clip;       /* modern */
+  /* fallback: overflow-x: hidden; */
+}
+
+
+button, input, textarea, select {
+  font-family: 'Chewy', sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+}
+
+:root {
+  /* Party Color Palette - Matching the image */
+  --party-pink-light: #FF8FAB;
+  --party-pink: #FF6B9D;
+  --party-pink-dark: #E91E63;
+  --party-purple: #9B59B6;
+  --party-blue: #3498DB;
+  --party-yellow: #F1C40F;
+  --party-orange: #E67E22;
+  --party-green: #2ECC71;
+  --party-red: #E74C3C;
+  --brown-dark: #7B4B36;
+  --brown-medium: #8B5A46;
+  --brown-light: #9B6A56;
+  
+  /* Gradients */
+  --gradient-party: linear-gradient(135deg, #FF6B9D 0%, #9B59B6 100%);
+  --gradient-fun: linear-gradient(135deg, #F1C40F 0%, #E67E22 100%);
+  --gradient-celebration: linear-gradient(135deg, #3498DB 0%, #2ECC71 100%);
+  --gradient-rainbow: linear-gradient(135deg, #FF6B9D 0%, #9B59B6 25%, #3498DB 50%, #2ECC71 75%, #F1C40F 100%);
+  --gradient-pink-main: linear-gradient(135deg, #FF8FAB 0%, #FF6B9D 50%, #E91E63 100%);
+}
+
+/* Typography matching the image */
+.font-party {
+  font-family: 'Chewy', sans-serif;
+}
+
+.font-playful {
+  font-family: 'Chewy', sans-serif;
+}
+
+.font-bold-display {
+  font-family: 'Chewy', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+/* App headline style */
+.app-headline {
+  font-family: 'Chewy', sans-serif;
+  color: #FF8F1F;
+  -webkit-text-stroke: 2px #36454F;
+  text-shadow: none;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.text-shadow-strong {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.text-shadow-soft {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Party Animations */
+@keyframes bounce-fun {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -10px, 0);
+  }
+  70% {
+    transform: translate3d(0, -5px, 0);
+  }
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+@keyframes wiggle {
+  0%, 7% {
+    transform: rotateZ(0);
+  }
+  15% {
+    transform: rotateZ(-15deg);
+  }
+  20% {
+    transform: rotateZ(10deg);
+  }
+  25% {
+    transform: rotateZ(-10deg);
+  }
+  30% {
+    transform: rotateZ(6deg);
+  }
+  35% {
+    transform: rotateZ(-4deg);
+  }
+  40%, 100% {
+    transform: rotateZ(0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes pulse-party {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotateZ(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotateZ(720deg);
+    opacity: 0;
+  }
+}
+
+/* Animation Classes */
+.animate-bounce-fun {
+  animation: bounce-fun 2s infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-party {
+  animation: pulse-party 2s ease-in-out infinite;
+}
+
+/* Party Button Styles */
+.btn-party {
+  @apply bg-gradient-to-r from-pink-400 to-purple-500 text-white font-bold py-3 px-6 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl;
+}
+
+.btn-fun {
+  @apply bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-3 px-6 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl;
+}
+
+.btn-celebration {
+  @apply bg-gradient-to-r from-blue-400 to-green-500 text-white font-bold py-3 px-6 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl;
+}
+
+/* Fun Card Styles */
+.card-party {
+  @apply bg-white rounded-3xl shadow-xl border-4 border-pink-200 overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+}
+
+.card-fun {
+  @apply bg-gradient-to-br from-yellow-50 to-orange-50 rounded-3xl shadow-xl border-4 border-yellow-200 overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+}
+
+/* Playful Backgrounds */
+.bg-party-pattern {
+  background-image: 
+    radial-gradient(circle at 25% 25%, #FF6B9D 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, #9B59B6 2px, transparent 2px),
+    radial-gradient(circle at 75% 25%, #F1C40F 2px, transparent 2px),
+    radial-gradient(circle at 25% 75%, #3498DB 2px, transparent 2px);
+  background-size: 50px 50px;
+  background-position: 0 0, 0 0, 25px 25px, 25px 25px;
+}
+
+.bg-confetti {
+  background-image: 
+    radial-gradient(circle at 20% 50%, #FF6B9D 2px, transparent 2px),
+    radial-gradient(circle at 40% 20%, #F1C40F 2px, transparent 2px),
+    radial-gradient(circle at 60% 60%, #3498DB 2px, transparent 2px),
+    radial-gradient(circle at 80% 30%, #2ECC71 2px, transparent 2px);
+  background-size: 30px 30px, 40px 40px, 35px 35px, 45px 45px;
+}
+
+/* Fun Text Effects */
+.text-rainbow {
+  background: linear-gradient(135deg, #FF6B9D 0%, #9B59B6 25%, #3498DB 50%, #2ECC71 75%, #F1C40F 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-party-shadow {
+  text-shadow: 3px 3px 0px #FF6B9D, 6px 6px 0px #9B59B6;
+}
+
+/* Balloon and Confetti Elements */
+.balloon {
+  @apply w-6 h-8 rounded-full relative;
+}
+
+.balloon::after {
+  content: '';
+  @apply absolute top-full left-1/2 transform -translate-x-1/2 w-px h-4 bg-gray-400;
+}
+
+.confetti-piece {
+  @apply absolute w-2 h-2 opacity-75;
+  animation: confetti-fall 3s linear infinite;
+}
+
+/* Party Theme for Forms */
+.form-party input, .form-party select, .form-party textarea {
+  @apply border-2 border-pink-200 rounded-xl px-4 py-3 focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all duration-200;
+}
+
+.form-party input:focus, .form-party select:focus, .form-party textarea:focus {
+  @apply transform scale-105;
+}
+
+/* Notification Styles */
+.notification-party {
+  @apply bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-2xl shadow-lg border-l-4 border-yellow-300;
+}
+
+.notification-success {
+  @apply bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-2xl shadow-lg border-l-4 border-yellow-300;
+}
+
+/* Loading Spinner Party Style */
+.spinner-party {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #FF6B9D;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+/* Name input styling: soft cream fill, subtle inner shadow, orange→red gradient border */
+.input-name-field {
+  /* Rely on utilities: parchment + parchment--texture + Tailwind borders */
+  background: none;
+  border: none;
+  color: inherit;
+  box-shadow: none;
+}
+
+.input-name-field::placeholder {
+  color: #C7763A; /* subtle hint color */
+  opacity: 0.8;
+}
+
+.input-name-field:focus {
+  outline: none;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.10),
+    0 0 0 4px rgba(255, 143, 31, 0.25), /* soft glow ring */
+    0 6px 16px rgba(230, 57, 70, 0.30);
+}
+
+/* Reusable background for form inputs */
+.form-input-bg {
+  background:
+    radial-gradient(800px 600px at 100% 100%, rgba(255,244,220,.35), transparent 50%),
+    linear-gradient(180deg, var(--parchment-50), var(--parchment-100));
+  border: 2px solid var(--parchment-200);
+  color: var(--ink-700);
+}
+
+.form-input-bg::placeholder {
+  color: #C7763A;
+  opacity: 0.8;
+}
+
+.form-input-bg:focus {
+  outline: none;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.10),
+    0 0 0 4px rgba(255, 143, 31, 0.25),
+    0 6px 16px rgba(230, 57, 70, 0.30);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Interactive Elements */
+.interactive-party {
+  @apply transform transition-all duration-200 hover:scale-110 cursor-pointer;
+}
+
+.interactive-party:active {
+  @apply scale-95;
+}
+
+/* Back/Next circular nav buttons */
+.nav-circle-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 9999px;
+  background: #4b3a7a;
+  border: 4px solid #3f3167;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15) inset, 0 4px 10px rgba(0,0,0,0.12);
+  color: #111;
+  transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+}
+
+.nav-circle-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2) inset, 0 6px 14px rgba(0,0,0,0.18);
+}
+
+.nav-circle-btn:active {
+  transform: scale(0.98);
+}
+
+.nav-circle-btn .label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f4b02a;
+  color: #111;
+  font-family: 'Chewy', cursive;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 16px;
+  line-height: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.nav-circle-btn--next .label {
+  left: 22px;
+  padding-right: 28px;
+}
+
+.nav-circle-btn--back .label {
+  right: 22px;
+  padding-left: 28px;
+}
+
+.nav-circle-btn--next::after,
+.nav-circle-btn--back::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+}
+
+.nav-circle-btn--next::after {
+  right: 18px;
+  border-top: 16px solid transparent;
+  border-bottom: 16px solid transparent;
+  border-left: 26px solid #f4b02a;
+}
+
+.nav-circle-btn--back::after {
+  left: 18px;
+  border-top: 16px solid transparent;
+  border-bottom: 16px solid transparent;
+  border-right: 26px solid #f4b02a;
+}
+
+@media (min-width: 640px) {
+  .nav-circle-btn { width: 96px; height: 96px; }
+  .nav-circle-btn .label { font-size: 18px; }
+}
+
+/* Image-based Back/Next buttons */
+.nav-img-btn {
+  display: inline-block;
+  width: 110px;
+  height: 110px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: transform 150ms ease;
+}
+.nav-img-btn:hover { transform: scale(1.03); }
+.nav-img-btn:active { transform: scale(0.98); }
+.nav-img-btn--back { background-image: url('/partyback.png'); }
+.nav-img-btn--next { background-image: url('/partynext.png'); }
+
+@media (min-width: 640px) {
+  .nav-img-btn { width: 128px; height: 128px; }
+}
+
+/* Hanging wooden sign used for HUD title/subtitle */
+.hanging-sign {
+  position: relative;
+  margin-top: 12px;
+  width: 98%;
+  max-width: 800px;
+}
+
+.rope-left, .rope-right {
+  position: absolute;
+  top: -30px;
+  width: 3px;
+  height: 40px;
+  background: linear-gradient(to bottom, #4a3f35 0%, #5c4f42 50%, #4a3f35 100%);
+  box-shadow: 1px 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.rope-left { left: 15%; transform: rotate(-2deg); }
+.rope-right { right: 15%; transform: rotate(2deg); }
+
+.wood-sign {
+  background: linear-gradient(135deg, #6b4423 0%, #8b5a2b 20%, #6b4423 40%, #8b5a2b 60%, #6b4423 80%, #8b5a2b 100%);
+  padding: 16px 28px;
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), inset 0 2px 5px rgba(255, 255, 255, 0.1), inset 0 -3px 8px rgba(0, 0, 0, 0.4);
+  position: relative;
+  border: 3px solid #4a3018;
+  animation: swing 3s ease-in-out infinite;
+  transform-origin: center top;
+}
+
+@keyframes swing {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+.wood-sign::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 0, 0, 0.1) 2px, rgba(0, 0, 0, 0.1) 4px);
+  pointer-events: none;
+  border-radius: 5px;
+}
+
+.wood-grain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.15;
+  background: repeating-linear-gradient(0deg, transparent 0px, rgba(0, 0, 0, 0.2) 1px, transparent 2px, transparent 15px);
+  border-radius: 5px;
+}
+
+.sign-title {
+  color: #f5deb3;
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(245, 222, 179, 0.3);
+  font-family: 'Chewy', sans-serif;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 1px;
+}
+
+.nail {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 30% 30%, #888, #444);
+  border-radius: 50%;
+  box-shadow: inset -1px -1px 2px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.nail-tl { top: 12px; left: 18px; }
+.nail-tr { top: 12px; right: 18px; }
+.nail-bl { bottom: 12px; left: 18px; }
+.nail-br { bottom: 12px; right: 18px; }
+
+/* Mobile Responsive Fun */
+@media (max-width: 768px) {
+  .btn-party, .btn-fun, .btn-celebration {
+    @apply text-sm py-2 px-4;
+  }
+  
+  .card-party, .card-fun {
+    @apply rounded-2xl border-2;
+  }
+}
+
+.child-step-hero { position: relative; }
+.child-step-hero .hero-line-1 { font-family: 'Chewy', cursive; font-weight: 900; color: #4b3a7a; letter-spacing: -0.02em; }
+.child-step-hero .hero-line-2 { font-family: 'Chewy', cursive; font-weight: 900; color: #ff6b9d; letter-spacing: -0.02em; }
+
+.confetti-area { position: relative; height: 120px; }
+.confetti-area .dot { position: absolute; border-radius: 9999px; opacity: 0.85; }
+
+.sign-wrap { position: relative; display: flex; justify-content: center; }
+.sign-board { position: relative; background: #f4b02a; border: 4px solid #c78616; border-radius: 18px; padding: 14px 22px; min-width: 280px; box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+.sign-board::after { content: ""; position: absolute; left: -10px; bottom: -80px; width: 14px; height: 90px; background: #7b4b36; border-radius: 6px; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.15); }
+.sign-board input { background: transparent; border: none; outline: none; font-family: 'Chewy', cursive; font-size: 18px; color: #3a2d1a; width: 100%; }
+.sign-board input::placeholder { color: #7a5b3a; opacity: 1; }
+
+.summary-card { position: relative; background: #ffe1ea; border-radius: 16px; padding: 18px; box-shadow: 0 8px 16px rgba(0,0,0,0.12); border: 4px solid #ffb6c9; }
+.summary-card .title { font-family: 'Poppins', sans-serif; font-weight: 800; color: #4b3a7a; font-size: 18px; }
+.summary-card .tape { position: absolute; top: -12px; left: 16px; width: 120px; height: 20px; background: #ff78a6; border-radius: 4px; transform: rotate(-3deg); box-shadow: 0 2px 4px rgba(0,0,0,0.12); }
+.summary-card .line { height: 1px; background: #4b3a7a; opacity: 0.4; margin: 6px 0 12px; }
+.summary-card .row { color: #4b3a7a; font-weight: 600; font-size: 14px; }
+.summary-card .blank { display: inline-block; min-width: 80px; border-bottom: 2px solid rgba(75,58,122,0.5); height: 18px; vertical-align: baseline; }
+
+@media (min-width: 768px) {
+  .confetti-area { height: 160px; }
+  .sign-board { padding: 16px 26px; min-width: 360px; }
+  .sign-board input { font-size: 20px; }
+  .summary-card { padding: 22px; }
+}
+
+/* Mobile optimizations for child-name step */
+@media (max-width: 767px) {
+  .child-step-hero .hero-line-1,
+  .child-step-hero .hero-line-2 { font-size: 34px; }
+  .confetti-area { height: 80px; }
+  .sign-board { min-width: 0; width: 92%; padding: 12px 16px; }
+  .sign-board input { font-size: 17px; }
+  .summary-card { width: 100%; }
+  .wizzy-mobile { width: 180px; height: auto; position: absolute; right: -16px; bottom: -10px; }
+}
+
+/* Magical progress bar effects */
+.progress-container {
+  width: 98%;
+  max-width: 800px;
+  position: relative;
+}
+
+.stone-frame {
+  background: linear-gradient(135deg, #8b7355 0%, #a89276 50%, #8b7355 100%);
+  padding: 12px;
+  border-radius: 20px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 2px 5px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.stone-frame::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 2px solid rgba(139, 115, 85, 0.5);
+  border-radius: 15px;
+  pointer-events: none;
+}
+
+.progress-bg {
+  background: linear-gradient(135deg, #0a4d68 0%, #05668d 50%, #0a4d68 100%);
+  height: 30px;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.spiral-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle at center,
+      transparent 0%,
+      rgba(255, 255, 255, 0.03) 20%,
+      transparent 40%,
+      rgba(255, 255, 255, 0.03) 60%,
+      transparent 80%);
+  animation: rotate 8s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg,
+      #00d9ff 0%,
+      #00b4d8 25%,
+      #0096c7 50%,
+      #00b4d8 75%,
+      #00d9ff 100%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+  position: relative;
+  transition: width 0.3s ease;
+  box-shadow:
+    0 0 20px rgba(0, 217, 255, 0.5),
+    inset 0 2px 10px rgba(255, 255, 255, 0.3);
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.sparkles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+  animation: sparkle 2s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  z-index: 10;
+}
+
+/* 1) Prevent page (root) vertical scrolling */
+html, body, #__next {
+  height: 100%;
+  overflow: hidden;               /* no vertical scroll on the page */
+  overscroll-behavior: none;      /* no bounce / pull-to-refresh */
+}
+
+/* 2) A safe full-height helper that respects mobile URL bars */
+.h-screen-safe {
+  height: 100dvh;                 /* modern dynamic viewport */
+}
+
+/* Fallback for older browsers that lack 100dvh */
+@supports not (height: 100dvh) {
+  .h-screen-safe { height: 100vh; }
+}
+
+/* 3) The only scrollable region */
+.scroll-area {
+  overflow-y: auto;
+  overflow-x: clip;
+  overscroll-behavior: contain;   /* prevent scroll chaining to body */
+  -webkit-overflow-scrolling: touch;  /* smoother iOS momentum */
+  scrollbar-gutter: stable both-edges; /* avoids layout shift when scrollbar appears */
+}
+
+/* Optional: if animated abs children exist inside scroll area */
+.scroll-area > * { max-inline-size: 100%; }
+
+/* Fluid rail tokens and helpers */
+:root {
+  /* Content rail and gutters */
+  --rail: clamp(20rem, 92vw, 36rem);
+  --gap: clamp(0.75rem, 1.5vw, 1rem);
+  --hud-h: clamp(52px, 8vw, 72px);
+  --nav-h: clamp(64px, 9vw, 88px);
+
+  /* Control sizes and type scale */
+  --ctl: clamp(64px, 8vw, 88px);
+  --fz-100: clamp(12px, 1.5vw, 14px);
+  --fz-200: clamp(14px, 1.8vw, 16px);
+  --fz-300: clamp(16px, 2.1vw, 18px);
+  --fz-400: clamp(18px, 2.6vw, 22px);
+}
+
+.hud-rail {
+  container-type: inline-size;
+  inline-size: var(--rail);
+}
+
+@container (min-width: 30rem) {
+  .hud-title { font-size: var(--fz-400); }
+}
+
+.btn-icon {
+  width: var(--ctl);
+  height: var(--ctl);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+}
+
+.hud-top { height: var(--hud-h); }
+.hud-bottom { height: calc(var(--nav-h) + env(safe-area-inset-bottom)); }
+
+/* Optional aspect helper */
+.aspect-portal {
+  position: relative;
+  width: 100%;
+  padding-top: calc(100% * 9 / 3);
+}
+.aspect-portal > * {
+  position: absolute; inset: 0;
+}
