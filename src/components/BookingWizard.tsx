@@ -53,7 +53,7 @@ import ConfirmationScene from "@/components/scenes/ConfirmationScene";
  * ──────────────────────────────────────────────────────────────────────────────
  */
 const inputBaseClass =
-  "form-input-bg w-full px-5 py-4 md:px-8 md:py-5 rounded-full border-[3px] font-medium tracking-wide placeholder-opacity-70 focus:outline-none transition-all duration-200 shadow-sm focus:shadow-md bg-amber-50 border-amber-800 focus:border-pink-500 text-amber-800 placeholder-amber-600 text-base md:text-lg";
+  "input bg-parchment bg-parchment-texture px-5 py-4 md:px-8 md:py-5 rounded-3xl font-medium tracking-wide text-base md:text-lg text-wiz-ink-700 placeholder:text-wiz-ink-500 shadow-parchment hover:shadow-lift focus:shadow-glow transition";
 
 const headingStackClass = "space-y-1 font-extrabold tracking-tight drop-shadow-sm";
 const headingLinePrimary = "text-amber-800 leading-tight";
