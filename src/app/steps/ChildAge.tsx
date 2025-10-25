@@ -17,7 +17,7 @@ export default function ChildAge({ childName, value, onChange }: Props) {
           placeholder="Age"
           value={value || ""}
           onChange={(e) => onChange(parseInt(e.target.value) || 0)}
-          className="input bg-parchment bg-parchment-texture w-full rounded-full px-5 py-4 md:px-8 md:py-5 font-medium tracking-wide text-lg md:text-xl text-center text-wiz-ink-700 placeholder:text-wiz-ink-500 hover:shadow-lift focus:shadow-glow transition"
+          className="input w-full rounded-full text-center text-lg md:text-xl"
         />
       </div>
     </div>

@@ -233,11 +233,12 @@ html, body, #__next {
   /* Inputs */
   .form-label { @apply block mb-1 text-wiz-ink-700; }
   .input {
-    @apply w-full rounded-2xl px-5 py-4 md:px-8 md:py-5
-           border border-wiz-parchment-200/60 bg-transparent
+    @apply w-full rounded-3xl px-5 py-4 md:px-8 md:py-5
+           border-2 border-wiz-parchment-200/80
+           bg-parchment bg-parchment-texture shadow-parchment
            text-wiz-ink-700 placeholder:text-wiz-ink-500 outline-none transition
            hover:shadow-lift focus:border-wiz-purple-400 focus:shadow-glow;
-    backdrop-filter: saturate(115%) blur(1px);
+    backdrop-filter: saturate(120%) blur(1.5px);
     -webkit-appearance: none;
     appearance: none;
     background-clip: padding-box;
