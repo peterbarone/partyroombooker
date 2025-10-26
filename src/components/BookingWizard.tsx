@@ -6,6 +6,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
 import ResponsiveStage from "@/components/layout/ResponsiveStage";
+import HudCharacter from "@/components/layout/HudCharacter";
 import HUD from "@/components/hud/HUD";
 // Modular Steps (HUD content)
 import GreetingStep from "@/app/steps/Greeting";
@@ -267,9 +268,6 @@ const ChildName: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
 const ChildAge: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
   <div className="h-full w-full flex flex-col items-center justify-center">
     {/* Title is rendered by HUD */}
-    <div className="text-center mb-4">
-      <p className={`${subheadingClass}`}>Helps us plan age-perfect fun!</p>
-    </div>
     <div className="w-full max-w-xs">
       <input
         type="number"
@@ -1352,20 +1350,17 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const Payment = () => (
     <div className="h-full w-full flex flex-col items-center justify-center">
       {/* Title is rendered by HUD */}
-      <div className="text-center mb-4">
-        <p className={`${subheadingClass} mt-4`}>Pay a 50% deposit to lock in your date and time.</p>
-        {typeof holdRemaining === "number" && holdRemaining > 0 && (
-          <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-yellow-800 text-sm font-semibold">
-            ⏳ Hold expires in <span className="tabular-nums">{fmtMMSS(holdRemaining)}</span>
-          </div>
-        )}
-      </div>
+      {typeof holdRemaining === "number" && holdRemaining > 0 && (
+        <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 text-yellow-800 text-sm font-semibold">
+          ⏳ Hold expires in <span className="tabular-nums">{fmtMMSS(holdRemaining)}</span>
+        </div>
+      )}
 
       <div className="w-full max-w-3xl bg-white/90 rounded-3xl p-6 shadow-lg">
         {/* Summary */}
         <h3 className="text-2xl text-amber-900 font-bold mb-2">Party Summary 🎉</h3>
         <div className="text-sm text-amber-800 mb-4">
-          Review your details and secure your reservation.
+          Pay a 50% deposit to lock in your date and time.
         </div>
 
         <div className="space-y-2 text-amber-900">
@@ -1707,20 +1702,99 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const bgs = getBackgroundsForStep(stepKey, tenant);
 
   // hudChars: characters rendered within the HUD overlay (test on child-name scene)
-  const HudChars = stepKey === "greeting" ? (
-    <>
-      <img
-        src="/assets/greeting/wizzygreeting.png"
-        alt="Wizzy"
-        className="pointer-events-none select-none absolute bottom-20 left-[-50px] sm:left-[-50px] w-[70%] sm:w-[60%] md:w-[50%] lg:w-[40%] max-w-[480px] md:max-w-[350px] lg:max-w-[280px]"
-      />
-      <img
-        src="/assets/greeting/rufffsgreeting.png"
-        alt="Ruffs"
-        className="pointer-events-none select-none absolute bottom-24 right-0 w-[40%] sm:w-[35%] md:w-[30%] lg:w-[25%] max-w-[210px] md:max-w-[160px] lg:max-w-[140px]"
-      />
-    </>
-  ) : null;
+  const HudChars = (() => {
+    switch (stepKey) {
+      case "greeting":
+        return (
+          <>
+            <HudCharacter
+              src="/assets/greeting/wizzygreeting.png"
+              alt="Wizzy"
+              anchor="left"
+              bottom="5rem"
+              offset="-28px"
+              minPx={300}
+              maxPx={620}
+              vwPercent={34}
+              cqwPercent={42}
+              scale={1.05}
+            />
+            <HudCharacter
+              src="/assets/greeting/rufffsgreeting.png"
+              alt="Ruffs"
+              anchor="right"
+              bottom="5.5rem"
+              offset="-6px"
+              minPx={220}
+              maxPx={500}
+              vwPercent={24}
+              cqwPercent={32}
+              scale={0.95}
+            />
+          </>
+        );
+      case "child-name":
+        return (
+          <>
+            <HudCharacter
+              src="/assets/child-name/wizzyWho.png"
+              alt="Wizzy Who"
+              anchor="left"
+              bottom="5rem"
+              offset="-28px"
+              minPx={300}
+              maxPx={620}
+              vwPercent={34}
+              cqwPercent={42}
+              scale={1.05}
+            />
+            <HudCharacter
+              src="/assets/child-name/ruffsWho.png"
+              alt="Ruffs Who"
+              anchor="right"
+              bottom="5.5rem"
+              offset="-6px"
+              minPx={220}
+              maxPx={500}
+              vwPercent={24}
+              cqwPercent={32}
+              scale={0.95}
+            />
+          </>
+        );
+      case "child-age":
+        return (
+          <>
+            <HudCharacter
+              src="/assets/child-age/wizzyAge.png"
+              alt="Wizzy Age"
+              anchor="left"
+              bottom="5rem"
+              offset="-28px"
+              minPx={300}
+              maxPx={620}
+              vwPercent={34}
+              cqwPercent={42}
+              scale={1.05}
+            />
+            <HudCharacter
+              src="/assets/child-age/ruffsAge.png"
+              alt="Ruffs Age"
+              anchor="right"
+              bottom="5.5rem"
+              offset="-6px"
+              minPx={220}
+              maxPx={500}
+              vwPercent={24}
+              cqwPercent={32}
+              scale={0.95}
+            />
+          </>
+        );
+      default:
+        return null;
+    }
+  })();
 
   return (
     <ResponsiveStage
