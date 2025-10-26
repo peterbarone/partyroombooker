@@ -18,7 +18,6 @@ export default function ChildInfo({ value, onChange }: Props) {
           autoCapitalize="words"
           className="
             input
-            bg-parchment bg-parchment-texture
             w-full rounded-full
             px-5 py-4 md:px-8 md:py-5
             font-medium tracking-wide

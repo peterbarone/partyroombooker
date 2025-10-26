@@ -172,6 +172,7 @@ html, body, #__next {
       linear-gradient(180deg, var(--parchment-50) 0%, var(--parchment-100) 100%);
   }
   .bg-parchment-texture {
+    background-color: var(--parchment-100);
     background-image:
       radial-gradient(rgba(0,0,0,.035) 1px, transparent 1px),
       radial-gradient(rgba(0,0,0,.03) 1px, transparent 1px),
@@ -233,15 +234,47 @@ html, body, #__next {
   /* Inputs */
   .form-label { @apply block mb-1 text-wiz-ink-700; }
   .input {
-    @apply w-full rounded-2xl px-4 py-3 bg-white/85 border-2 border-wiz-parchment-200
-           text-wiz-ink-700 placeholder:text-wiz-ink-500 outline-none
-           focus:border-wiz-purple-400 focus:shadow-glow transition;
+    background-color: var(--wizzy-purple-400);
+    color: white;
+    border: 2px solid #6F4624;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    @apply w-full rounded-2xl px-5 py-4 md:px-8 md:py-5
+           outline-none transition
+           hover:shadow-lift focus:shadow-glow;
+    backdrop-filter: saturate(115%) blur(1px);
+    -webkit-appearance: none;
+    appearance: none;
+    background-clip: padding-box;
+  }
+  /* Custom scrollbars */
+  .scrollable::-webkit-scrollbar {
+    width: 12px;
+  }
+  .scrollable::-webkit-scrollbar-track {
+    background: var(--wizzy-purple-400);
+    border-radius: 10px;
+  }
+  .scrollable::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #00d9ff 0%, #00b4d8 25%, #0096c7 50%, #00b4d8 75%, #00d9ff 100%);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,217,255,0.5);
+  }
+  .scrollable::-webkit-scrollbar-thumb:hover {
+    box-shadow: 0 0 15px rgba(0,217,255,0.8);
+  }
+  .input:-webkit-autofill:hover,
+  .input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--ink-700);
+    -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+    transition: background-color 99999s ease-in-out 0s;
+    caret-color: var(--ink-700);
+
   }
 
   /* Capacity/Info pill */
   .pill {
     @apply inline-flex items-center gap-2 rounded-full px-3 py-1
-           bg-wiz-parchment-200/70 border border-wiz-parchment-200 text-wiz-ink-600 text-sm;
+           bg-wiz-parchment-200 border border-wiz-parchment-200 text-wiz-ink-600 text-sm;
   }
 
   /* Back/Next circular nav buttons (image or solid) */
@@ -337,15 +370,19 @@ html, body, #__next {
 
 @layer components {
   .input {
+    background-color: var(--wizzy-purple-400);
+    color: white;
+    border: 2px solid #6F4624;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
     @apply w-full rounded-2xl px-4 py-3
-           border-2 border-wiz-parchment-200
-           text-wiz-ink-700 placeholder:text-wiz-ink-500
            outline-none transition
-           focus:border-wiz-purple-400 focus:shadow-glow
-           bg-transparent;                 /* ← remove white fill */
+           focus:shadow-glow;
     -webkit-appearance: none;              /* reset iOS/Chrome */
     appearance: none;
     background-clip: padding-box;
+  }
+  .input::placeholder {
+    color: #E6E0FF;
   }
 
   /* tame iOS/Chrome autofill “yellow” and white repaint */

@@ -53,7 +53,7 @@ import ConfirmationScene from "@/components/scenes/ConfirmationScene";
  * ──────────────────────────────────────────────────────────────────────────────
  */
 const inputBaseClass =
-  "form-input-bg w-full px-5 py-4 md:px-8 md:py-5 rounded-full border-[3px] font-medium tracking-wide placeholder-opacity-70 focus:outline-none transition-all duration-200 shadow-sm focus:shadow-md bg-amber-50 border-amber-800 focus:border-pink-500 text-amber-800 placeholder-amber-600 text-base md:text-lg";
+  "input px-5 py-4 md:px-8 md:py-5 rounded-3xl font-medium tracking-wide text-lg md:text-xl shadow-parchment hover:shadow-lift focus:shadow-glow transition";
 
 const headingStackClass = "space-y-1 font-extrabold tracking-tight drop-shadow-sm";
 const headingLinePrimary = "text-amber-800 leading-tight";
@@ -224,7 +224,7 @@ const getBackgroundsForStep = (step: StepKey, tenant?: string) => {
 };
 
 // Map step to Scene component
-const SceneByStep: Record<StepKey, React.ComponentType | null> = {
+const SceneByStep: Record<StepKey, React.ComponentType> = {
   "greeting": GreetingScene,
   "child-name": ChildNameScene,
   "child-age": ChildAgeScene,
@@ -281,6 +281,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   });
 
   // Preview modal state for room images
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [previewIndex, setPreviewIndex] = useState(0);
@@ -663,30 +664,40 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                   });
                   setAvailableRoomsForSelectedSlot(slot.rooms || []);
                 }}
-                className={`relative w-full p-3.5 md:p-4 rounded-[28px] border-[5px] transition-all bg-gradient-to-b from-white to-[#FFF8E6] shadow-[0_2px_8px_rgba(0,0,0,0.16)] ${
+                className={`relative w-full p-3.5 md:p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-parchment ${
                   isSelected
-                    ? "ring-4 ring-cyan-300 border-cyan-500 shadow-[0_4px_14px_rgba(0,0,0,0.18)] scale-[1.01]"
-                    : "border-amber-400 hover:border-cyan-300 hover:ring-2 hover:ring-cyan-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.18)] hover:scale-[1.01]"
+                    ? `bg-white ring-4 ring-cyan-300 border-cyan-500 shadow-[0_4px_14px_rgba(0,0,0,0.18)] scale-[1.01]`
+                    : `border-cyan-400 hover:border-cyan-300 hover:ring-2 hover:ring-cyan-200 hover:shadow-lift hover:scale-[1.01]`
                 }`}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 animate={
                   isSelected
                     ? {
+                        rotate: [0, -5, 5, -5, 0],
                         boxShadow: [
                           "0px 4px 14px rgba(0,0,0,0.18), 0 0 0 0 rgba(34,211,238,0.25)",
                           "0px 4px 14px rgba(0,0,0,0.18), 0 0 0 10px rgba(34,211,238,0.12)",
                           "0px 4px 14px rgba(0,0,0,0.18), 0 0 0 0 rgba(34,211,238,0.25)",
                         ],
-                        transition: { duration: 1.6, repeat: Infinity, repeatType: "mirror" },
+                        transition: { duration: 0.8, ease: "easeInOut" },
                       }
                     : undefined
                 }
               >
+                {isSelected && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: [0, 1.15, 1] }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full bg-cyan-500 text-white grid place-items-center shadow-lg"
+                  >
+                    ✓
+                  </motion.div>
+                )}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {/* Cartoon-like clock icon with thicker stroke and warm cast */
-                    }
+                    {/* Cartoon-like clock icon with thicker stroke and warm cast */}
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                       <defs>
                         <linearGradient id="faceGrad" x1="0" y1="0" x2="0" y2="1">
@@ -699,15 +710,9 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                       <path d="M12 6.2v5.6l4 1.9" stroke="#0EA5B7" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M8.3 3.6l1.6 1.6M15.7 3.6L14.1 5.2" stroke="#0EA5B7" strokeWidth="2.4" strokeLinecap="round" />
                     </svg>
-                    <div className="font-party text-amber-900 text-lg md:text-xl font-extrabold tracking-wide drop-shadow-sm">{label}</div>
+                    <div className="font-party text-white text-lg md:text-xl font-extrabold tracking-wide drop-shadow-sm" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>{label}</div>
                   </div>
-                  <span
-                    className={`relative font-party text-xs md:text-sm px-3 py-1 rounded-full border shadow-sm ${
-                      isSelected
-                        ? "bg-gradient-to-b from-amber-100 to-amber-50 text-amber-900 border-amber-400 shadow-[inset_0_0_10px_rgba(255,245,200,0.9)]"
-                        : "bg-gradient-to-b from-amber-50 to-amber-25 text-amber-800 border-amber-400 shadow-[inset_0_0_8px_rgba(255,245,200,0.7)]"
-                    }`}
-                  >
+                  <span className="relative font-party text-xs md:text-sm px-3 py-1 rounded-full bg-wiz-purple-600 text-white border border-wiz-purple-500 shadow-sm">
                     <motion.span
                       className="mr-1 inline-block"
                       animate={{ opacity: isSelected ? [0.7, 1, 0.7] : 0.8, rotate: isSelected ? [0, 10, -10, 0] : 0, scale: isSelected ? [0.95, 1, 0.95] : 1 }}
@@ -759,7 +764,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     };
 
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center">
+      <div className="h-full w-full flex flex-col items-center justify-center px-8 py-4">
         {/* Title is rendered by HUD */}
         {(bookingData.selectedDate || bookingData.selectedTime) && (
           <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
@@ -778,7 +783,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
         {listCount === 0 && (
           <div className="text-amber-800 text-center mb-4">No rooms available for this time. Try another time or date.</div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-3xl max-h-[55vh] overflow-y-auto pr-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 w-full max-w-3xl max-h-[55vh] overflow-y-auto pr-1">
           {list.map((room) => {
             const isDisabled = !room.available || !room.eligible;
             const selected = bookingData.selectedRoom?.id === room.id;
@@ -786,12 +791,12 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
             return (
             <motion.div
               key={room.id}
-              className={`relative p-4 rounded-[28px] border-[5px] transition-all bg-gradient-to-b from-white to-[#FFF8E6] ${
+              className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 text-center ${
                 selected
-                  ? `bg-white ring-4 ring-cyan-300 border-cyan-500 ${color.glow} scale-[1.01]`
+                  ? `bg-white ring-4 ring-cyan-300 border-cyan-500 scale-[1.01]`
                   : isDisabled
-                  ? "border-dashed border-amber-300 bg-white/60 cursor-not-allowed"
-                  : `border-amber-300 hover:border-amber-400 hover:ring-2 ${color.ring} hover:shadow-[0_4px_12px_rgba(0,0,0,0.18)] cursor-pointer`
+                  ? `border-red-400`
+                  : `border-cyan-400 hover:border-cyan-300 hover:ring-2 hover:ring-cyan-200 hover:shadow-lift hover:scale-[1.01]`
               }`}
               onClick={async () => {
                 updateBookingData({ selectedRoom: room as any });
@@ -838,7 +843,37 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                   ✓
                 </motion.div>
               )}
-              <div className="relative mb-3 rounded-2xl overflow-hidden border-2 border-amber-300">
+              {isDisabled && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="bg-red-600 text-white font-extrabold text-xl px-6 py-2 transform rotate-45 shadow-lg border-2 border-red-800">
+                    UNAVAILABLE
+                  </div>
+                </div>
+              )}
+              <div className="font-party text-white text-lg font-extrabold tracking-wide mb-2" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>{room.name}</div>
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <span className="text-xs px-3 py-1 rounded-full bg-wiz-purple-600 text-white border border-wiz-purple-500 shadow-sm">🎉 Up to {room.max_kids} kids</span>
+                {!room.eligible && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-red-500 text-white border border-red-400">Not eligible</span>
+                )}
+              </div>
+              {!isDisabled && (
+                <button
+                  type="button"
+                  className="mb-3 bg-wiz-purple-500 hover:bg-wiz-purple-400 text-white px-3 py-2 rounded-full text-sm font-medium transition shadow-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPreviewImages(Array.isArray(room.images) ? room.images : []);
+                    setPreviewIndex(0);
+                    setPreviewTitle(room.name);
+                    setPreviewOpen(true);
+                  }}
+                  aria-label="Tap to preview"
+                >
+                  👁️ Preview Room
+                </button>
+              )}
+              <div className="relative rounded-2xl overflow-hidden border-2 border-amber-300">
                 <div className="aspect-[4/3] w-full bg-amber-100/40 flex items-center justify-center">
                   {Array.isArray(room.images) && room.images.length > 0 ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -847,41 +882,21 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                     <div className="text-amber-700 text-sm">No photo</div>
                   )}
                 </div>
-                {!isDisabled && (
-                  <button
-                    type="button"
-                    className="absolute bottom-2 right-2 bg-black/35 hover:bg-black/45 text-white backdrop-blur px-2 py-1 rounded-full text-xs flex items-center gap-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPreviewImages(Array.isArray(room.images) ? room.images : []);
-                      setPreviewIndex(0);
-                      setPreviewTitle(room.name);
-                      setPreviewOpen(true);
-                    }}
-                    aria-label="Tap to preview"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" stroke="white" strokeWidth="2.2" fill="none"/>
-                      <circle cx="12" cy="12" r="3" fill="white" />
-                    </svg>
-                    <span>Preview</span>
-                  </button>
-                )}
-              </div>
-              <div className="font-party text-amber-900 text-lg font-extrabold tracking-wide mb-2">{room.name}</div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs px-3 py-1 rounded-full border border-amber-300 bg-amber-50 text-amber-800 shadow-sm">🎉 Up to {room.max_kids} kids</span>
-                {!room.eligible && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 border border-red-200">Not eligible</span>
-                )}
-                {room.eligible && !room.available && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">Not available</span>
-                )}
               </div>
             </motion.div>
             );
           })}
         </div>
+        {list.length > 4 && (
+          <motion.div
+            className="mt-6 text-center text-white font-party text-lg"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          >
+            <div>Scroll for more rooms</div>
+            <div className="text-3xl mt-2">⬇️</div>
+          </motion.div>
+        )}
         {previewOpen && (
           <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" role="dialog" aria-modal="true">
             <div className="relative w-full max-w-3xl">
@@ -921,8 +936,25 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     );
   };
 
-  const PackageChoice = () => (
-    <div className="h-full w-full flex flex-col items-center justify-start pt-20">
+  const PackageChoice = () => {
+    const packageRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      const el = packageRef.current;
+      if (!el) return;
+
+      const handleScroll = () => {
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
+          setHasScrolledToBottom(true);
+        }
+      };
+
+      el.addEventListener('scroll', handleScroll);
+      return () => el.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    return (
+      <div ref={packageRef} className="h-full w-full flex flex-col items-center justify-start pt-20">
       {/* Title is rendered by HUD */}
       {(bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom) && (
         <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
@@ -943,53 +975,107 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
           )}
         </div>
       )}
-      <div className="mb-2 text-xs text-amber-700">Packages loaded: {packages.length}</div>
-      <div className="text-center text-amber-900 font-bold mb-2">Packages</div>
       {packages.length === 0 && (
         <div className="text-amber-800 text-center mb-4">No packages available. Make sure your tenant has active packages in Supabase.</div>
       )}
-      <div className="mt-4 grid grid-cols-1 gap-4 w-full max-w-md">
-        {packages.map((pkg) => (
-          <motion.div
-            key={pkg.id}
-            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-              bookingData.selectedPackage?.id === pkg.id
-                ? "border-amber-400 bg-white shadow-md scale-[1.01]"
-                : "border-transparent bg-white/80 hover:scale-[1.005]"
-            }`}
-            onClick={() => updateBookingData({ selectedPackage: pkg })}
-            whileHover={{ scale: 1.005 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="text-2xl mb-2">{bookingData.selectedPackage?.id === pkg.id ? "✅" : "🎉"}</div>
-            <div className="text-base font-bold text-amber-900">{pkg.name}</div>
-            {!!pkg.description && <div className="text-xs text-amber-700 mt-1 line-clamp-2">{pkg.description}</div>}
-            <div className="mt-3 flex items-center justify-between">
-              <div className="text-sm font-semibold text-pink-600">${pkg.base_price.toFixed(2)}</div>
-              <div className="text-[11px] text-amber-700">
+      <div className="mt-4 grid grid-cols-1 gap-12 w-full max-w-md">
+        {packages.map((pkg, index) => {
+          const isSelected = bookingData.selectedPackage?.id === pkg.id;
+          const isPopular = index === 0; // Assume first is most popular
+          return (
+            <motion.div
+              key={pkg.id}
+              className={`relative p-4 rounded-3xl border-4 border-cyan-300 transition-all bg-purple-200 shadow-2xl scale-60 text-center cursor-pointer overflow-hidden ${
+                isSelected
+                  ? "border-cyan-400 bg-white scale-[1.01] ring-4 ring-cyan-300"
+                  : "hover:scale-[1.01] hover:ring-2 hover:ring-cyan-200 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+              }`}
+              style={{
+                background: isSelected ? 'white' : 'rgba(139,92,246,0.9)',
+                borderImage: 'linear-gradient(45deg, #a78bfa, #06b6d4) 1'
+              }}
+              onClick={() => updateBookingData({ selectedPackage: pkg })}
+              whileHover={{ scale: 1.01, boxShadow: "0 0 30px rgba(34,211,238,0.5)" }}
+              whileTap={{ scale: 0.98 }}
+              animate={isSelected ? { rotate: [0, -2, 2, 0] } : undefined}
+            >
+              {isSelected && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: [0, 1.15, 1] }}
+                  transition={{ duration: 0.5 }}
+                  className="absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full bg-cyan-500 text-white grid place-items-center shadow-lg"
+                >
+                  ✓
+                </motion.div>
+              )}
+              {isPopular && !isSelected && (
+                <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                  🥇 Most Popular
+                </div>
+              )}
+              <div className={`text-xl font-extrabold mb-1 ${isSelected ? 'text-amber-900' : 'text-white'}`}>{pkg.name}</div>
+              <div className={`text-sm font-medium mb-3 ${isSelected ? 'text-amber-800' : 'text-white'}`}>
+                {pkg.name.toLowerCase().includes('deluxe') ? '🎎 Best for families' : pkg.name.toLowerCase().includes('bounce') ? '🎈 Fun for young kids' : '⭐ Classic choice'}
+              </div>
+              <div className={`text-lg font-bold mb-1 ${isSelected ? 'text-pink-600' : 'text-white'}`}>${pkg.base_price.toFixed(2)}</div>
+              <div className={`text-xs mb-4 ${isSelected ? 'text-amber-700' : 'text-white'}`}>
                 {Math.max(1, Math.round((pkg.duration_min || 120) / 60))} hrs • up to {pkg.base_kids} kids
               </div>
-            </div>
-          </motion.div>
-        ))}
+              <div className="relative mb-4">
+                <div className="h-px bg-gradient-to-r from-cyan-400 to-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
+              </div>
+              <div className="text-left mb-4">
+                <div className={`text-sm font-semibold mb-3 ${isSelected ? 'text-amber-900' : 'text-white'}`}>What&apos;s included:</div>
+                <ul className={`text-xs space-y-2 ${isSelected ? 'text-amber-700' : 'text-white'}`} style={{ lineHeight: '1.8' }}>
+                  <li>🏠 Private party room</li>
+                  <li>🎭 Dedicated party host</li>
+                  <li>🍕 Pizza & drinks</li>
+                  <li>🎈 Balloon bundle</li>
+                  <li>🎟️ Return pass for birthday child</li>
+                </ul>
+              </div>
+              <div className="flex gap-2 justify-center px-4">
+                <button
+                  className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-full text-sm font-medium hover:bg-pink-600 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateBookingData({ selectedPackage: pkg });
+                  }}
+                >
+                  Select Package ➜
+                </button>
+                <button
+                  className="flex-1 px-4 py-2 border border-amber-400 text-amber-800 bg-amber-50 rounded-full text-sm font-medium hover:bg-amber-100 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Open details modal
+                  }}
+                >
+                  View Details
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
 
       {characters.length > 0 && (
         <div className="w-full max-w-md mt-10">
           <div className="text-center mb-2">
-            <div className={headingStackClass}>
-              <h3 className={`${headingLinePrimary} text-2xl sm:text-3xl`}>ADD A</h3>
-              <h3 className={`${headingLineAccent} text-2xl sm:text-3xl`}>CHARACTER</h3>
+            <div className="space-y-1 font-party font-extrabold tracking-tight drop-shadow-sm">
+              <h3 className="text-amber-800 leading-tight text-2xl sm:text-3xl">ADD A</h3>
+              <h3 className="text-pink-600 leading-tight text-2xl sm:text-3xl">CHARACTER</h3>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-12">
             {characters.map((ch) => {
               const selected = (bookingData.selectedCharacters || []).some((s) => s.character.id === ch.id);
               return (
                 <motion.div
                   key={ch.id}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                    selected ? "border-amber-400 bg-white shadow-xl scale-[1.02]" : "border-transparent bg-white/80 hover:scale-[1.01]"
+                  className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 cursor-pointer ${
+                    selected ? "border-amber-400 bg-white scale-[1.01]" : "border-transparent bg-white/80 hover:scale-[1.01]"
                   }`}
                   onClick={() => {
                     const list = bookingData.selectedCharacters || [];
@@ -1002,9 +1088,15 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="text-2xl mb-2">{selected ? "✅" : "🎭"}</div>
-                  <div className="text-base font-bold text-amber-900">{ch.name}</div>
-                  <div className="text-sm font-semibold text-pink-600 mt-1">${ch.price.toFixed(2)}</div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-amber-300 bg-amber-100/40 flex items-center justify-center">
+                      <div className="text-2xl">🎭</div>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="text-base font-bold text-amber-900">{ch.name}</div>
+                      <div className="text-sm font-semibold text-pink-600 mt-1">${ch.price.toFixed(2)}</div>
+                    </div>
+                  </div>
                 </motion.div>
               );
             })}
@@ -1014,48 +1106,53 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
       {addons.length > 0 && (
         <div className="w-full max-w-md mt-10">
-          <div className={headingStackClass + " text-center mb-4"}>
-            <h2 className={`${headingLinePrimary} text-3xl md:text-4xl`}>FUN</h2>
-            <h2 className={`${headingLineAccent} text-3xl md:text-4xl`}>ADD-ONS</h2>
+          <div className="space-y-1 font-party font-extrabold tracking-tight drop-shadow-sm text-center mb-4">
+            <h2 className="text-amber-800 leading-tight text-3xl md:text-4xl">FUN</h2>
+            <h2 className="text-pink-600 leading-tight text-3xl md:text-4xl">ADD-ONS</h2>
           </div>
-          <div className="grid grid-cols-1 gap-4">
-            {addons.map((addon) => {
+          <div className="grid grid-cols-1 gap-12">
+          {(() => {
+            const handleAddonQuantityChange = (addon: Addon, e: React.ChangeEvent<HTMLSelectElement>) => {
+              const qty = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
+              const list = bookingData.selectedAddons || [];
+              const exists = list.find((sa) => sa.addon.id === addon.id);
+              if (qty === 0) {
+                updateBookingData({ selectedAddons: list.filter((sa) => sa.addon.id !== addon.id) });
+              } else if (exists) {
+                updateBookingData({
+                  selectedAddons: list.map((sa) => (sa.addon.id === addon.id ? { ...sa, quantity: qty } : sa)),
+                });
+              } else {
+                updateBookingData({ selectedAddons: [...list, { addon, quantity: qty }] });
+              }
+            };
+
+            return addons.map((addon) => {
               const selected = (bookingData.selectedAddons || []).find((a) => a.addon.id === addon.id);
               const quantity = selected?.quantity ?? 0;
               return (
                 <motion.div
                   key={addon.id}
-                  className={`p-4 rounded-2xl border-2 transition-all ${
-                    quantity > 0 ? "border-amber-400 bg-white shadow-md scale-[1.01]" : "border-transparent bg-white/80 hover:scale-[1.005]"
+                  className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 cursor-pointer ${
+                    quantity > 0 ? "border-amber-400 bg-white scale-[1.01]" : "border-transparent bg-white/80 hover:scale-[1.01]"
                   }`}
                   whileHover={{ scale: 1.005 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="text-base font-bold text-amber-900">{addon.name}</div>
-                      {!!addon.description && <div className="text-xs text-amber-700 mt-1">{addon.description}</div>}
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-amber-300 bg-amber-100/40 flex items-center justify-center">
+                      <div className="text-2xl">🎉</div>
                     </div>
-                    <div className="text-sm font-semibold text-pink-600">${addon.price.toFixed(2)}</div>
+                    <div className="flex-1 text-left">
+                      <div className="text-base font-bold text-amber-900">{addon.name}</div>
+                      <div className="text-sm font-semibold text-pink-600 mt-1">${addon.price.toFixed(2)}</div>
+                    </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center justify-between">
                     <label className="text-xs text-amber-800">Quantity</label>
                     <select
                       value={quantity}
-                      onChange={(e) => {
-                        const qty = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
-                        const list = bookingData.selectedAddons || [];
-                        const exists = list.find((sa) => sa.addon.id === addon.id);
-                        if (qty === 0) {
-                          updateBookingData({ selectedAddons: list.filter((sa) => sa.addon.id !== addon.id) });
-                        } else if (exists) {
-                          updateBookingData({
-                            selectedAddons: list.map((sa) => (sa.addon.id === addon.id ? { ...sa, quantity: qty } : sa)),
-                          });
-                        } else {
-                          updateBookingData({ selectedAddons: [...list, { addon, quantity: qty }] });
-                        }
-                      }}
+                      onChange={(e) => handleAddonQuantityChange(addon, e)}
                       className="border rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-pink-400"
                     >
                       {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
@@ -1067,12 +1164,14 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                   </div>
                 </motion.div>
               );
-            })}
-          </div>
+            });
+          })()}
+        </div>
         </div>
       )}
     </div>
   );
+  };
 
   const GuestCount = () => (
     <div className="h-full w-full flex flex-col items-center justify-center pt-10">
@@ -1514,7 +1613,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       case "time-slot":
         return !bookingData.selectedTime;
       case "package-choice":
-        return !bookingData.selectedPackage;
+        return !bookingData.selectedPackage || !hasScrolledToBottom;
       case "room-choice":
         return !bookingData.selectedRoom;
       case "parent-info":
@@ -1572,62 +1671,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     }
   })();
 
-  const Hud = (
-    <HUD
-      currentStep={currentStep}
-      totalSteps={STEPS.length}
-      onPrev={prevStep}
-      onNext={nextStep}
-      title={hudTitle}
-      isNextDisabled={isNextDisabled()}
-      showNav={stepKey !== "greeting" && stepKey !== "payment" && stepKey !== "confirmation"}
-      showProgress={stepKey !== "greeting"}
-      contentOverflowY={(stepKey === "greeting" || stepKey === "party-date") ? 'visible' : 'auto'}
-      showScrollBackdrop={stepKey !== "greeting"}
-      holdId={hold?.id ?? null}
-      holdRemaining={holdRemaining}
-      fmtMMSS={fmtMMSS}
-    >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stepKey}
-          initial={{ opacity: 0, y: 28 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -24 }}
-          transition={{ duration: 0.25 }}
-          className="h-full"
-        >
-          {stepKey === "greeting" && <GreetingStep onStart={nextStep} />}
-          {stepKey === "child-name" && (
-            <ChildNameStep
-              value={bookingData.customerInfo.childName}
-              onChange={(name) =>
-                updateBookingData({ customerInfo: { ...bookingData.customerInfo, childName: name } })
-              }
-            />
-          )}
-          {stepKey === "child-age" && (
-            <ChildAgeStep
-              childName={bookingData.customerInfo.childName}
-              value={bookingData.customerInfo.childAge}
-              onChange={(age: number) =>
-                updateBookingData({ customerInfo: { ...bookingData.customerInfo, childAge: age } })
-              }
-            />
-          )}
-          {stepKey === "party-date" && <PartyDate />}
-          {stepKey === "time-slot" && <TimeSlot />}
-          {stepKey === "room-choice" && <RoomChoice />}
-          {stepKey === "package-choice" && <PackageChoice />}
-          {stepKey === "guest-count" && <GuestCount />}
-          {stepKey === "parent-info" && <ParentInfo />}
-          {stepKey === "special-notes" && <SpecialNotesStep />}
-          {stepKey === "payment" && <PaymentStep />}
-          {stepKey === "confirmation" && <ConfirmationStep />}
-        </motion.div>
-      </AnimatePresence>
-    </HUD>
-  );
+  const Hud = null;
 
   if (loading) {
     return (
@@ -1647,50 +1691,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const bgs = getBackgroundsForStep(stepKey, tenant);
 
   // hudChars: characters rendered within the HUD overlay (test on child-name scene)
-  const HudChars = (
-    <>
-      {stepKey === "greeting" && (
-        <>
-          <motion.img
-            src="/assets/greeting/wizzygreeting.png"
-            alt="Wizzy"
-            className="pointer-events-none select-none absolute bottom-20 left-[-50px] sm:left-[-50px] w-[60%] sm:w-[60%] md:w-[60%] max-w-[480px] z-40"
-            initial={{ y: 0 }}
-            animate={{ y: [0, -2, 0] }}
-            transition={{ duration: 6.5, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-          />
-          <motion.img
-            src="/assets/greeting/rufffsgreeting.png"
-            alt="Ruffs"
-            className="pointer-events-none select-none absolute bottom-24 right-0 w-[38%] max-w-[210px] z-40"
-            initial={{ y: 0, rotate: 0 }}
-            animate={{ y: [0, -2, 0], rotate: [0, -0.5, 0.25, 0] }}
-            transition={{ duration: 7.5, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-          />
-        </>
-      )}
-      {stepKey === "child-name" && (
-        <>
-          <motion.img
-            src="/assets/child-name/wizzyWho.png"
-            alt="Wizzy Who"
-            className="pointer-events-none select-none absolute bottom-28 sm:bottom-32 md:bottom-36 left-[-40px] w-[60%] sm:w-[60%] md:w-[60%] max-w-[440px]"
-            initial={{ y: 0 }}
-            animate={{ y: [0, -2, 0] }}
-            transition={{ duration: 6.25, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-          />
-          <motion.img
-            src="/assets/child-name/ruffsWho.png"
-            alt="Ruffs Who"
-            className="pointer-events-none select-none absolute bottom-32 sm:bottom-36 md:bottom-40 right-0 w-[38%] max-w-[200px]"
-            initial={{ y: 0, rotate: 0 }}
-            animate={{ y: [0, -1.5, 0], rotate: [0, -0.4, 0.2, 0] }}
-            transition={{ duration: 7, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-          />
-        </>
-      )}
-    </>
-  );
+  const HudChars = null;
 
   return (
     <ResponsiveStage
