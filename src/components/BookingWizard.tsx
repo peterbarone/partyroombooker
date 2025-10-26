@@ -137,6 +137,11 @@ interface FamilyFunBookingWizardProps {
   tenant: string;
 }
 
+type StepProps = {
+  bookingData: BookingData;
+  updateBookingData: (data: Partial<BookingData>) => void;
+};
+
 /**
  * ──────────────────────────────────────────────────────────────────────────────
  *  Steps & Component
@@ -238,6 +243,193 @@ const SceneByStep: Record<StepKey, React.ComponentType<any>> = {
   "payment": PaymentScene,
   "confirmation": ConfirmationScene,
 };
+
+// Step Components
+const ChildName: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
+  <div className="h-full w-full flex flex-col items-center justify-center @container">
+    {/* Title is rendered by HUD */}
+    <div className="w-full max-w-md">
+      <input
+        type="text"
+        placeholder="Enter your child's name"
+        value={bookingData.customerInfo.childName}
+        onChange={(e) =>
+          updateBookingData({
+            customerInfo: { ...bookingData.customerInfo, childName: e.target.value },
+          })
+        }
+        className={`${inputBaseClass} text-center`}
+      />
+    </div>
+  </div>
+);
+
+const ChildAge: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
+  <div className="h-full w-full flex flex-col items-center justify-center">
+    {/* Title is rendered by HUD */}
+    <div className="text-center mb-4">
+      <p className={`${subheadingClass}`}>Helps us plan age-perfect fun!</p>
+    </div>
+    <div className="w-full max-w-xs">
+      <input
+        type="number"
+        min={1}
+        max={18}
+        placeholder="Age"
+        value={bookingData.customerInfo.childAge || ""}
+        onChange={(e) =>
+          updateBookingData({
+            customerInfo: { ...bookingData.customerInfo, childAge: parseInt(e.target.value) || 0 },
+          })
+        }
+        className={`${inputBaseClass} text-center`}
+      />
+    </div>
+  </div>
+);
+
+const PartyDate: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
+  <div className="h-full w-full flex flex-col items-center justify-center">
+    {/* Title is rendered by HUD */}
+    <div className="w-full max-w-md px-2">
+      <Calendar
+        value={bookingData.selectedDate || null}
+        onChange={(iso) => {
+          updateBookingData({ selectedDate: iso, selectedSlot: undefined, selectedTime: "" });
+        }}
+        minDate={new Date()}
+        className="w-full"
+      />
+    </div>
+  </div>
+);
+
+const ParentInfo: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
+  <div className="h-full w-full flex flex-col items-center justify-center pt-10">
+    {/* Title is rendered by HUD */}
+    {(bookingData.customerInfo.childName || bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
+      <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
+        {bookingData.customerInfo.childName && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {bookingData.customerInfo.childName}{bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge})` : ''}
+          </span>
+        )}
+        {bookingData.selectedDate && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </span>
+        )}
+        {bookingData.selectedTime && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {bookingData.selectedTime}
+          </span>
+        )}
+        {bookingData.selectedRoom && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {bookingData.selectedRoom.name}
+          </span>
+        )}
+        {bookingData.selectedPackage && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {bookingData.selectedPackage.name}
+          </span>
+        )}
+        {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length > 0 && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length} character(s)
+          </span>
+        )}
+        {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length > 0 && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length} add-on(s)
+          </span>
+        )}
+      </div>
+    )}
+    <div className="grid grid-cols-1 gap-5 w-full max-w-md">
+      <input
+        type="text"
+        placeholder="Parent's Name"
+        value={bookingData.customerInfo.parentName}
+        onChange={(e) =>
+          updateBookingData({ customerInfo: { ...bookingData.customerInfo, parentName: e.target.value } })
+        }
+        className={inputBaseClass}
+      />
+      <input
+        type="email"
+        placeholder="Parent's Email"
+        value={bookingData.customerInfo.parentEmail}
+        onChange={(e) =>
+          updateBookingData({ customerInfo: { ...bookingData.customerInfo, parentEmail: e.target.value } })
+        }
+        className={inputBaseClass}
+      />
+      <input
+        type="tel"
+        placeholder="Parent's Phone"
+        value={bookingData.customerInfo.parentPhone}
+        onChange={(e) =>
+          updateBookingData({ customerInfo: { ...bookingData.customerInfo, parentPhone: e.target.value } })
+        }
+        className={inputBaseClass}
+      />
+    </div>
+  </div>
+);
+
+const SpecialNotes: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
+  <div className="h-full w-full flex flex-col items-center justify-center pt-10">
+    {/* Title is rendered by HUD */}
+    {(bookingData.customerInfo.childName || bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
+      <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
+        {bookingData.customerInfo.childName && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {bookingData.customerInfo.childName}{bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge})` : ''}
+          </span>
+        )}
+        {bookingData.selectedDate && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </span>
+        )}
+        {bookingData.selectedTime && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {bookingData.selectedTime}
+          </span>
+        )}
+        {bookingData.selectedRoom && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {bookingData.selectedRoom.name}
+          </span>
+        )}
+        {bookingData.selectedPackage && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {bookingData.selectedPackage.name}
+          </span>
+        )}
+        {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length > 0 && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length} character(s)
+          </span>
+        )}
+        {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length > 0 && (
+          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+            {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length} add-on(s)
+          </span>
+        )}
+      </div>
+    )}
+    <div className="w-full max-w-md">
+      <textarea
+        placeholder="Allergies, themes, decorations, etc."
+        value={bookingData.specialNotes}
+        onChange={(e) => updateBookingData({ specialNotes: e.target.value })}
+        className={`${inputBaseClass} rounded-3xl h-40 resize-none`}
+      />
+    </div>
+  </div>
+);
 
 export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -570,65 +762,6 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       <p className="text-base sm:text-lg text-gray-700 max-w-xl">
         Tap the huge <strong>Enter the party portal!</strong> button below to jump right into the fun.
       </p>
-    </div>
-  );
-
-  const ChildName = () => (
-    <div className="h-full w-full flex flex-col items-center justify-center @container">
-      {/* Title is rendered by HUD */}
-      <div className="w-full max-w-md">
-        <input
-          type="text"
-          placeholder="Enter your child’s name"
-          value={bookingData.customerInfo.childName}
-          onChange={(e) =>
-            updateBookingData({
-              customerInfo: { ...bookingData.customerInfo, childName: e.target.value },
-            })
-          }
-          className={`${inputBaseClass} text-center`}
-        />
-      </div>
-    </div>
-  );
-
-  const ChildAge = () => (
-    <div className="h-full w-full flex flex-col items-center justify-center">
-      {/* Title is rendered by HUD */}
-      <div className="text-center mb-4">
-        <p className={`${subheadingClass}`}>Helps us plan age-perfect fun!</p>
-      </div>
-      <div className="w-full max-w-xs">
-        <input
-          type="number"
-          min={1}
-          max={18}
-          placeholder="Age"
-          value={bookingData.customerInfo.childAge || ""}
-          onChange={(e) =>
-            updateBookingData({
-              customerInfo: { ...bookingData.customerInfo, childAge: parseInt(e.target.value) || 0 },
-            })
-          }
-          className={`${inputBaseClass} text-center`}
-        />
-      </div>
-    </div>
-  );
-
-  const PartyDate = () => (
-    <div className="h-full w-full flex flex-col items-center justify-center">
-      {/* Title is rendered by HUD */}
-      <div className="w-full max-w-md px-2">
-        <Calendar
-          value={bookingData.selectedDate || null}
-          onChange={(iso) => {
-            updateBookingData({ selectedDate: iso, selectedSlot: undefined, selectedTime: "" });
-          }}
-          minDate={new Date()}
-          className="w-full"
-        />
-      </div>
     </div>
   );
 
@@ -1216,133 +1349,6 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     </div>
   );
 
-  const ParentInfo = () => (
-    <div className="h-full w-full flex flex-col items-center justify-center pt-10">
-      {/* Title is rendered by HUD */}
-      {(bookingData.customerInfo.childName || bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
-        <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
-          {bookingData.customerInfo.childName && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.customerInfo.childName}{bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge})` : ''}
-            </span>
-          )}
-          {bookingData.selectedDate && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </span>
-          )}
-          {bookingData.selectedTime && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedTime}
-            </span>
-          )}
-          {bookingData.selectedRoom && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedRoom.name}
-            </span>
-          )}
-          {bookingData.selectedPackage && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedPackage.name}
-            </span>
-          )}
-          {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length > 0 && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length} character(s)
-            </span>
-          )}
-          {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length > 0 && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length} add-on(s)
-            </span>
-          )}
-        </div>
-      )}
-      <div className="grid grid-cols-1 gap-5 w-full max-w-md">
-        <input
-          type="text"
-          placeholder="Parent's Name"
-          value={bookingData.customerInfo.parentName}
-          onChange={(e) =>
-            updateBookingData({ customerInfo: { ...bookingData.customerInfo, parentName: e.target.value } })
-          }
-          className={inputBaseClass}
-        />
-        <input
-          type="email"
-          placeholder="Parent's Email"
-          value={bookingData.customerInfo.parentEmail}
-          onChange={(e) =>
-            updateBookingData({ customerInfo: { ...bookingData.customerInfo, parentEmail: e.target.value } })
-          }
-          className={inputBaseClass}
-        />
-        <input
-          type="tel"
-          placeholder="Parent's Phone"
-          value={bookingData.customerInfo.parentPhone}
-          onChange={(e) =>
-            updateBookingData({ customerInfo: { ...bookingData.customerInfo, parentPhone: e.target.value } })
-          }
-          className={inputBaseClass}
-        />
-      </div>
-    </div>
-  );
-
-  const SpecialNotes = () => (
-    <div className="h-full w-full flex flex-col items-center justify-center pt-10">
-      {/* Title is rendered by HUD */}
-      {(bookingData.customerInfo.childName || bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
-        <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
-          {bookingData.customerInfo.childName && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.customerInfo.childName}{bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge})` : ''}
-            </span>
-          )}
-          {bookingData.selectedDate && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </span>
-          )}
-          {bookingData.selectedTime && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedTime}
-            </span>
-          )}
-          {bookingData.selectedRoom && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedRoom.name}
-            </span>
-          )}
-          {bookingData.selectedPackage && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedPackage.name}
-            </span>
-          )}
-          {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length > 0 && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length} character(s)
-            </span>
-          )}
-          {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length > 0 && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length} add-on(s)
-            </span>
-          )}
-        </div>
-      )}
-      <div className="w-full max-w-md">
-        <textarea
-          placeholder="Allergies, themes, decorations, etc."
-          value={bookingData.specialNotes}
-          onChange={(e) => updateBookingData({ specialNotes: e.target.value })}
-          className={`${inputBaseClass} rounded-3xl h-40 resize-none`}
-        />
-      </div>
-    </div>
-  );
-
   const Payment = () => (
     <div className="h-full w-full flex flex-col items-center justify-center">
       {/* Title is rendered by HUD */}
@@ -1655,11 +1661,11 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       {(() => {
         switch (stepKey) {
           case "child-name":
-            return <ChildName />;
+            return <ChildName bookingData={bookingData} updateBookingData={updateBookingData} />;
           case "child-age":
-            return <ChildAge />;
+            return <ChildAge bookingData={bookingData} updateBookingData={updateBookingData} />;
           case "party-date":
-            return <PartyDate />;
+            return <PartyDate bookingData={bookingData} updateBookingData={updateBookingData} />;
           case "time-slot":
             return <TimeSlot />;
           case "room-choice":
@@ -1669,9 +1675,9 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
           case "guest-count":
             return <GuestCount />;
           case "parent-info":
-            return <ParentInfo />;
+            return <ParentInfo bookingData={bookingData} updateBookingData={updateBookingData} />;
           case "special-notes":
-            return <SpecialNotes />;
+            return <SpecialNotes bookingData={bookingData} updateBookingData={updateBookingData} />;
           case "payment":
             return <Payment />;
           case "confirmation":
@@ -1701,7 +1707,20 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const bgs = getBackgroundsForStep(stepKey, tenant);
 
   // hudChars: characters rendered within the HUD overlay (test on child-name scene)
-  const HudChars = null;
+  const HudChars = stepKey === "greeting" ? (
+    <>
+      <img
+        src="/assets/greeting/wizzygreeting.png"
+        alt="Wizzy"
+        className="pointer-events-none select-none absolute bottom-20 left-[-50px] sm:left-[-50px] w-[70%] sm:w-[60%] md:w-[50%] lg:w-[40%] max-w-[480px] md:max-w-[350px] lg:max-w-[280px]"
+      />
+      <img
+        src="/assets/greeting/rufffsgreeting.png"
+        alt="Ruffs"
+        className="pointer-events-none select-none absolute bottom-24 right-0 w-[40%] sm:w-[35%] md:w-[30%] lg:w-[25%] max-w-[210px] md:max-w-[160px] lg:max-w-[140px]"
+      />
+    </>
+  ) : null;
 
   return (
     <ResponsiveStage
