@@ -224,7 +224,7 @@ const getBackgroundsForStep = (step: StepKey, tenant?: string) => {
 };
 
 // Map step to Scene component
-const SceneByStep: Record<StepKey, React.ComponentType> = {
+const SceneByStep: Record<StepKey, React.ComponentType<any>> = {
   "greeting": GreetingScene,
   "child-name": ChildNameScene,
   "child-age": ChildAgeScene,
@@ -281,7 +281,6 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   });
 
   // Preview modal state for room images
-  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [previewIndex, setPreviewIndex] = useState(0);
@@ -297,6 +296,15 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const nextStep = () => setCurrentStep((i) => Math.min(i + 1, STEPS.length - 1));
   const prevStep = () => setCurrentStep((i) => Math.max(i - 1, 0));
   const stepKey: StepKey = STEPS[currentStep];
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleEnter = () => setCurrentStep((i) => Math.min(i + 1, STEPS.length - 1));
+    window.addEventListener("bookingwizard:enter", handleEnter);
+    return () => {
+      window.removeEventListener("bookingwizard:enter", handleEnter);
+    };
+  }, []);
 
   const updateBookingData = (data: Partial<BookingData>) =>
     setBookingData((prev) => ({ ...prev, ...data }));
@@ -556,17 +564,12 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent mb-2 md:mb-4 leading-tight drop-shadow">
         Welcome to {formatTenantName(tenant)}!
       </h2>
-      <p className="text-lg sm:text-xl text-gray-800 mb-6 md:mb-10">
+      <p className="text-lg sm:text-xl text-gray-800 mb-6 md:mb-4">
         Let&apos;s plan the most AMAZING party ever! 🎈
       </p>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={nextStep}
-        className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-10 py-4 rounded-full text-lg md:text-xl font-bold shadow-lg hover:shadow-xl transition"
-      >
-        Let&apos;s Start Planning! 🚀
-      </motion.button>
+      <p className="text-base sm:text-lg text-gray-700 max-w-xl">
+        Tap the huge <strong>Enter the party portal!</strong> button below to jump right into the fun.
+      </p>
     </div>
   );
 
@@ -939,19 +942,6 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const PackageChoice = () => {
     const packageRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-      const el = packageRef.current;
-      if (!el) return;
-
-      const handleScroll = () => {
-        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
-          setHasScrolledToBottom(true);
-        }
-      };
-
-      el.addEventListener('scroll', handleScroll);
-      return () => el.removeEventListener('scroll', handleScroll);
-    }, []);
 
     return (
       <div ref={packageRef} className="h-full w-full flex flex-col items-center justify-start pt-20">
@@ -1526,7 +1516,8 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     </div>
   );
 
-  const Confirmation = () => (
+  const Confirmation = () => {
+    return (
     <div className="h-full w-full flex flex-col items-center justify-center text-center">
       <motion.div
         animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
@@ -1597,51 +1588,15 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
         </button>
       </div>
     </div>
-  );
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Validation gating for Next button
-  // ────────────────────────────────────────────────────────────────────────────
-  function isNextDisabled() {
-    switch (stepKey) {
-      case "child-name":
-        return !bookingData.customerInfo.childName.trim();
-      case "child-age":
-        return !bookingData.customerInfo.childAge || bookingData.customerInfo.childAge < 1;
-      case "party-date":
-        return !bookingData.selectedDate;
-      case "time-slot":
-        return !bookingData.selectedTime;
-      case "package-choice":
-        return !bookingData.selectedPackage || !hasScrolledToBottom;
-      case "room-choice":
-        return !bookingData.selectedRoom;
-      case "parent-info":
-        return (
-          !bookingData.customerInfo.parentName.trim() ||
-          !bookingData.customerInfo.parentEmail.trim() ||
-          !bookingData.customerInfo.parentPhone.trim()
-        );
-      default:
-        return false;
-    }
-  }
-
-  // Backgrounds per step (art-directed exports from Figma)
-  const bg = useMemo(() => {
-    // You can switch per step for custom art; for now reuse a set with minor variations
-    const common = {
-      mobile: "/assets/greeting/bg-mobile.png",
-      tablet: "/assets/greeting/bg-tablet.png",
-      desktop: "/assets/greeting/bg-desktop.png",
-    };
-    return common;
-  }, [stepKey]);
+    );
+  };
 
   // HUD layer using shared HUD component
   // Dynamic single-line HUD title per step (no subtitle)
   const hudTitle = (() => {
     switch (stepKey) {
+      case "greeting":
+        return "WELCOME TO PARTYROOM!";
       case "child-name":
         return "WHO'S THE BIRTHDAY STAR?";
       case "child-age": {
@@ -1671,7 +1626,62 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     }
   })();
 
-  const Hud = null;
+  const Hud = stepKey === "greeting" ? (
+    <HUD
+      currentStep={currentStep}
+      totalSteps={STEPS.length}
+      onPrev={prevStep}
+      onNext={nextStep}
+      holdId={hold?.id}
+      holdRemaining={holdRemaining}
+      fmtMMSS={fmtMMSS}
+      title={hudTitle}
+      contentOverflowY="visible"
+      showNav={false}
+    >
+      <GreetingStep onStart={nextStep} />
+    </HUD>
+  ) : (
+    <HUD
+      currentStep={currentStep}
+      totalSteps={STEPS.length}
+      onPrev={prevStep}
+      onNext={nextStep}
+      holdId={hold?.id}
+      holdRemaining={holdRemaining}
+      fmtMMSS={fmtMMSS}
+      title={hudTitle}
+    >
+      {(() => {
+        switch (stepKey) {
+          case "child-name":
+            return <ChildName />;
+          case "child-age":
+            return <ChildAge />;
+          case "party-date":
+            return <PartyDate />;
+          case "time-slot":
+            return <TimeSlot />;
+          case "room-choice":
+            return <RoomChoice />;
+          case "package-choice":
+            return <PackageChoice />;
+          case "guest-count":
+            return <GuestCount />;
+          case "parent-info":
+            return <ParentInfo />;
+          case "special-notes":
+            return <SpecialNotes />;
+          case "payment":
+            return <Payment />;
+          case "confirmation":
+            return <Confirmation />;
+          default:
+            return null;
+        }
+      })()}
+    </HUD>
+  );
 
   if (loading) {
     return (

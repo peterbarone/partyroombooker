@@ -4,18 +4,6 @@ import { motion } from "framer-motion";
 export default function Greeting({ onStart }: { onStart: () => void }) {
   return (
     <div className="relative h-full w-full overflow-visible z-40 pt-[calc(theme(spacing.8)+env(safe-area-inset-top))] md:pt-[calc(theme(spacing.12)+env(safe-area-inset-top))]">
-      {/* Characters inside content column */}
-      <img
-        src="/assets/greeting/wizzygreeting.png"
-        alt="Wizzy"
-        className="pointer-events-none select-none absolute bottom-20 left-[-50px] sm:left-[-50px] w-[70%] sm:w-[70%] md:w-[70%] max-w-[480px] z-40"
-      />
-      <img
-        src="/assets/greeting/rufffsgreeting.png"
-        alt="Ruffs"
-        className="pointer-events-none select-none absolute bottom-24 right-0 w-[40%] max-w-[210px] z-40"
-      />
-
       {/* CTA at bottom of the scene */}
       <div className="fixed inset-x-0 bottom-[calc(theme(spacing.4)+env(safe-area-inset-bottom))] flex items-center justify-center px-4 z-50">
         <motion.button
