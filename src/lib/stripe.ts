@@ -6,7 +6,7 @@ if (!key) {
 }
 
 export const stripe = key
-  ? new Stripe(key, { apiVersion: "2024-06-20" })
+  ? new Stripe(key)
   : (null as unknown as Stripe);
 
 export const PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || "";

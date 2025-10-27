@@ -363,11 +363,13 @@ const CreateRoomModal = ({
  * ======================= */
 
 const EditRoomModal = ({
+  tenant,
   isOpen,
   onClose,
   room,
   onUpdated,
 }: {
+  tenant: string;
   isOpen: boolean;
   onClose: () => void;
   room: UIRoom | null;
@@ -404,7 +406,7 @@ const EditRoomModal = ({
         const tenantRow = await supabase
           .from("tenants")
           .select("id")
-          .eq("slug", (useParams<{ tenant: string }>().tenant as string) || "")
+          .eq("slug", tenant)
           .eq("active", true)
           .maybeSingle();
         const tenantId = tenantRow.data?.id || "tenants";
@@ -1380,6 +1382,7 @@ export default function RoomManagement() {
         onCreated={reloadRooms}
       />
       <EditRoomModal
+        tenant={tenant}
         isOpen={isEditRoomOpen}
         onClose={() => setIsEditRoomOpen(false)}
         room={selectedRoom}
