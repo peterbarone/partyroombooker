@@ -46,13 +46,36 @@ export default function HudCharacter({
   className = "",
   style,
 }: Props) {
+  const supportsContainerUnits =
+    typeof window !== "undefined" &&
+    typeof window.CSS !== "undefined" &&
+    typeof window.CSS.supports === "function" &&
+    window.CSS.supports("width", "1cqw");
+
   // Compute width expression
-  let width = SIZE_PRESETS[preset][units];
-  if (typeof minPx === "number" && typeof maxPx === "number" && (typeof vwPercent === "number" || typeof cqwPercent === "number")) {
-    const vwExpr = typeof vwPercent === "number" ? `${vwPercent}vw` : undefined;
-    const cqwExpr = typeof cqwPercent === "number" ? `${cqwPercent}cqw` : undefined;
-    const middle = vwExpr && cqwExpr ? `min(${vwExpr}, ${cqwExpr})` : (vwExpr || cqwExpr)!;
-    width = `clamp(${minPx}px, ${middle}, ${maxPx}px)`;
+  const unitKey = supportsContainerUnits ? units : "vw";
+  let width = SIZE_PRESETS[preset][unitKey];
+
+  const hasMinMax = typeof minPx === "number" && typeof maxPx === "number";
+  const hasVw = typeof vwPercent === "number";
+  const hasCqw = typeof cqwPercent === "number" && supportsContainerUnits;
+
+  if (hasMinMax && (hasVw || hasCqw)) {
+    const vwExpr = hasVw ? `${vwPercent}vw` : undefined;
+    const cqwExpr = hasCqw ? `${cqwPercent}cqw` : undefined;
+
+    let middle: string | undefined;
+    if (vwExpr && cqwExpr) {
+      middle = `min(${vwExpr}, ${cqwExpr})`;
+    } else {
+      middle = vwExpr ?? cqwExpr;
+    }
+
+    if (middle) {
+      width = `clamp(${minPx}px, ${middle}, ${maxPx}px)`;
+    } else {
+      width = `${Math.max(minPx, Math.min(maxPx, minPx))}px`;
+    }
   }
   const posStyle: React.CSSProperties = {
     position: "absolute",
