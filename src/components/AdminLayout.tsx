@@ -72,6 +72,18 @@ const AdminSidebar = ({ tenant }: { tenant: string }) => {
       description: "Transactions",
     },
     {
+      name: "Staff",
+      href: `/${tenant}/admin/staff`,
+      icon: "🧑‍💼",
+      description: "Team Members",
+    },
+    {
+      name: "Ads",
+      href: `/${tenant}/admin/ads`,
+      icon: "🪧",
+      description: "Advertisements",
+    },
+    {
       name: "Blackouts",
       href: `/${tenant}/admin/blackouts`,
       icon: "⛔",
@@ -110,7 +122,7 @@ const AdminSidebar = ({ tenant }: { tenant: string }) => {
   ];
 
   return (
-    <div className="bg-gray-900 text-white w-64 min-h-screen flex flex-col">
+    <div className="bg-gray-900 text-white w-64 h-screen flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-gray-700">
         <Link
@@ -126,7 +138,7 @@ const AdminSidebar = ({ tenant }: { tenant: string }) => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-2">
           {menuItems.map((item) => (
             <li key={item.name}>
@@ -188,11 +200,11 @@ const AdminHeader = ({ title, tenant }: { title: string; tenant: string }) => {
 
 export default function AdminLayout({ children, tenant }: AdminLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       <AdminSidebar tenant={tenant} />
       <div className="flex-1 flex flex-col">
         <AdminHeader title="Dashboard" tenant={tenant} />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

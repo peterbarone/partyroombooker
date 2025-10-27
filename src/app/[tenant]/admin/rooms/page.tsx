@@ -26,7 +26,8 @@ interface UIRoom {
   hourlyRate: number;
   status: Exclude<RoomStatus, "all">;
   availability: string;
-  images: string[];
+  featureImage: string;
+  galleryImages: string[];
   bookingCount: number;
   revenue: number;
   rating: number;
@@ -225,6 +226,8 @@ const CreateRoomModal = ({
   const [capacity, setCapacity] = useState<number>(0);
   const [active, setActive] = useState<boolean>(true);
   const [saving, setSaving] = useState(false);
+  const [featureFile, setFeatureFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<FileList | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -244,20 +247,65 @@ const CreateRoomModal = ({
     if (!tenantId || !name) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("rooms").insert({
-        tenant_id: tenantId,
-        name,
-        description: description || null,
-        max_kids: capacity,
-        active,
-      });
-      if (error) throw error;
+      const { data: inserted, error: insertErr } = await supabase
+        .from("rooms")
+        .insert({
+          tenant_id: tenantId,
+          name,
+          description: description || null,
+          max_kids: capacity,
+          active,
+        })
+        .select("id")
+        .single();
+      if (insertErr) throw insertErr;
+
+      const roomId = inserted.id as string;
+      const uploads: string[] = [];
+
+      if (featureFile) {
+        const path = `${tenantId}/rooms/${roomId}/feature-${Date.now()}-${featureFile.name}`;
+        const { error: upErr } = await supabase.storage
+          .from("tennent rooms")
+          .upload(path, featureFile, { upsert: false });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage
+          .from("tennent rooms")
+          .getPublicUrl(path);
+        if (pub?.publicUrl) uploads.push(pub.publicUrl);
+      }
+
+      if (galleryFiles && galleryFiles.length) {
+        for (let i = 0; i < galleryFiles.length; i++) {
+          const f = galleryFiles[i];
+          const path = `${tenantId}/rooms/${roomId}/gallery-${Date.now()}-${i}-${f.name}`;
+          const { error: upErr } = await supabase.storage
+            .from("tennent rooms")
+            .upload(path, f, { upsert: false });
+          if (upErr) throw upErr;
+          const { data: pub } = supabase.storage
+            .from("tennent rooms")
+            .getPublicUrl(path);
+          if (pub?.publicUrl) uploads.push(pub.publicUrl);
+        }
+      }
+
+      if (uploads.length) {
+        const { error: updateErr } = await supabase
+          .from("rooms")
+          .update({ images: uploads })
+          .eq("id", roomId);
+        if (updateErr) throw updateErr;
+      }
+
       onCreated();
       onClose();
       setName("");
       setDescription("");
       setCapacity(0);
       setActive(true);
+      setFeatureFile(null);
+      setGalleryFiles(null);
     } catch (e) {
       console.error(e);
       alert("Failed to create room.");
@@ -286,6 +334,14 @@ const CreateRoomModal = ({
           <div>
             <label className="block text-sm text-gray-600 mb-1">Capacity (max kids)</label>
             <input type="number" value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Featured Image</label>
+            <input type="file" accept="image/*" onChange={(e) => setFeatureFile(e.target.files?.[0] || null)} />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Gallery Images</label>
+            <input type="file" accept="image/*" multiple onChange={(e) => setGalleryFiles(e.target.files)} />
           </div>
           <div className="flex items-center space-x-2">
             <input id="roomActive" type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
@@ -322,6 +378,9 @@ const EditRoomModal = ({
   const [capacity, setCapacity] = useState<number>(0);
   const [active, setActive] = useState<boolean>(true);
   const [saving, setSaving] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [featureIndex, setFeatureIndex] = useState<number>(0);
+  const [newFiles, setNewFiles] = useState<FileList | null>(null);
 
   useEffect(() => {
     if (room) {
@@ -329,6 +388,9 @@ const EditRoomModal = ({
       setDescription(room.description || "");
       setCapacity(Number(room.capacity || 0));
       setActive(room.status === "active");
+      const arr = [room.featureImage, ...(room.galleryImages || [])].filter(Boolean);
+      setImages(arr);
+      setFeatureIndex(0);
     }
   }, [room]);
 
@@ -336,6 +398,35 @@ const EditRoomModal = ({
     if (!room) return;
     setSaving(true);
     try {
+      let updatedImages = [...images];
+
+      if (newFiles && newFiles.length) {
+        const tenantRow = await supabase
+          .from("tenants")
+          .select("id")
+          .eq("slug", (useParams<{ tenant: string }>().tenant as string) || "")
+          .eq("active", true)
+          .maybeSingle();
+        const tenantId = tenantRow.data?.id || "tenants";
+        for (let i = 0; i < newFiles.length; i++) {
+          const f = newFiles[i];
+          const path = `${tenantId}/rooms/${room.id}/edit-${Date.now()}-${i}-${f.name}`;
+          const { error: upErr } = await supabase.storage
+            .from("tennent rooms")
+            .upload(path, f, { upsert: false });
+          if (upErr) throw upErr;
+          const { data: pub } = supabase.storage
+            .from("tennent rooms")
+            .getPublicUrl(path);
+          if (pub?.publicUrl) updatedImages.push(pub.publicUrl);
+        }
+      }
+
+      if (featureIndex > 0 && featureIndex < updatedImages.length) {
+        const [feat] = updatedImages.splice(featureIndex, 1);
+        updatedImages = [feat, ...updatedImages];
+      }
+
       const { error } = await supabase
         .from("rooms")
         .update({
@@ -343,6 +434,7 @@ const EditRoomModal = ({
           description: description || null,
           max_kids: capacity,
           active,
+          images: updatedImages,
         })
         .eq("id", room.id);
       if (error) throw error;
@@ -381,6 +473,36 @@ const EditRoomModal = ({
             <input id="roomActiveEdit" type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
             <label htmlFor="roomActiveEdit" className="text-sm text-gray-700">Active</label>
           </div>
+          {images.length > 0 && (
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Images</label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {images.map((src, idx) => (
+                  <button
+                    type="button"
+                    key={idx}
+                    onClick={() => setFeatureIndex(idx)}
+                    className={`relative aspect-square rounded overflow-hidden border ${featureIndex === idx ? 'border-blue-600' : 'border-gray-200'}`}
+                  >
+                    <img src={src} alt={`img-${idx}`} className="w-full h-full object-cover" />
+                    {featureIndex === idx && (
+                      <span className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded">Feature</span>
+                    )}
+                    <span
+                      onClick={(e) => { e.stopPropagation(); setImages(images.filter((_, i) => i !== idx)); if (featureIndex === idx) setFeatureIndex(0); }}
+                      className="absolute top-1 right-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded"
+                    >
+                      ✕
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Add Images</label>
+            <input type="file" accept="image/*" multiple onChange={(e) => setNewFiles(e.target.files)} />
+          </div>
           <div>
             <button onClick={submit} disabled={saving || !name} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50">
               {saving ? "Saving..." : "Save"}
@@ -409,6 +531,15 @@ const RoomCard = ({
 }) => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      {room.featureImage && (
+        <div className="aspect-[16/9] bg-gray-100">
+          <img
+            src={room.featureImage}
+            alt={`${room.name} feature`}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
@@ -416,41 +547,6 @@ const RoomCard = ({
             <p className="text-sm text-gray-600 mt-1">{room.description}</p>
           </div>
           <StatusBadge status={room.status} type="room" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <span className="text-sm font-medium text-gray-700">Capacity:</span>
-            <span className="text-sm text-gray-900 ml-1">{room.capacity} guests</span>
-          </div>
-          <div>
-            <span className="text-sm font-medium text-gray-700">Size:</span>
-            <span className="text-sm text-gray-900 ml-1">{room.size || "—"}</span>
-          </div>
-          <div>
-            <span className="text-sm font-medium text-gray-700">Rate:</span>
-            <span className="text-sm text-gray-900 ml-1">${room.hourlyRate}/hour</span>
-          </div>
-          <div>
-            <span className="text-sm font-medium text-gray-700">Rating:</span>
-            <span className="text-sm text-gray-900 ml-1">⭐ {room.rating}</span>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <span className="text-sm font-medium text-gray-700">Amenities:</span>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {room.amenities.slice(0, 3).map((amenity, index) => (
-              <span key={index} className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
-                {amenity}
-              </span>
-            ))}
-            {room.amenities.length > 3 && (
-              <span className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
-                +{room.amenities.length - 3} more
-              </span>
-            )}
-          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
@@ -572,6 +668,26 @@ const RoomDetailModal = ({
         </div>
 
         <div className="px-6 py-4 space-y-6">
+          {room.featureImage && (
+            <div>
+              <div className="aspect-[16/9] bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={room.featureImage}
+                  alt={`${room.name} feature`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {room.galleryImages && room.galleryImages.length > 0 && (
+                <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {room.galleryImages.map((src, idx) => (
+                    <div key={idx} className="aspect-square bg-gray-100 rounded overflow-hidden">
+                      <img src={src} alt={`${room.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-3">Room Information</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -827,23 +943,34 @@ export default function RoomManagement() {
           return;
         }
 
-        const [{ data: roomsData }, { data: packagesData }, { data: mappings }] =
-          await Promise.all([
-            supabase
-              .from("rooms")
-              .select("id,name,description,max_kids,active")
-              .eq("tenant_id", tenantRow.id),
-            supabase
-              .from("packages")
-              .select(
-                "id,name,description,base_price,base_kids,duration_min,duration_minutes,includes_json,active"
-              )
-              .eq("tenant_id", tenantRow.id),
-            supabase
-              .from("package_rooms")
-              .select("package_id,room_id")
-              .eq("tenant_id", tenantRow.id),
-          ]);
+        // Rooms: try selecting images; if that fails (column might not exist), fallback without images
+        let roomsData: any[] | null = null;
+        const roomsResp = await supabase
+          .from("rooms")
+          .select("id,name,description,max_kids,active,images")
+          .eq("tenant_id", tenantRow.id);
+        if (roomsResp.error) {
+          const fallback = await supabase
+            .from("rooms")
+            .select("id,name,description,max_kids,active")
+            .eq("tenant_id", tenantRow.id);
+          roomsData = fallback.data || [];
+        } else {
+          roomsData = roomsResp.data || [];
+        }
+
+        const [{ data: packagesData }, { data: mappings }] = await Promise.all([
+          supabase
+            .from("packages")
+            .select(
+              "id,name,description,base_price,base_kids,duration_min,duration_minutes,includes_json,active"
+            )
+            .eq("tenant_id", tenantRow.id),
+          supabase
+            .from("package_rooms")
+            .select("package_id,room_id")
+            .eq("tenant_id", tenantRow.id),
+        ]);
 
         const packageToRooms = new Map<string, string[]>();
         (mappings || []).forEach((m: any) => {
@@ -852,23 +979,29 @@ export default function RoomManagement() {
           packageToRooms.set(m.package_id, arr);
         });
 
-        const mappedRooms: UIRoom[] = (roomsData || []).map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          description: r.description || "",
-          capacity: Number(r.max_kids || 0),
-          size: "",
-          amenities: [],
-          hourlyRate: 0,
-          status: r.active ? "active" : "inactive",
-          availability: "weekdays_weekends",
-          images: [],
-          bookingCount: 0,
-          revenue: 0,
-          rating: 5,
-          lastMaintenance: "",
-          nextMaintenance: "",
-        }));
+        const mappedRooms: UIRoom[] = (roomsData || []).map((r: any) => {
+          const imgs: string[] = Array.isArray(r.images)
+            ? r.images
+            : (r.images ? [r.images] : []);
+          return {
+            id: r.id,
+            name: r.name,
+            description: r.description || "",
+            capacity: Number(r.max_kids || 0),
+            size: "",
+            amenities: [],
+            hourlyRate: 0,
+            status: r.active ? "active" : "inactive",
+            availability: "weekdays_weekends",
+            featureImage: imgs[0] || "",
+            galleryImages: imgs.length > 1 ? imgs.slice(1) : [],
+            bookingCount: 0,
+            revenue: 0,
+            rating: 5,
+            lastMaintenance: "",
+            nextMaintenance: "",
+          };
+        });
 
         const mappedPkgs: UIPackage[] = (packagesData || []).map((p: any) => {
           const minutes = Number(p?.duration_min ?? p?.duration_minutes ?? 120);
@@ -922,30 +1055,47 @@ export default function RoomManagement() {
         setFilteredRooms([]);
         return;
       }
-      const { data: roomsData, error } = await supabase
+      // Rooms: try selecting images; if that fails (column might not exist), fallback without images
+      let roomsData: any[] | null = null;
+      const roomsResp = await supabase
         .from("rooms")
-        .select("id,name,description,max_kids,active")
+        .select("id,name,description,max_kids,active,images")
         .eq("tenant_id", tenantRow.id)
         .order("name");
-      if (error) throw error;
+      if (roomsResp.error) {
+        const fallback = await supabase
+          .from("rooms")
+          .select("id,name,description,max_kids,active")
+          .eq("tenant_id", tenantRow.id)
+          .order("name");
+        roomsData = fallback.data || [];
+      } else {
+        roomsData = roomsResp.data || [];
+      }
 
-      const mappedRooms: UIRoom[] = (roomsData || []).map((r: any) => ({
-        id: r.id,
-        name: r.name,
-        description: r.description || "",
-        capacity: Number(r.max_kids || 0),
-        size: "",
-        amenities: [],
-        hourlyRate: 0,
-        status: r.active ? "active" : "inactive",
-        availability: "weekdays_weekends",
-        images: [],
-        bookingCount: 0,
-        revenue: 0,
-        rating: 5,
-        lastMaintenance: "",
-        nextMaintenance: "",
-      }));
+      const mappedRooms: UIRoom[] = (roomsData || []).map((r: any) => {
+        const imgs: string[] = Array.isArray(r.images)
+          ? r.images
+          : (r.images ? [r.images] : []);
+        return {
+          id: r.id,
+          name: r.name,
+          description: r.description || "",
+          capacity: Number(r.max_kids || 0),
+          size: "",
+          amenities: [],
+          hourlyRate: 0,
+          status: r.active ? "active" : "inactive",
+          availability: "weekdays_weekends",
+          featureImage: imgs[0] || "",
+          galleryImages: imgs.length > 1 ? imgs.slice(1) : [],
+          bookingCount: 0,
+          revenue: 0,
+          rating: 5,
+          lastMaintenance: "",
+          nextMaintenance: "",
+        };
+      });
       setRooms(mappedRooms);
       setFilteredRooms(mappedRooms);
     } catch (e) {

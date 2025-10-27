@@ -279,6 +279,51 @@ export default function SlotsAdminPage() {
   };
   const timeToHHMM = (t?: string | null) => (t ? t.slice(0, 5) : "");
 
+  // ---- Time-based editor helpers ----
+  const allTimes = useMemo(() => {
+    const s = new Set<string>();
+    Object.values(rows).forEach((r) => {
+      (r?.start_times_json || []).forEach((t) => s.add(t));
+    });
+    return Array.from(s).sort();
+  }, [rows]);
+
+  const setTimeEnabled = (dow: number, time: string, enabled: boolean) => {
+    setRows((prev) => {
+      const existing = new Set(prev[dow]?.start_times_json || []);
+      if (enabled) existing.add(time); else existing.delete(time);
+      const next = Array.from(existing).sort();
+      return {
+        ...prev,
+        [dow]: {
+          tenant_id: tenantId || "",
+          day_of_week: dow,
+          start_times_json: next,
+          active: prev[dow]?.active ?? true,
+          open_time: prev[dow]?.open_time ?? null,
+          close_time: prev[dow]?.close_time ?? null,
+          id: prev[dow]?.id,
+        },
+      };
+    });
+  };
+
+  const [newTime, setNewTime] = useState("");
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const toggleSelectedDay = (d: number) => {
+    setSelectedDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
+  };
+  const applyNewTime = (enable: boolean) => {
+    const hhmm = newTime.trim();
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(hhmm)) {
+      setError("Enter time as HH:MM (24h), e.g. 13:30");
+      return;
+    }
+    setError(null);
+    selectedDays.forEach((d) => setTimeEnabled(d, hhmm, enable));
+    setNewTime("");
+  };
+
   return (
     <AdminLayout tenant={tenantSlug}>
       <div className="p-6 max-w-4xl mx-auto">
@@ -295,6 +340,68 @@ export default function SlotsAdminPage() {
             {success && (
               <div className="rounded-md border border-green-300 bg-green-50 text-green-700 p-3">{success}</div>
             )}
+
+            {/* Time-based editor */}
+            <div className="bg-white border rounded-lg p-4 shadow-sm">
+              <h2 className="font-semibold mb-3">Time-based editor</h2>
+              <div className="grid gap-3 md:grid-cols-3 items-end">
+                <div className="md:col-span-1">
+                  <label className="block text-xs text-gray-600 mb-1">New/Existing Time (HH:MM)</label>
+                  <input
+                    value={newTime}
+                    onChange={(e) => setNewTime(e.target.value)}
+                    placeholder="e.g. 10:00"
+                    className="w-full border rounded px-3 py-2"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <label className="block text-xs text-gray-600 mb-1">Apply to days</label>
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS.map((d, i) => (
+                      <label key={i} className="inline-flex items-center gap-1 text-xs">
+                        <input type="checkbox" checked={selectedDays.includes(i)} onChange={() => toggleSelectedDay(i)} />
+                        {d.slice(0,3)}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="md:col-span-1 flex gap-2 md:justify-end">
+                  <button className="px-3 py-2 rounded bg-blue-600 text-white" onClick={() => applyNewTime(true)}>Add to selected</button>
+                  <button className="px-3 py-2 rounded border" onClick={() => applyNewTime(false)}>Remove from selected</button>
+                </div>
+              </div>
+
+              {/* Matrix of existing times x days */}
+              {allTimes.length > 0 && (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr>
+                        <th className="text-left py-2 pr-4">Time</th>
+                        {DAYS.map((d, i) => (
+                          <th key={i} className="px-2 py-2 text-center">{d.slice(0,3)}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allTimes.map((t) => (
+                        <tr key={t} className="border-t">
+                          <td className="py-2 pr-4 font-medium text-gray-900">{t}</td>
+                          {DAYS.map((_, i) => {
+                            const present = (rows[i]?.start_times_json || []).includes(t);
+                            return (
+                              <td key={i} className="px-2 py-2 text-center">
+                                <input type="checkbox" checked={present} onChange={(e) => setTimeEnabled(i, t, e.target.checked)} />
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
 
             {DAYS.map((label, dow) => (
               <div key={dow} className="border rounded-lg p-4 bg-white shadow-sm">
