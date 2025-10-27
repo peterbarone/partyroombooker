@@ -27,7 +27,8 @@
     "next": "^15.0.0",
     "react": "^18",
     "react-dom": "^18",
-    "react-signature-canvas": "^1.0.6"
+    "react-signature-canvas": "^1.0.6",
+    "stripe": "^19.1.0"
   },
   "devDependencies": {
     "@tailwindcss/container-queries": "^0.1.1",

@@ -72,6 +72,12 @@ const AdminSidebar = ({ tenant }: { tenant: string }) => {
       description: "Transactions",
     },
     {
+      name: "Billing",
+      href: `/${tenant}/admin/billing`,
+      icon: "🧾",
+      description: "Subscription",
+    },
+    {
       name: "Staff",
       href: `/${tenant}/admin/staff`,
       icon: "🧑‍💼",
