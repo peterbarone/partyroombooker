@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, ReactNode, Suspense, useMemo } from "react";
+import { useState, useEffect, useRef, ReactNode, Suspense, useMemo, useId } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -47,6 +47,127 @@ import ConfirmationScene from "@/components/scenes/ConfirmationScene";
  */
 
 /** Using shared ResponsiveStage from components/layout/ResponsiveStage */
+
+// ConfettiOrbCounter control (used by Child Age and Guest Count)
+// Local definition to avoid adding a new file; uses Tailwind utilities + custom animations (see globals.css)
+
+type OrbCounterProps = {
+  value: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  onChange: (next: number) => void;
+  className?: string;
+  size?: 'sm' | 'md' | 'lg';
+};
+
+function ConfettiOrbCounter({
+  value,
+  min = 1,
+  max = 30,
+  step = 1,
+  onChange,
+  className = '',
+  size = 'lg',
+}: OrbCounterProps) {
+  const labelId = useId();
+  const [pulseKey, setPulseKey] = useState(0);
+  const confettiRef = useRef<HTMLDivElement>(null);
+
+  const sizes = {
+    sm: { orb: 'w-28 h-28 text-3xl', btn: 'w-12 h-12 text-2xl', gap: 'gap-4' },
+    md: { orb: 'w-36 h-36 text-4xl', btn: 'w-14 h-14 text-3xl', gap: 'gap-6' },
+    lg: { orb: 'w-44 h-44 text-5xl', btn: 'w-16 h-16 text-4xl', gap: 'gap-8' },
+  }[size];
+
+  const atMin = value <= min;
+  const atMax = value >= max;
+
+  function nudge(dir: number) {
+    const next = Math.min(max, Math.max(min, value + dir * step));
+    if (next === value) return;
+    onChange(next);
+    setPulseKey((k) => k + 1);
+    burst();
+  }
+
+  function burst() {
+    const el = confettiRef.current;
+    if (!el) return;
+    el.classList.remove('confetti-burst');
+    void el.offsetWidth;
+    el.classList.add('confetti-burst');
+  }
+
+  function onKey(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'ArrowLeft' || e.key === '-') nudge(-1);
+    if (e.key === 'ArrowRight' || e.key === '+') nudge(1);
+    if (e.key === 'PageDown') nudge(-5);
+    if (e.key === 'PageUp') nudge(5);
+    if (e.key === 'Home') onChange(min);
+    if (e.key === 'End') onChange(max);
+  }
+
+  return (
+    <div
+      className={`flex items-center justify-center ${sizes.gap} ${className}`}
+      aria-labelledby={labelId}
+      role="group"
+    >
+      <button
+        type="button"
+        aria-label="Decrease"
+        onClick={() => nudge(-1)}
+        disabled={atMin}
+        className={`rounded-full ${sizes.btn} grid place-items-center font-bold text-white bg-gradient-to-b from-pink-400 to-pink-600 shadow-[0_10px_20px_rgba(255,0,90,0.25)] transition-transform active:scale-95 enabled:hover:translate-y-[-1px] disabled:opacity-40 disabled:cursor-not-allowed ring-0 focus:outline-none focus-visible:ring-4 focus-visible:ring-portal-400/40`}
+      >
+        –
+      </button>
+
+      <div
+        tabIndex={0}
+        role="spinbutton"
+        aria-valuemin={min}
+        aria-valuemax={max}
+        aria-valuenow={value}
+        aria-label="Number of party pals"
+        onKeyDown={onKey}
+        className={`relative select-none ${sizes.orb} rounded-full grid place-items-center font-[800] text-white tracking-wide ring-0 focus:outline-none focus-visible:ring-4 focus-visible:ring-portal-400/40`}
+      >
+        <div
+          className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.35),transparent_55%)] before:absolute before:inset-[-6%] before:rounded-full before:bg-[conic-gradient(from_0deg,theme(colors.portal.400)_0%,theme(colors.portal.500)_40%,theme(colors.wizzy-purple.400)_70%,theme(colors.portal.400)_100%)] before:opacity-70 before:animate-orbSwirl after:absolute after:inset-0 after:rounded-full after:animate-orbTwinkles after:bg-[radial-gradient(circle,rgba(255,255,255,0.7)_0_1px,transparent_2px)] after:bg-[length:22px_22px] after:bg-center pointer-events-none"
+          aria-hidden
+        />
+        <div
+          className="absolute inset-[6%] rounded-full bg-[#0C5E81] shadow-[0_0_28px_8px_rgba(79,174,242,0.35),inset_0_10px_30px_rgba(255,255,255,0.2)]"
+          aria-hidden
+        />
+        <div
+          className="absolute -inset-2 rounded-full blur-2xl bg-portal-400/40 pointer-events-none"
+          aria-hidden
+        />
+        <span key={pulseKey} className="relative z-10 animate-numberPulse motion-reduce:animate-none">
+          {value}
+        </span>
+        <div ref={confettiRef} className="pointer-events-none absolute inset-0" aria-hidden>
+          {[...Array(8)].map((_, i) => (
+            <span key={i} className="confetti-particle" style={{ ['--th' as any]: `${(i / 8) * 360}deg` }} />
+          ))}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        aria-label="Increase"
+        onClick={() => nudge(1)}
+        disabled={atMax}
+        className={`rounded-full ${sizes.btn} grid place-items-center font-bold text-white bg-gradient-to-b from-pink-400 to-pink-600 shadow-[0_10px_20px_rgba(255,0,90,0.25)] transition-transform active:scale-95 enabled:hover:translate-y-[-1px] disabled:opacity-40 disabled:cursor-not-allowed ring-0 focus:outline-none focus-visible:ring-4 focus-visible:ring-portal-400/40`}
+      >
+        +
+      </button>
+    </div>
+  );
+}
 
 /**
  * ──────────────────────────────────────────────────────────────────────────────
@@ -267,22 +388,18 @@ const ChildName: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
 
 const ChildAge: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
   <div className="h-full w-full flex flex-col items-center justify-center">
-    {/* Title is rendered by HUD */}
-    <div className="w-full max-w-xs">
-      <input
-        type="number"
-        min={1}
-        max={18}
-        placeholder="Age"
-        value={bookingData.customerInfo.childAge || ""}
-        onChange={(e) =>
-          updateBookingData({
-            customerInfo: { ...bookingData.customerInfo, childAge: parseInt(e.target.value) || 0 },
-          })
-        }
-        className={`${inputBaseClass} text-center`}
-      />
-    </div>
+    <ConfettiOrbCounter
+      value={bookingData.customerInfo.childAge || 1}
+      min={1}
+      max={18}
+      step={1}
+      size="lg"
+      onChange={(age) =>
+        updateBookingData({
+          customerInfo: { ...bookingData.customerInfo, childAge: age },
+        })
+      }
+    />
   </div>
 );
 
@@ -1321,28 +1438,15 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
           )}
         </div>
       )}
-      <div className="flex items-center gap-6">
-        <button
-          onClick={() => updateBookingData({ guestCount: Math.max(1, bookingData.guestCount - 1) })}
-          className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 text-white text-3xl font-bold hover:scale-110 transition shadow-lg"
-        >
-          −
-        </button>
-        <motion.div
-          className="w-32 h-32 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center text-white shadow-2xl"
-          key={bookingData.guestCount}
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", bounce: 0.55 }}
-        >
-          <span className="text-5xl font-bold">{bookingData.guestCount}</span>
-        </motion.div>
-        <button
-          onClick={() => updateBookingData({ guestCount: bookingData.guestCount + 1 })}
-          className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 text-white text-3xl font-bold hover:scale-110 transition shadow-lg"
-        >
-          +
-        </button>
+      <div className="mt-2">
+        <ConfettiOrbCounter
+          value={bookingData.guestCount}
+          min={1}
+          max={30}
+          step={1}
+          size="lg"
+          onChange={(n) => updateBookingData({ guestCount: n })}
+        />
       </div>
     </div>
   );
