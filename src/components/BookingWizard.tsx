@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, ReactNode, Suspense, useMemo, useId } from
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { CharacterPlacements } from "@/config/character-placements";
 import { Calendar as CalendarIcon, Users, Package as PackageIcon, MapPin, DollarSign, User as UserIcon, Mail, Phone, Baby } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ResponsiveStage from "@/components/layout/ResponsiveStage";
@@ -1905,99 +1906,42 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const Scene = SceneByStep[stepKey];
   const bgs = getBackgroundsForStep(stepKey, tenant);
 
-  // hudChars: characters rendered within the HUD overlay (test on child-name scene)
   const HudChars = (() => {
-    switch (stepKey) {
-      case "greeting":
-        return (
-          <>
-            <HudCharacter
-              src="/assets/greeting/wizzygreeting.png"
-              alt="Wizzy"
-              anchor="left"
-              bottom="4.5rem"
-              offset="-20px"
-              minPx={180}
-              maxPx={460}
-              vwPercent={26}
-              cqwPercent={34}
-              scale={0.92}
-            />
-            <HudCharacter
-              src="/assets/greeting/rufffsgreeting.png"
-              alt="Ruffs"
-              anchor="right"
-              bottom="5rem"
-              offset="-4px"
-              minPx={150}
-              maxPx={380}
-              vwPercent={20}
-              cqwPercent={28}
-              scale={0.88}
-            />
-          </>
-        );
-      case "child-name":
-        return (
-          <>
-            <HudCharacter
-              src="/assets/child-name/wizzyWho.png"
-              alt="Wizzy Who"
-              anchor="left"
-              bottom="5rem"
-              offset="-28px"
-              minPx={320}
-              maxPx={660}
-              vwPercent={36}
-              cqwPercent={44}
-              scale={1.1}
-            />
-            <HudCharacter
-              src="/assets/child-name/ruffsWho.png"
-              alt="Ruffs Who"
-              anchor="right"
-              bottom="5rem"
-              offset="-4px"
-              minPx={150}
-              maxPx={380}
-              vwPercent={20}
-              cqwPercent={28}
-              scale={0.88}
-            />
-          </>
-        );
-      case "child-age":
-        return (
-          <>
-            <HudCharacter
-              src="/assets/child-age/wizzyAge.png"
-              alt="Wizzy Age"
-              anchor="left"
-              bottom="4.5rem"
-              offset="-20px"
-              minPx={180}
-              maxPx={460}
-              vwPercent={26}
-              cqwPercent={34}
-              scale={0.92}
-            />
-            <HudCharacter
-              src="/assets/child-age/ruffsAge.png"
-              alt="Ruffs Age"
-              anchor="right"
-              bottom="5rem"
-              offset="-4px"
-              minPx={150}
-              maxPx={380}
-              vwPercent={20}
-              cqwPercent={28}
-              scale={0.88}
-            />
-          </>
-        );
-      default:
-        return null;
-    }
+    const entry = (CharacterPlacements as any)[stepKey] || {};
+    const wiz = (entry as any).wizzy;
+    const ruffs = (entry as any).ruffs;
+    return (
+      <>
+        {wiz && (
+          <HudCharacter
+            src={wiz.src}
+            alt="Wizzy"
+            anchor={wiz.anchor}
+            preset={wiz.preset}
+            bottom={wiz.bottom}
+            offset={wiz.offset}
+            scale={wiz.scale}
+            translateX={wiz.translateX}
+            translateY={wiz.translateY}
+            origin={wiz.origin}
+          />
+        )}
+        {ruffs && (
+          <HudCharacter
+            src={ruffs.src}
+            alt="Ruffs"
+            anchor={ruffs.anchor}
+            preset={ruffs.preset}
+            bottom={ruffs.bottom}
+            offset={ruffs.offset}
+            scale={ruffs.scale}
+            translateX={ruffs.translateX}
+            translateY={ruffs.translateY}
+            origin={ruffs.origin}
+          />
+        )}
+      </>
+    );
   })();
 
   return (
