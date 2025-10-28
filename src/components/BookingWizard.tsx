@@ -1711,25 +1711,25 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
               src="/assets/greeting/wizzygreeting.png"
               alt="Wizzy"
               anchor="left"
-              bottom="5rem"
-              offset="-28px"
-              minPx={300}
-              maxPx={620}
-              vwPercent={34}
-              cqwPercent={42}
-              scale={1.05}
+              bottom="4.5rem"
+              offset="-20px"
+              minPx={180}
+              maxPx={460}
+              vwPercent={26}
+              cqwPercent={34}
+              scale={0.92}
             />
             <HudCharacter
               src="/assets/greeting/rufffsgreeting.png"
               alt="Ruffs"
               anchor="right"
-              bottom="5.5rem"
-              offset="-6px"
-              minPx={220}
-              maxPx={500}
-              vwPercent={24}
-              cqwPercent={32}
-              scale={0.95}
+              bottom="5rem"
+              offset="-4px"
+              minPx={150}
+              maxPx={380}
+              vwPercent={20}
+              cqwPercent={28}
+              scale={0.88}
             />
           </>
         );
@@ -1742,23 +1742,23 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
               anchor="left"
               bottom="5rem"
               offset="-28px"
-              minPx={300}
-              maxPx={620}
-              vwPercent={34}
-              cqwPercent={42}
-              scale={1.05}
+              minPx={320}
+              maxPx={660}
+              vwPercent={36}
+              cqwPercent={44}
+              scale={1.1}
             />
             <HudCharacter
               src="/assets/child-name/ruffsWho.png"
               alt="Ruffs Who"
               anchor="right"
-              bottom="5.5rem"
-              offset="-6px"
-              minPx={220}
-              maxPx={500}
-              vwPercent={24}
-              cqwPercent={32}
-              scale={0.95}
+              bottom="5rem"
+              offset="-4px"
+              minPx={150}
+              maxPx={380}
+              vwPercent={20}
+              cqwPercent={28}
+              scale={0.88}
             />
           </>
         );
@@ -1769,25 +1769,25 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
               src="/assets/child-age/wizzyAge.png"
               alt="Wizzy Age"
               anchor="left"
-              bottom="5rem"
-              offset="-28px"
-              minPx={300}
-              maxPx={620}
-              vwPercent={34}
-              cqwPercent={42}
-              scale={1.05}
+              bottom="4.5rem"
+              offset="-20px"
+              minPx={180}
+              maxPx={460}
+              vwPercent={26}
+              cqwPercent={34}
+              scale={0.92}
             />
             <HudCharacter
               src="/assets/child-age/ruffsAge.png"
               alt="Ruffs Age"
               anchor="right"
-              bottom="5.5rem"
-              offset="-6px"
-              minPx={220}
-              maxPx={500}
-              vwPercent={24}
-              cqwPercent={32}
-              scale={0.95}
+              bottom="5rem"
+              offset="-4px"
+              minPx={150}
+              maxPx={380}
+              vwPercent={20}
+              cqwPercent={28}
+              scale={0.88}
             />
           </>
         );
