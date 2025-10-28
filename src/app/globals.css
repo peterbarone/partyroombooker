@@ -47,6 +47,12 @@
   --fz-200: clamp(14px, 1.8vw, 16px);
   --fz-300: clamp(16px, 2.1vw, 18px);
   --fz-400: clamp(18px, 2.6vw, 22px);
+
+  /* Themed scrollbar tokens */
+  --sb-track: color-mix(in oklab, var(--parchment-100), black 4%);
+  --sb-track-border: color-mix(in oklab, var(--parchment-200), black 8%);
+  --sb-thumb: linear-gradient(180deg, var(--portal-400), var(--wizzy-purple-500));
+  --sb-thumb-hover: linear-gradient(180deg, #39a5ec, #7b68d8);
 }
 
 /* ---------- Global base ---------- */
@@ -119,6 +125,34 @@ html, body, #__next {
   scrollbar-gutter: stable both-edges;
 }
 .scroll-area > * { max-inline-size: 100%; }
+
+/* Themed scrollbars (Firefox) */
+body, .scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: #7b68d8 var(--sb-track);
+}
+
+/* Themed scrollbars (WebKit) */
+body::-webkit-scrollbar,
+.scroll-area::-webkit-scrollbar {
+  width: 12px;
+}
+body::-webkit-scrollbar-track,
+.scroll-area::-webkit-scrollbar-track {
+  background: var(--sb-track);
+  border-left: 1px solid var(--sb-track-border);
+  border-right: 1px solid var(--sb-track-border);
+}
+body::-webkit-scrollbar-thumb,
+.scroll-area::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb);
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.35), 0 1px 4px rgba(0,0,0,0.15);
+}
+body::-webkit-scrollbar-thumb:hover,
+.scroll-area::-webkit-scrollbar-thumb:hover {
+  background: var(--sb-thumb-hover);
+}
 
 /* Rail container (single source of truth) */
 .hud-rail {

@@ -424,21 +424,11 @@ const PartyDate: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
 const ParentInfo: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
   <div className="h-full w-full flex flex-col items-center justify-center pt-10">
     {/* Title is rendered by HUD */}
-    {(bookingData.customerInfo.childName || bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
+    {(bookingData.customerInfo.childName || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
       <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
         {bookingData.customerInfo.childName && (
           <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
             {bookingData.customerInfo.childName}{bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge})` : ''}
-          </span>
-        )}
-        {bookingData.selectedDate && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-          </span>
-        )}
-        {bookingData.selectedTime && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {bookingData.selectedTime}
           </span>
         )}
         {bookingData.selectedRoom && (
@@ -498,21 +488,11 @@ const ParentInfo: React.FC<StepProps> = ({ bookingData, updateBookingData }) => 
 const SpecialNotes: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
   <div className="h-full w-full flex flex-col items-center justify-center pt-10">
     {/* Title is rendered by HUD */}
-    {(bookingData.customerInfo.childName || bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
+    {(bookingData.customerInfo.childName || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
       <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
         {bookingData.customerInfo.childName && (
           <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
             {bookingData.customerInfo.childName}{bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge})` : ''}
-          </span>
-        )}
-        {bookingData.selectedDate && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-          </span>
-        )}
-        {bookingData.selectedTime && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {bookingData.selectedTime}
           </span>
         )}
         {bookingData.selectedRoom && (
@@ -888,13 +868,6 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       {!bookingData.selectedDate && (
         <div className="mb-4 text-center text-amber-900 font-semibold">Pick a date first</div>
       )}
-      {!!bookingData.selectedDate && (
-        <div className="mb-5 text-center">
-          <span className="inline-block px-3 py-1 rounded-full bg-white/90 border-[3px] border-amber-400 shadow-[0_1px_2px_rgba(0,0,0,0.12)] text-amber-900 text-sm font-extrabold">
-            {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-          </span>
-        </div>
-      )}
       <div className="w-full max-w-md flex flex-col gap-3 -mt-2">
         {!availability && <div className="text-amber-800 text-center">Checking availability…</div>}
         {availability && availability.length === 0 && (
@@ -1021,16 +994,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
         {/* Title is rendered by HUD */}
         {(bookingData.selectedDate || bookingData.selectedTime) && (
           <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
-            {bookingData.selectedDate && (
-              <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-                {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-              </span>
-            )}
-            {bookingData.selectedTime && (
-              <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-                {bookingData.selectedTime}
-              </span>
-            )}
+            {/* Date/time chips removed; shown in HUD Party Summary */}
           </div>
         )}
         {listCount === 0 && (
@@ -1042,101 +1006,103 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
             const selected = bookingData.selectedRoom?.id === room.id;
             const color = getRoomColorClasses(room.name);
             return (
-            <motion.div
-              key={room.id}
-              className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 text-center ${
-                selected
-                  ? `bg-white ring-4 ring-cyan-300 border-cyan-500 scale-[1.01]`
-                  : isDisabled
-                  ? `border-red-400`
-                  : `border-cyan-400 hover:border-cyan-300 hover:ring-2 hover:ring-cyan-200 hover:shadow-lift hover:scale-[1.01]`
-              }`}
-              onClick={async () => {
-                updateBookingData({ selectedRoom: room as any });
-                const slot = bookingData.selectedSlot;
-                if (!tenant || !slot?.timeStart || !slot?.timeEnd) return;
-                if (hold?.id) {
-                  try {
-                    await supabase.functions.invoke("releaseHold", { body: { holdId: hold.id } });
-                  } catch {}
-                  setHold(null);
-                }
-                try {
-                  const { data, error } = await supabase.functions.invoke("createHold", {
-                    body: {
-                      tenantSlug: tenant,
-                      roomId: room.id,
-                      startTime: slot.timeStart,
-                      endTime: slot.timeEnd,
-                      packageId: bookingData.selectedPackage?.id,
-                      kids: bookingData.guestCount,
-                    },
-                  });
-                  if (!error) {
-                    const holdId = (data as any)?.holdId as string | undefined;
-                    const expiresAt = (data as any)?.expiresAt as string | undefined;
-                    if (holdId && expiresAt) setHold({ id: holdId, expiresAt });
-                  } else {
-                    console.error("createHold error", error);
+              <motion.div
+                key={room.id}
+                className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 text-center cursor-pointer overflow-hidden ${
+                  selected
+                    ? "border-cyan-400 bg-white scale-[1.01] ring-4 ring-cyan-300"
+                    : "hover:scale-[1.01] hover:ring-2 hover:ring-cyan-200 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                }`}
+                style={{
+                  background: selected ? 'white' : 'rgba(139,92,246,0.9)',
+                  borderImage: 'linear-gradient(45deg, #a78bfa, #06b6d4) 1'
+                }}
+                onClick={async () => {
+                  updateBookingData({ selectedRoom: room as any });
+                  const slot = bookingData.selectedSlot;
+                  if (!tenant || !slot?.timeStart || !slot?.timeEnd) return;
+                  if (hold?.id) {
+                    try {
+                      await supabase.functions.invoke("releaseHold", { body: { holdId: hold.id } });
+                    } catch {}
+                    setHold(null);
                   }
-                } catch (e) {
-                  console.error("createHold exception", e);
-                }
-              }}
-              whileHover={{ scale: isDisabled ? 1 : 1.01 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {selected && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: [0, 1.15, 1] }}
-                  transition={{ duration: 0.5 }}
-                  className="absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full bg-cyan-500 text-white grid place-items-center shadow-lg"
-                >
-                  ✓
-                </motion.div>
-              )}
-              {isDisabled && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-red-600 text-white font-extrabold text-xl px-6 py-2 transform rotate-45 shadow-lg border-2 border-red-800">
-                    UNAVAILABLE
-                  </div>
-                </div>
-              )}
-              <div className="font-party text-white text-lg font-extrabold tracking-wide mb-2" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>{room.name}</div>
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-xs px-3 py-1 rounded-full bg-wiz-purple-600 text-white border border-wiz-purple-500 shadow-sm">🎉 Up to {room.max_kids} kids</span>
-                {!room.eligible && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-red-500 text-white border border-red-400">Not eligible</span>
+                  try {
+                    const { data, error } = await supabase.functions.invoke("createHold", {
+                      body: {
+                        tenantSlug: tenant,
+                        roomId: room.id,
+                        startTime: slot.timeStart,
+                        endTime: slot.timeEnd,
+                        packageId: bookingData.selectedPackage?.id,
+                        kids: bookingData.guestCount,
+                      },
+                    });
+                    if (!error) {
+                      const holdId = (data as any)?.holdId as string | undefined;
+                      const expiresAt = (data as any)?.expiresAt as string | undefined;
+                      if (holdId && expiresAt) setHold({ id: holdId, expiresAt });
+                    } else {
+                      console.error("createHold error", error);
+                    }
+                  } catch (e) {
+                    console.error("createHold exception", e);
+                  }
+                }}
+                whileHover={{ scale: isDisabled ? 1 : 1.01 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {selected && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: [0, 1.15, 1] }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full bg-cyan-500 text-white grid place-items-center shadow-lg"
+                  >
+                    ✓
+                  </motion.div>
                 )}
-              </div>
-              {!isDisabled && (
-                <button
-                  type="button"
-                  className="mb-3 bg-wiz-purple-500 hover:bg-wiz-purple-400 text-white px-3 py-2 rounded-full text-sm font-medium transition shadow-sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPreviewImages(Array.isArray(room.images) ? room.images : []);
-                    setPreviewIndex(0);
-                    setPreviewTitle(room.name);
-                    setPreviewOpen(true);
-                  }}
-                  aria-label="Tap to preview"
-                >
-                  👁️ Preview Room
-                </button>
-              )}
-              <div className="relative rounded-2xl overflow-hidden border-2 border-amber-300">
-                <div className="aspect-[4/3] w-full bg-amber-100/40 flex items-center justify-center">
-                  {Array.isArray(room.images) && room.images.length > 0 ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-amber-700 text-sm">No photo</div>
+                {isDisabled && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="bg-red-600 text-white font-extrabold text-xl px-6 py-2 transform rotate-45 shadow-lg border-2 border-red-800">
+                      UNAVAILABLE
+                    </div>
+                  </div>
+                )}
+                <div className="font-party text-white text-lg font-extrabold tracking-wide mb-2" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>{room.name}</div>
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <span className="text-xs px-3 py-1 rounded-full bg-wiz-purple-600 text-white border border-wiz-purple-500 shadow-sm">🎉 Up to {room.max_kids} kids</span>
+                  {!room.eligible && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-red-500 text-white border border-red-400">Not eligible</span>
                   )}
                 </div>
-              </div>
-            </motion.div>
+                {!isDisabled && (
+                  <button
+                    type="button"
+                    className="mb-3 bg-wiz-purple-500 hover:bg-wiz-purple-400 text-white px-3 py-2 rounded-full text-sm font-medium transition shadow-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewImages(Array.isArray(room.images) ? room.images : []);
+                      setPreviewIndex(0);
+                      setPreviewTitle(room.name);
+                      setPreviewOpen(true);
+                    }}
+                    aria-label="Tap to preview"
+                  >
+                    👁️ Preview Room
+                  </button>
+                )}
+                <div className="relative rounded-2xl overflow-hidden border-2 border-amber-300">
+                  <div className="aspect-[4/3] w-full bg-amber-100/40 flex items-center justify-center">
+                    {Array.isArray(room.images) && room.images.length > 0 ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-amber-700 text-sm">No photo</div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
             );
           })}
         </div>
@@ -1192,242 +1158,223 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const PackageChoice = () => {
     const packageRef = useRef<HTMLDivElement>(null);
 
-
     return (
       <div ref={packageRef} className="h-full w-full flex flex-col items-center justify-start pt-20">
-      {/* Title is rendered by HUD */}
-      {(bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom) && (
-        <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
-          {bookingData.selectedDate && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </span>
-          )}
-          {bookingData.selectedTime && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedTime}
-            </span>
-          )}
-          {bookingData.selectedRoom && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedRoom.name}
-            </span>
-          )}
-        </div>
-      )}
-      {packages.length === 0 && (
-        <div className="text-amber-800 text-center mb-4">No packages available. Make sure your tenant has active packages in Supabase.</div>
-      )}
-      <div className="mt-4 grid grid-cols-1 gap-12 w-full max-w-md">
-        {packages.map((pkg, index) => {
-          const isSelected = bookingData.selectedPackage?.id === pkg.id;
-          const isPopular = index === 0; // Assume first is most popular
-          return (
-            <motion.div
-              key={pkg.id}
-              className={`relative p-4 rounded-3xl border-4 border-cyan-300 transition-all bg-purple-200 shadow-2xl scale-60 text-center cursor-pointer overflow-hidden ${
-                isSelected
-                  ? "border-cyan-400 bg-white scale-[1.01] ring-4 ring-cyan-300"
-                  : "hover:scale-[1.01] hover:ring-2 hover:ring-cyan-200 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
-              }`}
-              style={{
-                background: isSelected ? 'white' : 'rgba(139,92,246,0.9)',
-                borderImage: 'linear-gradient(45deg, #a78bfa, #06b6d4) 1'
-              }}
-              onClick={() => updateBookingData({ selectedPackage: pkg })}
-              whileHover={{ scale: 1.01, boxShadow: "0 0 30px rgba(34,211,238,0.5)" }}
-              whileTap={{ scale: 0.98 }}
-              animate={isSelected ? { rotate: [0, -2, 2, 0] } : undefined}
-            >
-              {isSelected && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: [0, 1.15, 1] }}
-                  transition={{ duration: 0.5 }}
-                  className="absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full bg-cyan-500 text-white grid place-items-center shadow-lg"
-                >
-                  ✓
-                </motion.div>
-              )}
-              {isPopular && !isSelected && (
-                <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
-                  🥇 Most Popular
+        {/* Title is rendered by HUD */}
+        {(bookingData.selectedRoom) && (
+          <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
+            {/* Date/time chips removed; shown in HUD Party Summary */}
+            {bookingData.selectedRoom && (
+              <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
+                {bookingData.selectedRoom.name}
+              </span>
+            )}
+          </div>
+        )}
+        {packages.length === 0 && (
+          <div className="text-amber-800 text-center mb-4">No packages available. Make sure your tenant has active packages in Supabase.</div>
+        )}
+        <div className="mt-4 grid grid-cols-1 gap-12 w-full max-w-md">
+          {packages.map((pkg, index) => {
+            const isSelected = bookingData.selectedPackage?.id === pkg.id;
+            const isPopular = index === 0; // Assume first is most popular
+            return (
+              <motion.div
+                key={pkg.id}
+                className={`relative p-4 rounded-3xl border-4 border-cyan-300 transition-all bg-purple-200 shadow-2xl scale-60 text-center cursor-pointer overflow-hidden ${
+                  isSelected
+                    ? "border-cyan-400 bg-white scale-[1.01] ring-4 ring-cyan-300"
+                    : "hover:scale-[1.01] hover:ring-2 hover:ring-cyan-200 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                }`}
+                style={{
+                  background: isSelected ? 'white' : 'rgba(139,92,246,0.9)',
+                  borderImage: 'linear-gradient(45deg, #a78bfa, #06b6d4) 1'
+                }}
+                onClick={() => updateBookingData({ selectedPackage: pkg })}
+                whileHover={{ scale: 1.01, boxShadow: "0 0 30px rgba(34,211,238,0.5)" }}
+                whileTap={{ scale: 0.98 }}
+                animate={isSelected ? { rotate: [0, -2, 2, 0] } : undefined}
+              >
+                {isSelected && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: [0, 1.15, 1] }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full bg-cyan-500 text-white grid place-items-center shadow-lg"
+                  >
+                    ✓
+                  </motion.div>
+                )}
+                {isPopular && !isSelected && (
+                  <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                    🥇 Most Popular
+                  </div>
+                )}
+                <div className={`text-xl font-extrabold mb-1 ${isSelected ? 'text-amber-900' : 'text-white'}`}>{pkg.name}</div>
+                <div className={`text-sm font-medium mb-3 ${isSelected ? 'text-amber-800' : 'text-white'}`}>
+                  {pkg.name.toLowerCase().includes('deluxe') ? '🎎 Best for families' : pkg.name.toLowerCase().includes('bounce') ? '🎈 Fun for young kids' : '⭐ Classic choice'}
                 </div>
-              )}
-              <div className={`text-xl font-extrabold mb-1 ${isSelected ? 'text-amber-900' : 'text-white'}`}>{pkg.name}</div>
-              <div className={`text-sm font-medium mb-3 ${isSelected ? 'text-amber-800' : 'text-white'}`}>
-                {pkg.name.toLowerCase().includes('deluxe') ? '🎎 Best for families' : pkg.name.toLowerCase().includes('bounce') ? '🎈 Fun for young kids' : '⭐ Classic choice'}
-              </div>
-              <div className={`text-lg font-bold mb-1 ${isSelected ? 'text-pink-600' : 'text-white'}`}>${pkg.base_price.toFixed(2)}</div>
-              <div className={`text-xs mb-4 ${isSelected ? 'text-amber-700' : 'text-white'}`}>
-                {Math.max(1, Math.round((pkg.duration_min || 120) / 60))} hrs • up to {pkg.base_kids} kids
-              </div>
-              <div className="relative mb-4">
-                <div className="h-px bg-gradient-to-r from-cyan-400 to-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
-              </div>
-              <div className="text-left mb-4">
-                <div className={`text-sm font-semibold mb-3 ${isSelected ? 'text-amber-900' : 'text-white'}`}>What&apos;s included:</div>
-                <ul className={`text-xs space-y-2 ${isSelected ? 'text-amber-700' : 'text-white'}`} style={{ lineHeight: '1.8' }}>
-                  <li>🏠 Private party room</li>
-                  <li>🎭 Dedicated party host</li>
-                  <li>🍕 Pizza & drinks</li>
-                  <li>🎈 Balloon bundle</li>
-                  <li>🎟️ Return pass for birthday child</li>
-                </ul>
-              </div>
-              <div className="flex gap-2 justify-center px-4">
-                <button
-                  className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-full text-sm font-medium hover:bg-pink-600 transition"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    updateBookingData({ selectedPackage: pkg });
-                  }}
-                >
-                  Select Package ➜
-                </button>
-                <button
-                  className="flex-1 px-4 py-2 border border-amber-400 text-amber-800 bg-amber-50 rounded-full text-sm font-medium hover:bg-amber-100 transition"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // TODO: Open details modal
-                  }}
-                >
-                  View Details
-                </button>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+                <div className={`text-lg font-bold mb-1 ${isSelected ? 'text-pink-600' : 'text-white'}`}>${pkg.base_price.toFixed(2)}</div>
+                <div className={`text-xs mb-4 ${isSelected ? 'text-amber-700' : 'text-white'}`}>
+                  {Math.max(1, Math.round((pkg.duration_min || 120) / 60))} hrs • up to {pkg.base_kids} kids
+                </div>
+                <div className="relative mb-4">
+                  <div className="h-px bg-gradient-to-r from-cyan-400 to-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
+                </div>
+                <div className="text-left mb-4">
+                  <div className={`text-sm font-semibold mb-3 ${isSelected ? 'text-amber-900' : 'text-white'}`}>What&apos;s included:</div>
+                  <ul className={`text-xs space-y-2 ${isSelected ? 'text-amber-700' : 'text-white'}`} style={{ lineHeight: '1.8' }}>
+                    <li>🏠 Private party room</li>
+                    <li>🎭 Dedicated party host</li>
+                    <li>🍕 Pizza & drinks</li>
+                    <li>🎈 Balloon bundle</li>
+                    <li>🎟️ Return pass for birthday child</li>
+                  </ul>
+                </div>
+                <div className="flex gap-2 justify-center px-4">
+                  <button
+                    className="flex-1 px-4 py-2 bg-pink-500 text-white rounded-full text-sm font-medium hover:bg-pink-600 transition"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateBookingData({ selectedPackage: pkg });
+                    }}
+                  >
+                    Select Package ➜
+                  </button>
+                  <button
+                    className="flex-1 px-4 py-2 border border-amber-400 text-amber-800 bg-amber-50 rounded-full text-sm font-medium hover:bg-amber-100 transition"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // TODO: Open details modal
+                    }}
+                  >
+                    View Details
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
 
-      {characters.length > 0 && (
-        <div className="w-full max-w-md mt-10">
-          <div className="text-center mb-2">
-            <div className="space-y-1 font-party font-extrabold tracking-tight drop-shadow-sm">
-              <h3 className="text-amber-800 leading-tight text-2xl sm:text-3xl">ADD A</h3>
-              <h3 className="text-pink-600 leading-tight text-2xl sm:text-3xl">CHARACTER</h3>
+        {characters.length > 0 && (
+          <div className="w-full max-w-md mt-10">
+            <div className="text-center mb-2">
+              <div className="space-y-1 font-party font-extrabold tracking-tight drop-shadow-sm">
+                <h3 className="text-amber-800 leading-tight text-2xl sm:text-3xl">ADD A</h3>
+                <h3 className="text-pink-600 leading-tight text-2xl sm:text-3xl">CHARACTER</h3>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-12">
+              {characters.map((ch) => {
+                const selected = (bookingData.selectedCharacters || []).some((s) => s.character.id === ch.id);
+                return (
+                  <motion.div
+                    key={ch.id}
+                    className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 cursor-pointer ${
+                      selected ? "border-amber-400 bg-white scale-[1.01]" : "border-transparent bg-white/80 hover:scale-[1.01]"
+                    }`}
+                    onClick={() => {
+                      const list = bookingData.selectedCharacters || [];
+                      if (selected) {
+                        updateBookingData({ selectedCharacters: list.filter((s) => s.character.id !== ch.id) });
+                      } else {
+                        updateBookingData({ selectedCharacters: [...list, { character: ch, quantity: 1 }] });
+                      }
+                    }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-amber-300 bg-amber-100/40 flex items-center justify-center">
+                        <div className="text-2xl">🎭</div>
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="text-base font-bold text-amber-900">{ch.name}</div>
+                        <div className="text-sm font-semibold text-pink-600 mt-1">${ch.price.toFixed(2)}</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-12">
-            {characters.map((ch) => {
-              const selected = (bookingData.selectedCharacters || []).some((s) => s.character.id === ch.id);
-              return (
-                <motion.div
-                  key={ch.id}
-                  className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 cursor-pointer ${
-                    selected ? "border-amber-400 bg-white scale-[1.01]" : "border-transparent bg-white/80 hover:scale-[1.01]"
-                  }`}
-                  onClick={() => {
-                    const list = bookingData.selectedCharacters || [];
-                    if (selected) {
-                      updateBookingData({ selectedCharacters: list.filter((s) => s.character.id !== ch.id) });
-                    } else {
-                      updateBookingData({ selectedCharacters: [...list, { character: ch, quantity: 1 }] });
-                    }
-                  }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-amber-300 bg-amber-100/40 flex items-center justify-center">
-                      <div className="text-2xl">🎭</div>
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-base font-bold text-amber-900">{ch.name}</div>
-                      <div className="text-sm font-semibold text-pink-600 mt-1">${ch.price.toFixed(2)}</div>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+        )}
 
-      {addons.length > 0 && (
-        <div className="w-full max-w-md mt-10">
-          <div className="space-y-1 font-party font-extrabold tracking-tight drop-shadow-sm text-center mb-4">
-            <h2 className="text-amber-800 leading-tight text-3xl md:text-4xl">FUN</h2>
-            <h2 className="text-pink-600 leading-tight text-3xl md:text-4xl">ADD-ONS</h2>
-          </div>
-          <div className="grid grid-cols-1 gap-12">
-          {(() => {
-            const handleAddonQuantityChange = (addon: Addon, e: React.ChangeEvent<HTMLSelectElement>) => {
-              const qty = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
-              const list = bookingData.selectedAddons || [];
-              const exists = list.find((sa) => sa.addon.id === addon.id);
-              if (qty === 0) {
-                updateBookingData({ selectedAddons: list.filter((sa) => sa.addon.id !== addon.id) });
-              } else if (exists) {
-                updateBookingData({
-                  selectedAddons: list.map((sa) => (sa.addon.id === addon.id ? { ...sa, quantity: qty } : sa)),
-                });
-              } else {
-                updateBookingData({ selectedAddons: [...list, { addon, quantity: qty }] });
-              }
-            };
+        {addons.length > 0 && (
+          <div className="w-full max-w-md mt-10">
+            <div className="space-y-1 font-party font-extrabold tracking-tight drop-shadow-sm text-center mb-4">
+              <h2 className="text-amber-800 leading-tight text-3xl md:text-4xl">FUN</h2>
+              <h2 className="text-pink-600 leading-tight text-3xl md:text-4xl">ADD-ONS</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-12">
+              {(() => {
+                const handleAddonQuantityChange = (addon: Addon, e: React.ChangeEvent<HTMLSelectElement>) => {
+                  const qty = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
+                  const list = bookingData.selectedAddons || [];
+                  const exists = list.find((sa) => sa.addon.id === addon.id);
+                  if (qty === 0) {
+                    updateBookingData({ selectedAddons: list.filter((sa) => sa.addon.id !== addon.id) });
+                  } else if (exists) {
+                    updateBookingData({
+                      selectedAddons: list.map((sa) => (sa.addon.id === addon.id ? { ...sa, quantity: qty } : sa)),
+                    });
+                  } else {
+                    updateBookingData({ selectedAddons: [...list, { addon, quantity: qty }] });
+                  }
+                };
 
-            return addons.map((addon) => {
-              const selected = (bookingData.selectedAddons || []).find((a) => a.addon.id === addon.id);
-              const quantity = selected?.quantity ?? 0;
-              return (
-                <motion.div
-                  key={addon.id}
-                  className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 cursor-pointer ${
-                    quantity > 0 ? "border-amber-400 bg-white scale-[1.01]" : "border-transparent bg-white/80 hover:scale-[1.01]"
-                  }`}
-                  whileHover={{ scale: 1.005 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-amber-300 bg-amber-100/40 flex items-center justify-center">
-                      <div className="text-2xl">🎉</div>
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-base font-bold text-amber-900">{addon.name}</div>
-                      <div className="text-sm font-semibold text-pink-600 mt-1">${addon.price.toFixed(2)}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs text-amber-800">Quantity</label>
-                    <select
-                      value={quantity}
-                      onChange={(e) => handleAddonQuantityChange(addon, e)}
-                      className="border rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-pink-400"
+                return addons.map((addon) => {
+                  const selected = (bookingData.selectedAddons || []).find((a) => a.addon.id === addon.id);
+                  const quantity = selected?.quantity ?? 0;
+                  return (
+                    <motion.div
+                      key={addon.id}
+                      className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 cursor-pointer ${
+                        quantity > 0 ? "border-amber-400 bg-white scale-[1.01]" : "border-transparent bg-white/80 hover:scale-[1.01]"
+                      }`}
+                      whileHover={{ scale: 1.005 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </motion.div>
-              );
-            });
-          })()}
-        </div>
-        </div>
-      )}
-    </div>
-  );
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-amber-300 bg-amber-100/40 flex items-center justify-center">
+                          <div className="text-2xl">🎉</div>
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="text-base font-bold text-amber-900">{addon.name}</div>
+                          <div className="text-sm font-semibold text-pink-600 mt-1">${addon.price.toFixed(2)}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs text-amber-800">Quantity</label>
+                        <select
+                          value={quantity}
+                          onChange={(e) => handleAddonQuantityChange(addon, e)}
+                          className="border rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-pink-400"
+                        >
+                          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </motion.div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const GuestCount = () => (
     <div className="h-full w-full flex flex-col items-center justify-center pt-10">
       {/* Title is rendered by HUD */}
-      {(bookingData.selectedDate || bookingData.selectedTime || bookingData.selectedRoom || bookingData.selectedPackage) && (
+      {(bookingData.selectedRoom || bookingData.selectedPackage) && (
         <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
-          {bookingData.selectedDate && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </span>
-          )}
-          {bookingData.selectedTime && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedTime}
-            </span>
-          )}
+          {/* Date/time chips removed; shown in HUD Party Summary */}
           {bookingData.selectedRoom && (
             <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
               {bookingData.selectedRoom.name}
