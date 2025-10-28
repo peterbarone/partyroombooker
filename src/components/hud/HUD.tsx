@@ -1,7 +1,7 @@
 "use client";
-import { ReactNode } from "react";
-import { motion } from "framer-motion";
-import ScrollUnroll from "@/components/ScrollUnroll";
+import { ReactNode, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 type Props = {
   currentStep: number;
@@ -18,6 +18,7 @@ type Props = {
   fmtMMSS?: (secs: number) => string;
   title?: ReactNode;
   children?: ReactNode;
+  summary?: ReactNode;
 };
 
 export default function HUD({
@@ -35,8 +36,10 @@ export default function HUD({
   fmtMMSS = (s) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.max(0, s) % 60).padStart(2, "0")}`,
   title,
   children,
+  summary,
 }: Props) {
   const pct = Math.min(100, Math.max(0, ((currentStep + 1) / totalSteps) * 100));
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <div className="relative flex h-dvh w-full flex-col overflow-hidden">
@@ -135,7 +138,7 @@ export default function HUD({
 
       {/* Bottom nav */}
       {showNav && (
-        <div className="hud-bottom">
+        <div className="hud-bottom relative">
           <div className="h-full w-full flex items-center justify-center">
             <div className="hud-rail flex items-center justify-between">
               <button
@@ -146,13 +149,42 @@ export default function HUD({
               >
                 <span className="sr-only">Back</span>
               </button>
-              {/* Center animated scroll (non-interactive here) */}
-              <div className="flex-none">
-                <ScrollUnroll
-                  className="w-[clamp(6rem,12vw,7rem)]"
-                  playOnMount={false}
-                  sizes="(min-width: 768px) 7rem, (min-width: 640px) 4rem, 6rem"
-                />
+              {/* Center: Summary drawer toggle + panel (relative anchor) */}
+              <div className="flex-none relative w-[min(60vw,18rem)]">
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen((v) => !v)}
+                  aria-expanded={drawerOpen}
+                  aria-controls="hud-summary-drawer"
+                  className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition-colors flex items-center justify-between"
+                >
+                  <span>Party Summary</span>
+                  {drawerOpen ? (
+                    <ChevronDown className="w-5 h-5" />
+                  ) : (
+                    <ChevronUp className="w-5 h-5" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {drawerOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      id="hud-summary-drawer"
+                      className="absolute bottom-full mb-2 left-0 right-0 bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl border-2 border-amber-200 p-4 max-h-96 overflow-y-auto z-50"
+                      role="region"
+                      aria-label="Party summary"
+                    >
+                      <h3 className="font-bold text-lg text-amber-900 border-b-2 border-amber-200 pb-2 mb-3">Booking Details</h3>
+                      {summary ?? (
+                        <div className="text-center text-sm opacity-80 py-3">No selections yet</div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
               <button
                 onClick={onNext}
@@ -165,6 +197,7 @@ export default function HUD({
               </button>
             </div>
           </div>
+          {/* Drawer is anchored to the center button above */}
         </div>
       )}
     </div>

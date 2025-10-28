@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, ReactNode, Suspense, useMemo, useId } from
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { Calendar as CalendarIcon, Users, Package as PackageIcon, MapPin, DollarSign, User as UserIcon, Mail, Phone, Baby } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ResponsiveStage from "@/components/layout/ResponsiveStage";
 import HudCharacter from "@/components/layout/HudCharacter";
@@ -1701,7 +1702,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const hudTitle = (() => {
     switch (stepKey) {
       case "greeting":
-        return "WELCOME TO PARTYROOM!";
+        return "PARTY WITH,";
       case "child-name":
         return "WHO'S THE BIRTHDAY STAR?";
       case "child-age": {
@@ -1731,6 +1732,103 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     }
   })();
 
+  // Compact live summary for HUD drawer
+  const summaryNode = (
+    <div className="text-amber-900 text-sm space-y-3">
+      {bookingData.selectedPackage && (
+        <div className="space-y-2">
+          <div className="flex items-start gap-2">
+            <PackageIcon className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-amber-900">{bookingData.selectedPackage.name}</p>
+              {bookingData.selectedPackage.description && (
+                <p className="text-xs text-gray-600">{bookingData.selectedPackage.description}</p>
+              )}
+            </div>
+          </div>
+
+          {bookingData.selectedRoom && (
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-amber-700 flex-shrink-0" />
+              <span className="text-gray-700">{bookingData.selectedRoom.name}</span>
+            </div>
+          )}
+
+          {(bookingData.selectedDate || bookingData.selectedTime) && (
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-amber-700 flex-shrink-0" />
+              <span className="text-gray-700">
+                {bookingData.selectedDate
+                  ? new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                  : ''}
+                {bookingData.selectedTime ? ` at ${bookingData.selectedTime}` : ''}
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-amber-700 flex-shrink-0" />
+            <span className="text-gray-700">{bookingData.guestCount} kids</span>
+          </div>
+
+          {(bookingData.selectedAddons || []).filter(a => a.quantity > 0).length > 0 && (
+            <div className="border-t border-amber-100 pt-2 mt-2">
+              <p className="font-semibold text-amber-900 text-xs mb-1">Add-ons:</p>
+              {bookingData.selectedAddons.filter(a => a.quantity > 0).map(({ addon, quantity }) => (
+                <div key={addon.id} className="flex justify-between text-xs text-gray-700 ml-6">
+                  <span>{addon.name} x{quantity}</span>
+                  <span>${((addon.price || 0) * quantity).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {bookingData.customerInfo && (
+        <div className="border-t border-amber-100 pt-2 space-y-2">
+          {bookingData.customerInfo.parentName && (
+            <div className="flex items-center gap-2">
+              <UserIcon className="w-4 h-4 text-amber-700 flex-shrink-0" />
+              <span className="text-gray-700">{bookingData.customerInfo.parentName}</span>
+            </div>
+          )}
+          {bookingData.customerInfo.parentEmail && (
+            <div className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-amber-700 flex-shrink-0" />
+              <span className="text-gray-700 text-xs">{bookingData.customerInfo.parentEmail}</span>
+            </div>
+          )}
+          {bookingData.customerInfo.parentPhone && (
+            <div className="flex items-center gap-2">
+              <Phone className="w-4 h-4 text-amber-700 flex-shrink-0" />
+              <span className="text-gray-700">{bookingData.customerInfo.parentPhone}</span>
+            </div>
+          )}
+          {bookingData.customerInfo.childName && (
+            <div className="flex items-center gap-2">
+              <Baby className="w-4 h-4 text-amber-700 flex-shrink-0" />
+              <span className="text-gray-700">
+                {bookingData.customerInfo.childName}
+                {bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge} years)` : ''}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="border-t-2 border-amber-200 pt-2 mt-2">
+        <div className="flex items-center justify-between font-bold text-amber-900">
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-5 h-5" />
+            <span>Total:</span>
+          </div>
+          <span className="text-lg">${calculateTotal().toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+  );
+
   const Hud = stepKey === "greeting" ? (
     <HUD
       currentStep={currentStep}
@@ -1743,6 +1841,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       title={hudTitle}
       contentOverflowY="visible"
       showNav={false}
+      summary={summaryNode}
     >
       <GreetingStep onStart={nextStep} />
     </HUD>
@@ -1756,6 +1855,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       holdRemaining={holdRemaining}
       fmtMMSS={fmtMMSS}
       title={hudTitle}
+      summary={summaryNode}
     >
       {(() => {
         switch (stepKey) {
