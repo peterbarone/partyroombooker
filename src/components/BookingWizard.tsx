@@ -1779,7 +1779,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   );
 
   // NEW: Toggle between old and new layout (set to true to enable fixed layout)
-  const USE_FIXED_LAYOUT = true;
+  const USE_FIXED_LAYOUT = false;
 
   // Get character data from placements
   const entry = (CharacterPlacements as any)[stepKey] || {};
