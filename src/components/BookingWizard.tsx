@@ -9,6 +9,7 @@ import { Calendar as CalendarIcon, Users, Package as PackageIcon, MapPin, Dollar
 import { supabase } from "@/lib/supabase";
 import ResponsiveStage from "@/components/layout/ResponsiveStage";
 import HudCharacter from "@/components/layout/HudCharacter";
+import CharacterSection from "@/components/layout/CharacterSection";
 import HUD from "@/components/hud/HUD";
 // Modular Steps (HUD content)
 import GreetingStep from "@/app/steps/Greeting";
@@ -1777,6 +1778,22 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     </div>
   );
 
+  // NEW: Toggle between old and new layout (set to true to enable fixed layout)
+  const USE_FIXED_LAYOUT = true;
+
+  // Get character data from placements
+  const entry = (CharacterPlacements as any)[stepKey] || {};
+  const wiz = (entry as any).wizzy;
+  const ruffs = (entry as any).ruffs;
+
+  // NEW: Character section for fixed layout
+  const CharSection = (
+    <CharacterSection
+      wizzy={wiz ? { src: wiz.src, alt: "Wizzy", scale: wiz.scale } : undefined}
+      ruffs={ruffs ? { src: ruffs.src, alt: "Ruffs", scale: ruffs.scale } : undefined}
+    />
+  );
+
   const Hud = stepKey === "greeting" ? (
     <HUD
       currentStep={currentStep}
@@ -1790,6 +1807,8 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       contentOverflowY="visible"
       showNav={false}
       summary={summaryNode}
+      useFixedLayout={USE_FIXED_LAYOUT}
+      characterSection={CharSection}
     >
       <GreetingStep onStart={nextStep} />
     </HUD>
@@ -1804,6 +1823,8 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       fmtMMSS={fmtMMSS}
       title={hudTitle}
       summary={summaryNode}
+      useFixedLayout={USE_FIXED_LAYOUT}
+      characterSection={CharSection}
     >
       {(() => {
         switch (stepKey) {
@@ -1853,10 +1874,8 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const Scene = SceneByStep[stepKey];
   const bgs = getBackgroundsForStep(stepKey, tenant);
 
+  // Legacy overlay characters (for old layout) - using variables from above
   const HudChars = (() => {
-    const entry = (CharacterPlacements as any)[stepKey] || {};
-    const wiz = (entry as any).wizzy;
-    const ruffs = (entry as any).ruffs;
     return (
       <>
         {wiz && (
@@ -1898,6 +1917,8 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       bgDesktop={bgs.desktop}
       hudChars={HudChars}
       hud={Hud}
+      useFixedLayout={USE_FIXED_LAYOUT}
+      characterSection={CharSection}
     >
       {Scene ? <Scene /> : null}
     </ResponsiveStage>

@@ -8,12 +8,24 @@ type Props = {
   bgDesktop: string
   children?: ReactNode          // scene midground layer (behind HUD)
   hud?: ReactNode               // main HUD: progress, nav, content
-  hudChars?: ReactNode          // characters positioned within HUD overlay
+  hudChars?: ReactNode          // characters positioned within HUD overlay (legacy)
+  useFixedLayout?: boolean      // NEW: enable fixed layout mode
+  characterSection?: ReactNode  // NEW: character section for fixed layout
 }
 
 export default function ResponsiveStage({
-  bgMobile, bgTablet, bgDesktop, children, hud, hudChars
+  bgMobile, bgTablet, bgDesktop, children, hud, hudChars, useFixedLayout = false, characterSection
 }: Props) {
+  // Fixed layout mode (new design)
+  if (useFixedLayout) {
+    return (
+      <div className="fixed-layout-container">
+        {hud}
+      </div>
+    );
+  }
+
+  // Legacy overlay layout mode
   return (
     <div className="relative w-full h-screen-safe overflow-hidden">
       {/* Background (absolute fill, never impacts layout width) */}
