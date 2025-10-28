@@ -193,6 +193,56 @@ html, body, #__next {
   /* Aspect helper (portal crops) */
   .aspect-portal { position: relative; width:100%; padding-top: calc(100% * 9 / 3); }
   .aspect-portal > * { position:absolute; inset:0; }
+
+  /* Allow using theme(colors.portal.400) in arbitrary gradients */
+  .bg-portal-400\/40 { background-color: color-mix(in oklab, var(--portal-400), transparent 60%); }
+
+  /* ConfettiOrbCounter animations/utilities */
+  .animate-numberPulse { animation: numberPulse .28s ease-out; }
+  .animate-orbSwirl { animation: orbSwirl 10s linear infinite; }
+  .animate-orbTwinkles { animation: orbTwinkles 2.4s ease-in-out infinite; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-orbSwirl { animation: none; }
+    .animate-orbTwinkles { animation: none; }
+  }
+
+  /* confetti particles */
+  .confetti-particle {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 6px; height: 6px; border-radius: 9999px;
+    background: radial-gradient(circle, #fff 0 45%, transparent 46%);
+    box-shadow: 0 0 0 2px rgba(255,255,255,.25) inset;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+  }
+  .confetti-burst .confetti-particle:nth-child(odd)  { background-color: #ffd166; }
+  .confetti-burst .confetti-particle:nth-child(even) { background-color: #ff80bf; }
+  .confetti-burst .confetti-particle { animation: confettiPop 420ms ease-out forwards; }
+  @media (prefers-reduced-motion: reduce) {
+    .confetti-burst .confetti-particle { animation: none; }
+  }
+}
+
+@keyframes numberPulse {
+  0% { transform: scale(1); text-shadow: 0 0 0 rgba(255,255,255,0); }
+  35% { transform: scale(1.14); text-shadow: 0 6px 18px rgba(255,255,255,.45); }
+  100% { transform: scale(1); text-shadow: 0 0 0 rgba(255,255,255,0); }
+}
+@keyframes orbSwirl {
+  0% { transform: rotate(0deg); filter: hue-rotate(0deg) brightness(1); }
+  100% { transform: rotate(360deg); filter: hue-rotate(10deg) brightness(1.02); }
+}
+@keyframes orbTwinkles {
+  0%, 100% { opacity: .25; transform: scale(1); }
+  50% { opacity: .45; transform: scale(1.02); }
+}
+@keyframes confettiPop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) rotate(var(--th)) translateX(0) scale(.6); }
+  10%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--th)) translateX(70px) translateY(-8px) scale(1); }
 }
 
 /* ---------- COMPONENTS LAYER ---------- */

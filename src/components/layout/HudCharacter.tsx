@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 
+
 type SizePreset = "xs" | "sm" | "md" | "lg" | "xl";
 type Unit = "cqw" | "vw";
 
@@ -23,11 +24,11 @@ type Props = {
 };
 
 const SIZE_PRESETS: Record<SizePreset, { cqw: string; vw: string }> = {
-  xs: { cqw: "clamp(110px, 18cqw, 180px)", vw: "clamp(110px, 12vw, 220px)" },
-  sm: { cqw: "clamp(140px, 22cqw, 240px)", vw: "clamp(140px, 16vw, 280px)" },
-  md: { cqw: "clamp(170px, 26cqw, 300px)", vw: "clamp(170px, 20vw, 360px)" },
-  lg: { cqw: "clamp(200px, 30cqw, 360px)", vw: "clamp(200px, 24vw, 440px)" },
-  xl: { cqw: "clamp(220px, 34cqw, 420px)", vw: "clamp(240px, 28vw, 560px)" },
+  xs: { cqw: "clamp(84px, 16cqw, 150px)", vw: "clamp(84px, 10vw, 180px)" },
+  sm: { cqw: "clamp(110px, 20cqw, 200px)", vw: "clamp(110px, 14vw, 240px)" },
+  md: { cqw: "clamp(130px, 22cqw, 260px)", vw: "clamp(130px, 18vw, 300px)" },
+  lg: { cqw: "clamp(160px, 26cqw, 320px)", vw: "clamp(160px, 22vw, 380px)" },
+  xl: { cqw: "clamp(180px, 30cqw, 380px)", vw: "clamp(200px, 26vw, 480px)" },
 };
 
 export default function HudCharacter({
