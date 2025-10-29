@@ -17,23 +17,7 @@ export default function GreetingScene() {
           />
         </div>
 
-        {/* Row 2: Content area below logo (two columns, all screen sizes) */}
-        <div className="w-md grid grid-cols-2 items-center justify-items-center">
-          <div className="w-full h-full flex items-center justify-center">
-            <img
-              src="/assets/greeting/wizzygreeting.png"
-              alt="Wizzy Greeting"
-              className="max-h-[350px] w-auto object-contain drop-shadow"
-            />
-          </div>
-          <div className="w-full h-full flex items-center justify-center">
-            <img
-              src="/assets/greeting/ruffsgreeting.png"
-              alt="Ruffs Greeting"
-              className="max-h-[250px] w-auto object-contain drop-shadow"
-            />
-          </div>
-        </div>
+       
       </div>
     </div>
   );
