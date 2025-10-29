@@ -73,11 +73,24 @@ function ConfettiOrbCounter({
   const labelId = useId();
   const [pulseKey, setPulseKey] = useState(0);
   const confettiRef = useRef<HTMLDivElement>(null);
+  const orbRef = useRef<HTMLDivElement>(null);
 
   const sizes = {
-    sm: { orb: 'w-28 h-28 text-3xl', btn: 'w-12 h-12 text-2xl', gap: 'gap-4' },
-    md: { orb: 'w-36 h-36 text-4xl', btn: 'w-14 h-14 text-3xl', gap: 'gap-6' },
-    lg: { orb: 'w-44 h-44 text-5xl', btn: 'w-16 h-16 text-4xl', gap: 'gap-8' },
+    sm: {
+      orb: 'w-24 h-24 text-2xl sm:w-28 sm:h-28 sm:text-3xl',
+      btn: 'w-10 h-10 text-xl sm:w-12 sm:h-12 sm:text-2xl',
+      gap: 'gap-3 sm:gap-4',
+    },
+    md: {
+      orb: 'w-28 h-28 text-3xl sm:w-36 sm:h-36 sm:text-4xl',
+      btn: 'w-12 h-12 text-2xl sm:w-14 sm:h-14 sm:text-3xl',
+      gap: 'gap-4 sm:gap-6',
+    },
+    lg: {
+      orb: 'w-32 h-32 text-4xl sm:w-40 sm:h-40 md:w-44 md:h-44 md:text-5xl',
+      btn: 'w-12 h-12 text-2xl sm:w-14 sm:h-14 md:w-16 md:h-16 md:text-4xl',
+      gap: 'gap-4 sm:gap-6 md:gap-8',
+    },
   }[size];
 
   const atMin = value <= min;
@@ -93,10 +106,24 @@ function ConfettiOrbCounter({
 
   function burst() {
     const el = confettiRef.current;
-    if (!el) return;
-    el.classList.remove('confetti-burst');
-    void el.offsetWidth;
-    el.classList.add('confetti-burst');
+    const orb = orbRef.current;
+
+    if (el) {
+      el.classList.remove('confetti-burst');
+      // Ensure the browser sees the removal before re-adding
+      requestAnimationFrame(() => {
+        void el.offsetWidth;
+        el.classList.add('confetti-burst');
+      });
+    }
+
+    if (orb) {
+      orb.classList.remove('confetti-burst');
+      requestAnimationFrame(() => {
+        void orb.offsetWidth;
+        orb.classList.add('confetti-burst');
+      });
+    }
   }
 
   function onKey(e: React.KeyboardEvent<HTMLDivElement>) {
@@ -125,6 +152,7 @@ function ConfettiOrbCounter({
       </button>
 
       <div
+        key={pulseKey}
         tabIndex={0}
         role="spinbutton"
         aria-valuemin={min}
@@ -132,7 +160,8 @@ function ConfettiOrbCounter({
         aria-valuenow={value}
         aria-label="Number of party pals"
         onKeyDown={onKey}
-        className={`relative select-none ${sizes.orb} rounded-full grid place-items-center font-[800] text-white tracking-wide ring-0 focus:outline-none focus-visible:ring-4 focus-visible:ring-portal-400/40`}
+        className={`relative select-none ${sizes.orb} rounded-full grid place-items-center font-[800] text-white tracking-wide ring-0 focus:outline-none focus-visible:ring-4 focus-visible:ring-portal-400/40 confetti-burst`}
+        ref={orbRef}
       >
         <div
           className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.35),transparent_55%)] before:absolute before:inset-[-6%] before:rounded-full before:bg-[conic-gradient(from_0deg,theme(colors.portal.400)_0%,theme(colors.portal.500)_40%,theme(colors.wizzy-purple.400)_70%,theme(colors.portal.400)_100%)] before:opacity-70 before:animate-orbSwirl after:absolute after:inset-0 after:rounded-full after:animate-orbTwinkles after:bg-[radial-gradient(circle,rgba(255,255,255,0.7)_0_1px,transparent_2px)] after:bg-[length:22px_22px] after:bg-center pointer-events-none"
@@ -514,6 +543,17 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [previewIndex, setPreviewIndex] = useState(0);
   const [previewTitle, setPreviewTitle] = useState<string>("");
+
+  // Development-only placeholder images for preview when rooms have no photos yet
+  const DEV_PREVIEW_IMAGES = useMemo(
+    () => [
+      "https://picsum.photos/seed/partyroom1/1000/600",
+      "https://picsum.photos/seed/partyroom2/1000/600",
+      "https://picsum.photos/seed/partyroom3/1000/600",
+      "https://picsum.photos/seed/partyroom4/1000/600",
+    ],
+    []
+  );
 
   // Helpers
   const fmtMMSS = (secs: number) => {
@@ -940,7 +980,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
         {listCount === 0 && (
           <div className="text-amber-800 text-center mb-4">No rooms available for this time. Try another time or date.</div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-3xl p-4 max-h-[57vh] overflow-y-auto ">
+        <div className="grid grid-cols-1 sm:grid-cols-1 gap-2 w-full max-w-3xl p-4 max-h-[57vh] overflow-y-auto ">
           {list.map((room) => {
             const isDisabled = !room.available || !room.eligible;
             const selected = bookingData.selectedRoom?.id === room.id;
@@ -948,16 +988,13 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
             return (
               <motion.div
                 key={room.id}
-                className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl text-center cursor-pointer ${
+                className={`relative flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
                   selected
-                    ? "border-cyan-400 bg-white scale-[1.01]"
-                    : "hover:scale-[1.01] hover:ring-2  hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
-                }`}
-                style={{
-                  background: selected ? 'white' : 'rgba(139,92,246,0.9)'
-                  
-                }}
+                    ? "border-cyan-500 bg-cyan-50 shadow-md"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                } ${isDisabled ? "opacity-50" : ""}`}
                 onClick={async () => {
+                  if (isDisabled) return;
                   updateBookingData({ selectedRoom: room as any });
                   const slot = bookingData.selectedSlot;
                   if (!tenant || !slot?.timeStart || !slot?.timeEnd) return;
@@ -989,58 +1026,105 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                     console.error("createHold exception", e);
                   }
                 }}
-                whileHover={{ scale: isDisabled ? 1 : 1.01 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={isDisabled ? {} : { scale: 1.01 }}
+                whileTap={isDisabled ? {} : { scale: 0.99 }}
               >
-                {selected && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: [0, 1.15, 1] }}
-                    transition={{ duration: 0.5 }}
-                    className="absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full bg-cyan-500 text-white grid place-items-center shadow-lg"
-                  >
-                    ✓
-                  </motion.div>
-                )}
-                {isDisabled && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="bg-red-600 text-white font-extrabold text-xl px-6 py-2 transform rotate-45 shadow-lg border-2 border-red-800">
-                      UNAVAILABLE
-                    </div>
-                  </div>
-                )}
-                <div className="font-party text-white text-lg font-extrabold tracking-wide mb-2" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>{room.name}</div>
-                <div className="flex items-center justify-center gap-2 mb-3">
-                  <span className="text-xs px-3 py-1 rounded-full bg-wiz-purple-600 text-white border border-wiz-purple-500 shadow-sm">🎉 Up to {room.max_kids} kids</span>
-                  {!room.eligible && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-red-500 text-white border border-red-400">Not eligible</span>
+                {/* Room Image (clickable when photos exist) */}
+                <div className="relative w-16 h-16 flex-shrink-0">
+                  {Array.isArray(room.images) && room.images.length > 0 ? (
+                    <button
+                      type="button"
+                      aria-label={`View photos for ${room.name}`}
+                      className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewImages(room.images);
+                        setPreviewIndex(0);
+                        setPreviewTitle(room.name);
+                        setPreviewOpen(true);
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
+                      <span className="absolute top-1 left-1 bg-white/90 text-gray-800 text-[10px] font-medium rounded px-1 py-0.5 shadow">
+                        {room.images.length} photos
+                      </span>
+                      {selected && (
+                        <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-full bg-cyan-500 text-white flex items-center justify-center text-sm">
+                            ✓
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label={`View sample photos for ${room.name}`}
+                      className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 text-gray-500 text-[10px] flex items-center justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewImages(DEV_PREVIEW_IMAGES);
+                        setPreviewIndex(0);
+                        setPreviewTitle(room.name);
+                        setPreviewOpen(true);
+                      }}
+                    >
+                      No photo
+                      <span className="absolute top-1 left-1 bg-white/90 text-gray-800 text-[10px] font-medium rounded px-1 py-0.5 shadow">
+                        {DEV_PREVIEW_IMAGES.length} photos
+                      </span>
+                      {selected && (
+                        <div className="absolute inset-0 bg-cyan-500/20 flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-full bg-cyan-500 text-white flex items-center justify-center text-sm">
+                            ✓
+                          </div>
+                        </div>
+                      )}
+                    </button>
                   )}
                 </div>
-                {!isDisabled && (
+
+                {/* Room Info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 text-base truncate">{room.name}</h3>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-sm text-gray-600">👥 Up to {room.max_kids} kids</span>
+                    {!room.eligible && (
+                      <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">Not eligible</span>
+                    )}
+                  </div>
                   <button
                     type="button"
-                    className="mb-3 bg-wiz-purple-500 hover:bg-wiz-purple-400 text-white px-3 py-2 rounded-full text-sm font-medium transition shadow-sm"
+                    className={`inline-flex items-center gap-1 text-xs font-medium mt-1.5 ${isDisabled ? "text-gray-400 cursor-not-allowed" : "text-cyan-600 hover:text-cyan-700 hover:underline"}`}
                     onClick={(e) => {
+                      if (isDisabled) return;
                       e.stopPropagation();
-                      setPreviewImages(Array.isArray(room.images) ? room.images : []);
+                      const imgs = Array.isArray(room.images) && room.images.length > 0 ? room.images : DEV_PREVIEW_IMAGES;
+                      setPreviewImages(imgs);
                       setPreviewIndex(0);
                       setPreviewTitle(room.name);
                       setPreviewOpen(true);
                     }}
-                    aria-label="Tap to preview"
+                    disabled={isDisabled}
                   >
-                    👁️ Preview Room
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    {Array.isArray(room.images) && room.images.length > 0
+                      ? `View photos (${room.images.length})`
+                      : `View photos (${DEV_PREVIEW_IMAGES.length})`}
                   </button>
-                )}
-                <div className="relative rounded-2xl overflow-hidden border-2 border-amber-300">
-                  <div className="aspect-[4/3] w-full bg-amber-100/40 flex items-center justify-center">
-                    {Array.isArray(room.images) && room.images.length > 0 ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-amber-700 text-sm">No photo</div>
-                    )}
-                  </div>
+                </div>
+
+                {/* Availability indicator */}
+                <div className="flex-shrink-0 text-right">
+                  {isDisabled ? (
+                    <div className="text-sm font-medium text-red-600">Unavailable</div>
+                  ) : (
+                    <div className="text-sm font-medium text-green-600">Available</div>
+                  )}
                 </div>
               </motion.div>
             );
@@ -1594,60 +1678,64 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     }
   })();
 
-  // Compact live summary for HUD drawer
+  // Compact live summary for HUD drawer (always shows entered data)
   const summaryNode = (
     <div className="text-amber-900 text-sm space-y-3">
+      {/* Package */}
       {bookingData.selectedPackage && (
-        <div className="space-y-2">
-          <div className="flex items-start gap-2">
-            <PackageIcon className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-amber-900">{bookingData.selectedPackage.name}</p>
-              {bookingData.selectedPackage.description && (
-                <p className="text-xs text-gray-600">{bookingData.selectedPackage.description}</p>
-              )}
-            </div>
+        <div className="flex items-start gap-2">
+          <PackageIcon className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-semibold text-amber-900">{bookingData.selectedPackage.name}</p>
+            {bookingData.selectedPackage.description && (
+              <p className="text-xs text-gray-600">{bookingData.selectedPackage.description}</p>
+            )}
           </div>
-
-          {bookingData.selectedRoom && (
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-amber-700 flex-shrink-0" />
-              <span className="text-gray-700">{bookingData.selectedRoom.name}</span>
-            </div>
-          )}
-
-          {(bookingData.selectedDate || bookingData.selectedTime) && (
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-amber-700 flex-shrink-0" />
-              <span className="text-gray-700">
-                {bookingData.selectedDate
-                  ? new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-                  : ''}
-                {bookingData.selectedTime ? ` at ${bookingData.selectedTime}` : ''}
-              </span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-amber-700 flex-shrink-0" />
-            <span className="text-gray-700">{bookingData.guestCount} kids</span>
-          </div>
-
-          {(bookingData.selectedAddons || []).filter(a => a.quantity > 0).length > 0 && (
-            <div className="border-t border-amber-100 pt-2 mt-2">
-              <p className="font-semibold text-amber-900 text-xs mb-1">Add-ons:</p>
-              {bookingData.selectedAddons.filter(a => a.quantity > 0).map(({ addon, quantity }) => (
-                <div key={addon.id} className="flex justify-between text-xs text-gray-700 ml-6">
-                  <span>{addon.name} x{quantity}</span>
-                  <span>${((addon.price || 0) * quantity).toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       )}
 
-      {bookingData.customerInfo && (
+      {/* Room */}
+      {bookingData.selectedRoom && (
+        <div className="flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-amber-700 flex-shrink-0" />
+          <span className="text-gray-700">{bookingData.selectedRoom.name}</span>
+        </div>
+      )}
+
+      {/* Date / Time */}
+      {(bookingData.selectedDate || bookingData.selectedTime) && (
+        <div className="flex items-center gap-2">
+          <CalendarIcon className="w-4 h-4 text-amber-700 flex-shrink-0" />
+          <span className="text-gray-700">
+            {bookingData.selectedDate
+              ? new Date(bookingData.selectedDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+              : ''}
+            {bookingData.selectedTime ? ` at ${bookingData.selectedTime}` : ''}
+          </span>
+        </div>
+      )}
+
+      {/* Guest Count */}
+      <div className="flex items-center gap-2">
+        <Users className="w-4 h-4 text-amber-700 flex-shrink-0" />
+        <span className="text-gray-700">{bookingData.guestCount} kids</span>
+      </div>
+
+      {/* Add-ons */}
+      {(bookingData.selectedAddons || []).filter(a => a.quantity > 0).length > 0 && (
+        <div className="border-t border-amber-100 pt-2 mt-2">
+          <p className="font-semibold text-amber-900 text-xs mb-1">Add-ons:</p>
+          {bookingData.selectedAddons.filter(a => a.quantity > 0).map(({ addon, quantity }) => (
+            <div key={addon.id} className="flex justify-between text-xs text-gray-700 ml-6">
+              <span>{addon.name} x{quantity}</span>
+              <span>${((addon.price || 0) * quantity).toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Parent + Child info */}
+      {(bookingData.customerInfo?.parentName || bookingData.customerInfo?.parentEmail || bookingData.customerInfo?.parentPhone || bookingData.customerInfo?.childName || bookingData.customerInfo?.childAge) && (
         <div className="border-t border-amber-100 pt-2 space-y-2">
           {bookingData.customerInfo.parentName && (
             <div className="flex items-center gap-2">
@@ -1667,11 +1755,11 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
               <span className="text-gray-700">{bookingData.customerInfo.parentPhone}</span>
             </div>
           )}
-          {bookingData.customerInfo.childName && (
+          {(bookingData.customerInfo.childName || bookingData.customerInfo.childAge) && (
             <div className="flex items-center gap-2">
               <Baby className="w-4 h-4 text-amber-700 flex-shrink-0" />
               <span className="text-gray-700">
-                {bookingData.customerInfo.childName}
+                {bookingData.customerInfo.childName || 'Birthday Star'}
                 {bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge} years)` : ''}
               </span>
             </div>
@@ -1679,6 +1767,15 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
         </div>
       )}
 
+      {/* Special Notes */}
+      {bookingData.specialNotes && (
+        <div className="border-t border-amber-100 pt-2">
+          <p className="font-semibold text-amber-900 text-xs mb-1">Notes:</p>
+          <p className="text-xs text-gray-700 whitespace-pre-wrap">{bookingData.specialNotes}</p>
+        </div>
+      )}
+
+      {/* Totals */}
       <div className="border-t-2 border-amber-200 pt-2 mt-2">
         <div className="flex items-center justify-between font-bold text-amber-900">
           <div className="flex items-center gap-2">
