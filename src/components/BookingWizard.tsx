@@ -9,6 +9,7 @@ import { Calendar as CalendarIcon, Users, Package as PackageIcon, MapPin, Dollar
 import { supabase } from "@/lib/supabase";
 import ResponsiveStage from "@/components/layout/ResponsiveStage";
 import HudCharacter from "@/components/layout/HudCharacter";
+import RiveAnimation from "@/components/RiveAnimation";
 import CharacterSection from "@/components/layout/CharacterSection";
 import HUD from "@/components/hud/HUD";
 // Modular Steps (HUD content)
@@ -1893,18 +1894,38 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
           />
         )}
         {ruffs && (
-          <HudCharacter
-            src={ruffs.src}
-            alt="Ruffs"
-            anchor={ruffs.anchor}
-            preset={ruffs.preset}
-            bottom={ruffs.bottom}
-            offset={ruffs.offset}
-            scale={ruffs.scale}
-            translateX={ruffs.translateX}
-            translateY={ruffs.translateY}
-            origin={ruffs.origin}
-          />
+          stepKey === "greeting" ? (
+            <div
+              className="hud-char"
+              data-anchor={ruffs.anchor}
+              data-size={ruffs.preset}
+              style={{
+                // Move slightly DOWN (closer to bottom), RIGHT (closer to edge), and smaller
+                ["--char-b" as any]: "6rem",      // was ~7.5rem
+                ["--char-x" as any]: "3%",        // was ~6%
+                ["--char-scale" as any]: "1.35",  // was ~1.65
+              }}
+              aria-hidden
+            >
+              <RiveAnimation
+                src="/assets/greeting/greeting.rive"
+                className="w-full h-auto"
+              />
+            </div>
+          ) : (
+            <HudCharacter
+              src={ruffs.src}
+              alt="Ruffs"
+              anchor={ruffs.anchor}
+              preset={ruffs.preset}
+              bottom={ruffs.bottom}
+              offset={ruffs.offset}
+              scale={ruffs.scale}
+              translateX={ruffs.translateX}
+              translateY={ruffs.translateY}
+              origin={ruffs.origin}
+            />
+          )
         )}
       </>
     );
