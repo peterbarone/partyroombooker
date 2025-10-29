@@ -8,13 +8,11 @@ type Props = {
   bgDesktop: string
   children?: ReactNode          // scene midground layer (behind HUD)
   hud?: ReactNode               // main HUD: progress, nav, content
-  hudChars?: ReactNode          // characters positioned within HUD overlay (legacy)
   useFixedLayout?: boolean      // NEW: enable fixed layout mode
-  characterSection?: ReactNode  // NEW: character section for fixed layout
 }
 
 export default function ResponsiveStage({
-  bgMobile, bgTablet, bgDesktop, children, hud, hudChars, useFixedLayout = false, characterSection
+  bgMobile, bgTablet, bgDesktop, children, hud, useFixedLayout = false
 }: Props) {
   // Fixed layout mode (new design)
   if (useFixedLayout) {
@@ -49,15 +47,6 @@ export default function ResponsiveStage({
 
       {/* HUD overlay (no hard px paddings here; rail handles spacing) */}
       <div className="absolute inset-0 z-30">
-        {/* Fixed characters aligned to the rail (overlay) */}
-        {hudChars && (
-          <div className="pointer-events-none absolute inset-0 z-[10001] flex justify-center">
-            <div className="hud-rail @container w-full h-full relative">
-              {hudChars}
-            </div>
-          </div>
-        )}
-
         {/* Main HUD column centered on the rail */}
         <div className="w-full h-full flex justify-center">
           <div

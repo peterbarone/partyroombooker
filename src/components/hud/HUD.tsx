@@ -20,7 +20,6 @@ type Props = {
   children?: ReactNode;
   summary?: ReactNode;
   useFixedLayout?: boolean;      // NEW: enable fixed layout mode
-  characterSection?: ReactNode;  // NEW: character section for fixed layout
 };
 
 export default function HUD({
@@ -40,7 +39,6 @@ export default function HUD({
   children,
   summary,
   useFixedLayout = false,
-  characterSection,
 }: Props) {
   const pct = Math.min(100, Math.max(0, ((currentStep + 1) / totalSteps) * 100));
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -124,9 +122,6 @@ export default function HUD({
             )}
 
             {children}
-
-            {/* Character Section */}
-            {characterSection}
           </div>
         </div>
 

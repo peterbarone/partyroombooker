@@ -11,8 +11,8 @@ type Room = {
 
 export default function RoomCard({ room, tenant }: { room: Room; tenant: string }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <div className="p-4">
+    <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+      <div className="p-1">
         <div className="flex items-start justify-between">
           <h3 className="text-lg font-semibold text-gray-900">{room.name}</h3>
           <span className="text-xs text-gray-500">{tenant}</span>

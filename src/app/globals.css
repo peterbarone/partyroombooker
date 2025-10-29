@@ -481,40 +481,6 @@ body::-webkit-scrollbar-thumb:hover,
 }
 
 @layer components {
-  /* Responsive character: prefers container units, falls back to vw */
-  .hud-char {
-    position: absolute;
-    pointer-events: none;
-    user-select: none;
-    height: auto;
-
-    /* Fallbacks (SSR-safe): vw + rem/px variables */
-    width: var(--char-w-vw, clamp(130px, 18vw, 300px));
-    inset-block-end: var(--char-b, 6rem);
-    transform: translate(var(--char-tx, 0), var(--char-ty, 0)) scale(var(--char-scale, 1));
-    transform-origin: var(--char-origin, 50% 100%); /* pivot = center bottom */
-  }
-
-  .hud-char[data-anchor="left"]  { inset-inline-start: var(--char-x, 8%); }
-  .hud-char[data-anchor="right"] { inset-inline-end:   var(--char-x, 8%); }
-
-  /* Prefer container queries when available; .hud-rail already sets container-type */
-  @supports (width: 1cqw) {
-    .hud-char {
-      width: var(--char-w-cq, clamp(130px, 22cqw, 260px));
-      /* Use container-query floor when provided, else fall back to rem-based --char-b */
-      inset-block-end: var(--char-b-cq, var(--char-b, 6rem));
-    }
-  }
-
-  /* Optional: gentle size tuning by container width (uses your .hud-rail) */
-  @container (min-width: 700px) {
-    .hud-char[data-size="md"] { --char-w-cq: clamp(140px, 20cqw, 300px); }
-  }
-  @container (min-width: 1100px) {
-    .hud-char[data-size="md"] { --char-w-cq: clamp(160px, 18cqw, 340px); }
-  }
-
   /* Fixed Layout System - New responsive layout matching design spec */
   .fixed-layout-container {
     position: fixed;
@@ -573,55 +539,5 @@ body::-webkit-scrollbar-thumb:hover,
     max-width: 550px;
     width: 100%;
     margin: 8px;
-  }
-
-  /* Character section - side by side layout */
-  .character-section {
-    margin: 1rem 0;
-  }
-
-  .character-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    width: 100%;
-  }
-
-  @media (max-width: 640px) {
-    .character-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .character-card {
-    background: linear-gradient(135deg, rgba(255, 100, 180, 0.15), rgba(100, 150, 255, 0.15));
-    border-radius: 12px;
-    padding: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 200px;
-  }
-
-  .character-content {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .character-image-wrapper {
-    max-width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .character-image {
-    max-width: 100%;
-    height: auto;
-    object-fit: contain;
-    user-select: none;
-    pointer-events: none;
   }
 }

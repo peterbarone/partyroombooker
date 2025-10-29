@@ -16,13 +16,6 @@ export default function GreetingScene() {
         />
       </div>
 
-      {/* Rive animation (update src to your actual .riv path under public/) */}
-      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-        <div className="w-full max-w-[720px] aspect-[16/9]">
-          {/* Update src if your file name differs */}
-          <RiveAnimation src="/assets/greeting/greeting.rive" className="w-full h-full" />
-        </div>
-      </div>
     </div>
   );
 }

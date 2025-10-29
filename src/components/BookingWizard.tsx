@@ -4,13 +4,9 @@ import { useState, useEffect, useRef, ReactNode, Suspense, useMemo, useId } from
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { CharacterPlacements } from "@/config/character-placements";
 import { Calendar as CalendarIcon, Users, Package as PackageIcon, MapPin, DollarSign, User as UserIcon, Mail, Phone, Baby } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ResponsiveStage from "@/components/layout/ResponsiveStage";
-import HudCharacter from "@/components/layout/HudCharacter";
-import RiveAnimation from "@/components/RiveAnimation";
-import CharacterSection from "@/components/layout/CharacterSection";
 import HUD from "@/components/hud/HUD";
 // Modular Steps (HUD content)
 import GreetingStep from "@/app/steps/Greeting";
@@ -426,35 +422,6 @@ const PartyDate: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
 const ParentInfo: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
   <div className="h-full w-full flex flex-col items-center justify-center pt-10">
     {/* Title is rendered by HUD */}
-    {(bookingData.customerInfo.childName || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
-      <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
-        {bookingData.customerInfo.childName && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {bookingData.customerInfo.childName}{bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge})` : ''}
-          </span>
-        )}
-        {bookingData.selectedRoom && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {bookingData.selectedRoom.name}
-          </span>
-        )}
-        {bookingData.selectedPackage && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {bookingData.selectedPackage.name}
-          </span>
-        )}
-        {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length > 0 && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length} character(s)
-          </span>
-        )}
-        {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length > 0 && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length} add-on(s)
-          </span>
-        )}
-      </div>
-    )}
     <div className="grid grid-cols-1 gap-5 w-full max-w-md">
       <input
         type="text"
@@ -490,35 +457,6 @@ const ParentInfo: React.FC<StepProps> = ({ bookingData, updateBookingData }) => 
 const SpecialNotes: React.FC<StepProps> = ({ bookingData, updateBookingData }) => (
   <div className="h-full w-full flex flex-col items-center justify-center pt-10">
     {/* Title is rendered by HUD */}
-    {(bookingData.customerInfo.childName || bookingData.selectedRoom || bookingData.selectedPackage || (bookingData.selectedCharacters || []).length || (bookingData.selectedAddons || []).length) && (
-      <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
-        {bookingData.customerInfo.childName && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {bookingData.customerInfo.childName}{bookingData.customerInfo.childAge ? ` (${bookingData.customerInfo.childAge})` : ''}
-          </span>
-        )}
-        {bookingData.selectedRoom && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {bookingData.selectedRoom.name}
-          </span>
-        )}
-        {bookingData.selectedPackage && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {bookingData.selectedPackage.name}
-          </span>
-        )}
-        {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length > 0 && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {(bookingData.selectedCharacters || []).filter((c) => (c.quantity ?? 1) > 0).length} character(s)
-          </span>
-        )}
-        {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length > 0 && (
-          <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-            {(bookingData.selectedAddons || []).filter((a) => a.quantity > 0).length} add-on(s)
-          </span>
-        )}
-      </div>
-    )}
     <div className="w-full max-w-md">
       <textarea
         placeholder="Allergies, themes, decorations, etc."
@@ -992,17 +930,17 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     };
 
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center px-8 py-4">
+      <div className="h-full w-full flex flex-col items-center justify-center px-4 py-2">
         {/* Title is rendered by HUD */}
         {(bookingData.selectedDate || bookingData.selectedTime) && (
-          <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
+          <div className="mb-2 text-center flex items-center justify-center gap-2 flex-wrap">
             {/* Date/time chips removed; shown in HUD Party Summary */}
           </div>
         )}
         {listCount === 0 && (
           <div className="text-amber-800 text-center mb-4">No rooms available for this time. Try another time or date.</div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 w-full max-w-3xl max-h-[55vh] overflow-y-auto pr-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-3xl p-4 max-h-[57vh] overflow-y-auto ">
           {list.map((room) => {
             const isDisabled = !room.available || !room.eligible;
             const selected = bookingData.selectedRoom?.id === room.id;
@@ -1010,14 +948,14 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
             return (
               <motion.div
                 key={room.id}
-                className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 text-center cursor-pointer overflow-hidden ${
+                className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl text-center cursor-pointer ${
                   selected
-                    ? "border-cyan-400 bg-white scale-[1.01] ring-4 ring-cyan-300"
-                    : "hover:scale-[1.01] hover:ring-2 hover:ring-cyan-200 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                    ? "border-cyan-400 bg-white scale-[1.01]"
+                    : "hover:scale-[1.01] hover:ring-2  hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
                 }`}
                 style={{
-                  background: selected ? 'white' : 'rgba(139,92,246,0.9)',
-                  borderImage: 'linear-gradient(45deg, #a78bfa, #06b6d4) 1'
+                  background: selected ? 'white' : 'rgba(139,92,246,0.9)'
+                  
                 }}
                 onClick={async () => {
                   updateBookingData({ selectedRoom: room as any });
@@ -1161,29 +1099,19 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
     const packageRef = useRef<HTMLDivElement>(null);
 
     return (
-      <div ref={packageRef} className="h-full w-full flex flex-col items-center justify-start pt-20">
+      <div ref={packageRef} className="h-full w-full flex flex-col items-center justify-start pt-4">
         {/* Title is rendered by HUD */}
-        {(bookingData.selectedRoom) && (
-          <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
-            {/* Date/time chips removed; shown in HUD Party Summary */}
-            {bookingData.selectedRoom && (
-              <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-                {bookingData.selectedRoom.name}
-              </span>
-            )}
-          </div>
-        )}
         {packages.length === 0 && (
           <div className="text-amber-800 text-center mb-4">No packages available. Make sure your tenant has active packages in Supabase.</div>
         )}
-        <div className="mt-4 grid grid-cols-1 gap-12 w-full max-w-md">
+        <div className="mt-2 grid grid-cols-1 gap-4 w-full max-w-md">
           {packages.map((pkg, index) => {
             const isSelected = bookingData.selectedPackage?.id === pkg.id;
             const isPopular = index === 0; // Assume first is most popular
             return (
               <motion.div
                 key={pkg.id}
-                className={`relative p-4 rounded-3xl border-4 border-cyan-300 transition-all bg-purple-200 shadow-2xl scale-60 text-center cursor-pointer overflow-hidden ${
+                className={`relative p-4 rounded-3xl border-4 border-cyan-300 transition-all bg-purple-200 shadow-2xl text-center cursor-pointer ${
                   isSelected
                     ? "border-cyan-400 bg-white scale-[1.01] ring-4 ring-cyan-300"
                     : "hover:scale-[1.01] hover:ring-2 hover:ring-cyan-200 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
@@ -1266,13 +1194,13 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                 <h3 className="text-pink-600 leading-tight text-2xl sm:text-3xl">CHARACTER</h3>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-12">
+            <div className="grid grid-cols-1 gap-4">
               {characters.map((ch) => {
                 const selected = (bookingData.selectedCharacters || []).some((s) => s.character.id === ch.id);
                 return (
                   <motion.div
                     key={ch.id}
-                    className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 cursor-pointer ${
+                    className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl cursor-pointer ${
                       selected ? "border-amber-400 bg-white scale-[1.01]" : "border-transparent bg-white/80 hover:scale-[1.01]"
                     }`}
                     onClick={() => {
@@ -1308,7 +1236,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
               <h2 className="text-amber-800 leading-tight text-3xl md:text-4xl">FUN</h2>
               <h2 className="text-pink-600 leading-tight text-3xl md:text-4xl">ADD-ONS</h2>
             </div>
-            <div className="grid grid-cols-1 gap-12">
+            <div className="grid grid-cols-1 gap-4">
               {(() => {
                 const handleAddonQuantityChange = (addon: Addon, e: React.ChangeEvent<HTMLSelectElement>) => {
                   const qty = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
@@ -1331,7 +1259,7 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
                   return (
                     <motion.div
                       key={addon.id}
-                      className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl scale-60 cursor-pointer ${
+                      className={`relative p-4 rounded-3xl border-2 transition-all bg-wiz-purple-400 shadow-2xl cursor-pointer ${
                         quantity > 0 ? "border-amber-400 bg-white scale-[1.01]" : "border-transparent bg-white/80 hover:scale-[1.01]"
                       }`}
                       whileHover={{ scale: 1.005 }}
@@ -1373,22 +1301,6 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
 
   const GuestCount = () => (
     <div className="h-full w-full flex flex-col items-center justify-center pt-10">
-      {/* Title is rendered by HUD */}
-      {(bookingData.selectedRoom || bookingData.selectedPackage) && (
-        <div className="mb-4 text-center flex items-center justify-center gap-2 flex-wrap">
-          {/* Date/time chips removed; shown in HUD Party Summary */}
-          {bookingData.selectedRoom && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedRoom.name}
-            </span>
-          )}
-          {bookingData.selectedPackage && (
-            <span className="inline-block px-3 py-1 rounded-full bg-white/80 border-2 border-amber-300 text-amber-900 text-sm font-semibold">
-              {bookingData.selectedPackage.name}
-            </span>
-          )}
-        </div>
-      )}
       <div className="mt-2">
         <ConfettiOrbCounter
           value={bookingData.guestCount}
@@ -1782,19 +1694,6 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   // NEW: Toggle between old and new layout (set to true to enable fixed layout)
   const USE_FIXED_LAYOUT = false;
 
-  // Get character data from placements
-  const entry = (CharacterPlacements as any)[stepKey] || {};
-  const wiz = (entry as any).wizzy;
-  const ruffs = (entry as any).ruffs;
-
-  // NEW: Character section for fixed layout
-  const CharSection = (
-    <CharacterSection
-      wizzy={wiz ? { src: wiz.src, alt: "Wizzy", scale: wiz.scale } : undefined}
-      ruffs={ruffs ? { src: ruffs.src, alt: "Ruffs", scale: ruffs.scale } : undefined}
-    />
-  );
-
   const Hud = stepKey === "greeting" ? (
     <HUD
       currentStep={currentStep}
@@ -1809,7 +1708,6 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       showNav={false}
       summary={summaryNode}
       useFixedLayout={USE_FIXED_LAYOUT}
-      characterSection={CharSection}
     >
       <GreetingStep onStart={nextStep} />
     </HUD>
@@ -1825,7 +1723,6 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
       title={hudTitle}
       summary={summaryNode}
       useFixedLayout={USE_FIXED_LAYOUT}
-      characterSection={CharSection}
     >
       {(() => {
         switch (stepKey) {
@@ -1875,74 +1772,15 @@ export default function FamilyFunBookingWizardV2({ tenant }: FamilyFunBookingWiz
   const Scene = SceneByStep[stepKey];
   const bgs = getBackgroundsForStep(stepKey, tenant);
 
-  // Legacy overlay characters (for old layout) - using variables from above
-  const HudChars = (() => {
-    return (
-      <>
-        {wiz && (
-          <HudCharacter
-            src={wiz.src}
-            alt="Wizzy"
-            anchor={wiz.anchor}
-            preset={wiz.preset}
-            bottom={wiz.bottom}
-            offset={wiz.offset}
-            scale={wiz.scale}
-            translateX={wiz.translateX}
-            translateY={wiz.translateY}
-            origin={wiz.origin}
-          />
-        )}
-        {ruffs && (
-          stepKey === "greeting" ? (
-            <div
-              className="hud-char"
-              data-anchor={ruffs.anchor}
-              data-size={ruffs.preset}
-              style={{
-                // Move slightly DOWN (closer to bottom), RIGHT (closer to edge), and smaller
-                ["--char-b" as any]: "6rem",      // was ~7.5rem
-                ["--char-x" as any]: "3%",        // was ~6%
-                ["--char-scale" as any]: "1.35",  // was ~1.65
-              }}
-              aria-hidden
-            >
-              <RiveAnimation
-                src="/assets/greeting/greeting.rive"
-                className="w-full h-auto"
-              />
-            </div>
-          ) : (
-            <HudCharacter
-              src={ruffs.src}
-              alt="Ruffs"
-              anchor={ruffs.anchor}
-              preset={ruffs.preset}
-              bottom={ruffs.bottom}
-              offset={ruffs.offset}
-              scale={ruffs.scale}
-              translateX={ruffs.translateX}
-              translateY={ruffs.translateY}
-              origin={ruffs.origin}
-            />
-          )
-        )}
-      </>
-    );
-  })();
-
   return (
     <ResponsiveStage
       bgMobile={bgs.mobile}
       bgTablet={bgs.tablet}
       bgDesktop={bgs.desktop}
-      hudChars={HudChars}
       hud={Hud}
       useFixedLayout={USE_FIXED_LAYOUT}
-      characterSection={CharSection}
     >
       {Scene ? <Scene /> : null}
     </ResponsiveStage>
   );
 }
-
