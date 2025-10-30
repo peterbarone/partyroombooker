@@ -10,7 +10,7 @@ export default function GreetingScene() {
     <div className="w-full h-full relative px-4 z-40 pt-28 md:pt-36">
       <div className="max-w-5xl mx-auto grid grid-cols-1 gap-4 place-items-center">
         {/* Row 1: Logo (single column) */}
-        <div className="w-full flex justify-center">
+        <div className="w-full flex justify-center mt-2 md:mt-4 lg:mt-6">
           <img
             src="/assets/logo.png"
             alt="Company Logo"
@@ -22,25 +22,38 @@ export default function GreetingScene() {
         className="absolute inset-x-0 z-40 px-4 bottom-[120px] md:bottom-[84px] lg:bottom-[64px]"
       >
         <div className="max-w-5xl mx-auto">
-          <CharacterSection
-            className="pointer-events-none"
-            wizzy={{
-              src: '/assets/greeting/wizzygreeting.png',
-              alt: 'Wizzy greeting',
-              scale: 1,
-            }}
-            ruffs={{
-              src: '/assets/greeting/ruffsvideoone.mp4',
-              alt: 'Ruffs greeting',
-              isVideo: true,
-              poster: '/assets/greeting/ruffsgreetingvideov2.webp',
-              autoPlay: true,
-              loop: true,
-              muted: true,
-              controls: false,
-              scale: 0.85,
-            }}
-          />
+          {/* Mobile: larger Ruffs scale */}
+          <div className="block md:hidden">
+            <CharacterSection
+              className="pointer-events-none"
+              wizzy={{
+                src: '/assets/greeting/wizzygreetintgvideo.webp',
+                alt: 'Wizzy greeting',
+                scale: 1,
+              }}
+              ruffs={{
+                src: '/assets/greeting/ruffsgreetingvideo.webp',
+                alt: 'Ruffs greeting',
+                scale: 1.05,
+              }}
+            />
+          </div>
+          {/* Desktop/tablet: previous scale */}
+          <div className="hidden md:block">
+            <CharacterSection
+              className="pointer-events-none"
+              wizzy={{
+                src: '/assets/greeting/wizzygreetintgvideo.webp',
+                alt: 'Wizzy greeting',
+                scale: 1,
+              }}
+              ruffs={{
+                src: '/assets/greeting/ruffsgreetingvideo.webp',
+                alt: 'Ruffs greeting',
+                scale: 0.85,
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

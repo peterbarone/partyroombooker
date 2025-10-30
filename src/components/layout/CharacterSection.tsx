@@ -29,7 +29,7 @@ export default function CharacterSection({ wizzy, ruffs, className = "" }: Props
 
   return (
     <div className={`character-section ${className}`}>
-      <div className="character-grid w-full flex items-end justify-between gap-4">
+      <div className="character-grid w-full flex items-end justify-between gap-2">
         {wizzy && (
           <motion.div
             initial={{ opacity: 0, x: -20 }}
