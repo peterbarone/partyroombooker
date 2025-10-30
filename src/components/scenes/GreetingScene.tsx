@@ -1,12 +1,13 @@
  'use client'
 import dynamic from 'next/dynamic'
+import CharacterSection from '@/components/layout/CharacterSection'
 
 // Load Rive on the client only
 const RiveAnimation = dynamic(() => import('@/components/RiveAnimation'), { ssr: false })
 
 export default function GreetingScene() {
   return (
-    <div className="w-full h-full relative px-4 z-40 pt-40">
+    <div className="w-full h-full relative px-4 z-40 pt-28 md:pt-36">
       <div className="max-w-5xl mx-auto grid grid-cols-1 gap-4 place-items-center">
         {/* Row 1: Logo (single column) */}
         <div className="w-full flex justify-center">
@@ -16,8 +17,31 @@ export default function GreetingScene() {
             className="h-[72px] sm:h-24 md:h-28 w-auto drop-shadow"
           />
         </div>
-
-       
+      </div>
+      <div
+        className="absolute inset-x-0 z-40 px-4 bottom-[120px] md:bottom-[84px] lg:bottom-[64px]"
+      >
+        <div className="max-w-5xl mx-auto">
+          <CharacterSection
+            className="pointer-events-none"
+            wizzy={{
+              src: '/assets/greeting/wizzygreeting.png',
+              alt: 'Wizzy greeting',
+              scale: 1,
+            }}
+            ruffs={{
+              src: '/assets/greeting/ruffsvideoone.mp4',
+              alt: 'Ruffs greeting',
+              isVideo: true,
+              poster: '/assets/greeting/ruffsgreetingvideov2.webp',
+              autoPlay: true,
+              loop: true,
+              muted: true,
+              controls: false,
+              scale: 0.85,
+            }}
+          />
+        </div>
       </div>
     </div>
   );
