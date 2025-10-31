@@ -249,15 +249,20 @@ export default function SlotsAdminPage() {
       // Build upserts only for rows with data
       const payload = Object.values(rows)
         .filter((r): r is TemplateRow => !!r && !!r.tenant_id)
-        .map((r) => ({
-          id: r.id,
-          tenant_id: tenantId,
-          day_of_week: r.day_of_week,
-          start_times_json: r.start_times_json ?? [],
-          active: r.active ?? true,
-          open_time: r.open_time ?? null,
-          close_time: r.close_time ?? null,
-        }));
+        .map((r) => {
+          const base: any = {
+            tenant_id: tenantId,
+            day_of_week: r.day_of_week,
+            start_times_json: r.start_times_json ?? [],
+            active: r.active ?? true,
+            open_time: r.open_time ?? null,
+            close_time: r.close_time ?? null,
+          };
+          // IMPORTANT: Only include id when it exists. If id is undefined/null, omit it
+          // so Postgres uses DEFAULT (gen_random_uuid()) instead of trying to insert NULL.
+          if (r.id) base.id = r.id;
+          return base;
+        });
 
       // Upsert per day_of_week,tenant_id (assumes unique constraint)
       const { error: upErr } = await supabase

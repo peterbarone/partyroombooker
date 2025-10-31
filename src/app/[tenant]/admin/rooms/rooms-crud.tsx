@@ -33,6 +33,9 @@ export default function RoomsPage() {
   const [notes, setNotes] = useState("");
   const [active, setActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [featureFile, setFeatureFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<FileList | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -76,6 +79,9 @@ export default function RoomsPage() {
     setActive(true);
     setEditRoom(null);
     setCreateOpen(true);
+    setFormError(null);
+    setFeatureFile(null);
+    setGalleryFiles(null);
   };
 
   const openEdit = (room: Room) => {
@@ -87,19 +93,39 @@ export default function RoomsPage() {
     setActive(room.active);
     setEditRoom(room);
     setCreateOpen(true);
+    setFormError(null);
+    setFeatureFile(null);
+    setGalleryFiles(null);
   };
 
   const handleSubmit = async () => {
-    if (!tenantId || !name) return;
+    // Basic validation
+    if (!tenantId) return;
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setFormError("Name is required");
+      return;
+    }
+    if (maxKids < 1) {
+      setFormError("Max kids must be at least 1");
+      return;
+    }
+    if (capacity !== null && typeof capacity === 'number' && capacity > 0 && capacity < maxKids) {
+      setFormError("Total capacity cannot be less than Max kids");
+      return;
+    }
+    setFormError(null);
     setSaving(true);
     
     try {
+      let roomId: string | null = editRoom ? editRoom.id : null;
+
       if (editRoom) {
-        // Update
+        // Update base fields
         const { error } = await supabase
           .from("rooms")
           .update({
-            name,
+            name: trimmedName,
             description: description || null,
             max_kids: maxKids,
             capacity: capacity || null,
@@ -107,23 +133,68 @@ export default function RoomsPage() {
             active,
           })
           .eq("id", editRoom.id);
-        
         if (error) throw error;
       } else {
-        // Create
-        const { error } = await supabase
+        // Create and return id for subsequent uploads
+        const { data: inserted, error } = await supabase
           .from("rooms")
           .insert({
             tenant_id: tenantId,
-            name,
+            name: trimmedName,
             description: description || null,
             max_kids: maxKids,
             capacity: capacity || null,
             notes: notes || null,
             active,
-          });
-        
+          })
+          .select("id")
+          .single();
         if (error) throw error;
+        roomId = inserted?.id ?? null;
+      }
+
+      // If we have images selected, upload to 'tennent rooms' and update room.images
+      if (tenantId && (featureFile || (galleryFiles && galleryFiles.length)) ) {
+        const idForUpload = roomId || editRoom?.id;
+        if (!idForUpload) throw new Error("Missing room id for image upload");
+
+        const urls: string[] = [];
+
+        if (featureFile) {
+          const path = `${tenantId}/rooms/${idForUpload}/feature-${Date.now()}-${featureFile.name}`;
+          const { error: upErr } = await supabase.storage
+            .from("tennent rooms")
+            .upload(path, featureFile, { upsert: false });
+          if (upErr) throw upErr;
+          const { data: pub } = supabase.storage
+            .from("tennent rooms")
+            .getPublicUrl(path);
+          if (pub?.publicUrl) urls.push(pub.publicUrl);
+        }
+
+        if (galleryFiles && galleryFiles.length) {
+          const max = Math.min(4, galleryFiles.length);
+          for (let i = 0; i < max; i++) {
+            const f = galleryFiles[i];
+            const path = `${tenantId}/rooms/${idForUpload}/gallery-${Date.now()}-${i}-${f.name}`;
+            const { error: upErr } = await supabase.storage
+              .from("tennent rooms")
+              .upload(path, f, { upsert: false });
+            if (upErr) throw upErr;
+            const { data: pub } = supabase.storage
+              .from("tennent rooms")
+              .getPublicUrl(path);
+            if (pub?.publicUrl) urls.push(pub.publicUrl);
+          }
+        }
+
+        if (urls.length) {
+          const { error: imgErr } = await supabase
+            .from("rooms")
+            .update({ images: urls })
+            .eq("id", idForUpload);
+          if (imgErr) throw imgErr;
+        }
       }
       
       setCreateOpen(false);
@@ -267,6 +338,7 @@ export default function RoomsPage() {
                     <label className="block text-sm text-gray-600 mb-1">Max Kids</label>
                     <input
                       type="number"
+                      min={1}
                       value={maxKids}
                       onChange={(e) => setMaxKids(Number(e.target.value))}
                       className="w-full px-3 py-2 border rounded-lg"
@@ -276,12 +348,33 @@ export default function RoomsPage() {
                     <label className="block text-sm text-gray-600 mb-1">Total Capacity</label>
                     <input
                       type="number"
+                      min={0}
                       value={capacity}
                       onChange={(e) => setCapacity(Number(e.target.value))}
                       className="w-full px-3 py-2 border rounded-lg"
                     />
                   </div>
                 </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Feature Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setFeatureFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Gallery Images (up to 4)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => setGalleryFiles(e.target.files)}
+                  />
+                </div>
+                {formError && (
+                  <div className="text-sm text-red-600">{formError}</div>
+                )}
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">Notes</label>
                   <textarea
@@ -302,7 +395,7 @@ export default function RoomsPage() {
                 </div>
                 <button
                   onClick={handleSubmit}
-                  disabled={saving || !name}
+                  disabled={saving || !name.trim() || !!formError}
                   className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : editRoom ? 'Update Room' : 'Create Room'}
