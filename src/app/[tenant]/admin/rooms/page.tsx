@@ -5,87 +5,133 @@ import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
 
-/* =======================
- * Types
- * ======================= */
-
-type RoomStatus = "all" | "active" | "maintenance" | "inactive";
-type PackageStatus = "all" | "active" | "seasonal" | "inactive";
-
-export interface RoomManagementProps {
-  params: { tenant: string };
-}
-
-interface UIRoom {
+interface Room {
   id: string;
+  tenant_id: string;
   name: string;
-  description: string;
-  capacity: number;
-  size: string;
-  amenities: string[];
-  hourlyRate: number;
-  status: Exclude<RoomStatus, "all">;
-  availability: string;
-  featureImage: string;
-  galleryImages: string[];
-  bookingCount: number;
-  revenue: number;
-  rating: number;
-  lastMaintenance: string;
-  nextMaintenance: string;
+  description: string | null;
+  max_kids: number;
+  capacity: number | null;
+  active: boolean;
+  slug: string | null;
+  notes: string | null;
 }
 
-interface UIPackage {
-  id: string;
-  name: string;
-  description: string;
-  duration: number; // hours
-  maxGuests: number;
-  basePrice: number;
-  includes: string[];
-  addOns: { name: string; price: number }[];
-  availableRooms: string[]; // room ids
-  status: Exclude<PackageStatus, "all">;
-  bookingCount: number;
-  revenue: number;
-  popularity: number;
-}
-
-/* =======================
- * Status Badge
- * ======================= */
-
-const StatusBadge = ({
-  status,
-  type,
+const CreateRoomModal = ({
+  isOpen,
+  onClose,
+  tenantId,
+  onCreated,
 }: {
-  status: string;
-  type: "room" | "package";
+  isOpen: boolean;
+  onClose: () => void;
+  tenantId: string;
+  onCreated: () => void;
 }) => {
-  const getConfig = () => {
-    if (type === "room") {
-      const configs = {
-        active: { color: "bg-green-100 text-green-800", label: "Active" },
-        maintenance: { color: "bg-yellow-100 text-yellow-800", label: "Maintenance" },
-        inactive: { color: "bg-red-100 text-red-800", label: "Inactive" },
-      };
-      return configs[status as keyof typeof configs] || configs.active;
-    } else {
-      const configs = {
-        active: { color: "bg-green-100 text-green-800", label: "Active" },
-        seasonal: { color: "bg-blue-100 text-blue-800", label: "Seasonal" },
-        inactive: { color: "bg-red-100 text-red-800", label: "Inactive" },
-      };
-      return configs[status as keyof typeof configs] || configs.active;
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [maxKids, setMaxKids] = useState(10);
+  const [capacity, setCapacity] = useState(15);
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    if (!name) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("rooms").insert({
+        tenant_id: tenantId,
+        name,
+        description: description || null,
+        max_kids: maxKids,
+        capacity: capacity || null,
+        notes: notes || null,
+        active: true,
+      });
+      if (error) throw error;
+      onCreated();
+      onClose();
+      setName("");
+      setDescription("");
+      setMaxKids(10);
+      setCapacity(15);
+      setNotes("");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to create room.");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const config = getConfig();
+  if (!isOpen) return null;
 
   return (
-    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${config.color}`}>
-      {config.label}
-    </span>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Create Room</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div className="px-6 py-4 space-y-4">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Room Name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              placeholder="e.g., Safari Room"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              rows={3}
+              placeholder="Describe the room..."
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Max Kids</label>
+              <input
+                type="number"
+                value={maxKids}
+                onChange={(e) => setMaxKids(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Total Capacity</label>
+              <input
+                type="number"
+                value={capacity}
+                onChange={(e) => setCapacity(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Notes</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              rows={2}
+            />
+          </div>
+          <button
+            onClick={submit}
+            disabled={saving || !name}
+            className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {saving ? "Creating..." : "Create Room"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

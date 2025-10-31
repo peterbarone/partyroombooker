@@ -1,0 +1,45 @@
+/* Website (auth + setup) styles - separate from admin */
+
+:root {
+  --bg-start: #eff6ff; /* blue-50 */
+  --bg-end: #e0e7ff;   /* indigo-100 */
+}
+
+.website-root {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+}
+
+.website-scroll {
+  min-height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.website-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.website-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.website-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.website-subtitle {
+  color: #4b5563;
+}
+
+/* Make long forms usable on small screens */
+.website-form-container {
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+}
