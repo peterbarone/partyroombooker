@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import AdminLayout from "../../../../components/AdminLayout";
 import { supabase } from "@/lib/supabase";
+import RoomsCrud from "./rooms-crud";
 
 interface Room {
   id: string;
@@ -944,8 +945,8 @@ const PackageDetailModal = ({
  * ======================= */
 
 export default function RoomManagement() {
-  const params = useParams<{ tenant: string }>();
-  const tenant = (params?.tenant as string) || "";
+  // Use the new simplified CRUD implementation
+  return <RoomsCrud />;
 
   const [activeTab, setActiveTab] = useState<"rooms" | "packages">("rooms");
 

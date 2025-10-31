@@ -16,23 +16,9 @@ export async function middleware(req: NextRequest) {
   const adminRouteMatch = path.match(/^\/([^/]+)\/admin(\/.*)?$/);
 
   if (adminRouteMatch) {
-    const tenantSlug = adminRouteMatch[1];
-
-    // Check for Supabase auth token in cookies
-    const authToken = req.cookies.get("sb-access-token")?.value ||
-                     req.cookies.get("sb-auth-token")?.value ||
-                     req.cookies.get(`sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0]}-auth-token`)?.value;
-
-    // If no auth token, redirect to login
-    if (!authToken) {
-      const loginUrl = new URL("/auth/login", req.url);
-      loginUrl.searchParams.set("redirect", path);
-      return NextResponse.redirect(loginUrl);
-    }
-
-    // Note: Full access check and tenant validation happens on the client
-    // This middleware provides basic auth protection
-    // The admin pages will verify tenant access using RPC calls
+    // Let the client handle auth verification to avoid false negatives when
+    // using localStorage sessions (no cookies available in middleware).
+    return res;
   }
 
   // Allow auth routes without authentication
