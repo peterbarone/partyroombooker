@@ -1,20 +1,76 @@
-/* Admin Area Styles - Professional Dashboard Theme */
-/* Separate from the main booking wizard theme */
+/* Admin Area Styles - Stripe-style Professional Theme */
+/* Scoped to .admin-theme to isolate from public/marketing site */
 
-/* Reset any booking wizard specific styles for admin area */
-.admin-area {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #f5f7fa;
+/* Design Tokens */
+.admin-theme {
+  /* Surfaces */
+  --bg-canvas: #F6F8FB;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #FAFBFC;
+
+  /* Text */
+  --text-primary: #0A2540;
+  --text-secondary: #475467;
+  --text-tertiary: #6B7280;
+
+  /* Accent (Stripe-like purple) */
+  --accent: #635BFF;
+  --accent-600: #5146FF;
+  --accent-100: #EAE8FF;
+
+  /* Borders & Dividers */
+  --border: #E5E7EB;
+  --border-strong: #D1D5DB;
+
+  /* States */
+  --success: #16A34A;
+  --warning: #F59E0B;
+  --danger: #DC2626;
+
+  /* Shadows & Radii */
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgba(16,24,40,0.06);
+  --shadow-md: 0 4px 12px rgba(16,24,40,0.08);
+  --shadow-lg: 0 8px 24px rgba(16,24,40,0.10);
+
+  /* Spacing scale */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+
+  /* Charts */
+  --chart-line: #7A5AF8;
+  --chart-grid: #EEF2F7;
 }
 
-/* Remove wizard background effects for admin */
-.admin-area::before,
-.admin-area::after {
+/* Base typography + canvas */
+.admin-theme {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  color: var(--text-primary);
+  background: var(--bg-canvas);
+  min-height: 100dvh;
+}
+
+/* Remove wizard background effects and vignette from admin area only */
+.admin-theme::before,
+.admin-theme::after {
   display: none !important;
 }
 
+/* Hide body vignette overlays when in admin area */
+body:has(.admin-theme)::before,
+body:has(.admin-theme)::after {
+  display: none !important;
+}
+
+/* Override body background for admin area */
+body:has(.admin-theme) {
+  background: var(--bg-canvas) !important;
+  background-image: none !important;
+}
+
 /* Admin Container */
-.admin-container {
+.admin-theme .admin-container {
   max-width: 100%;
   margin: 0;
   padding: 0;
@@ -154,82 +210,89 @@
 }
 
 /* Admin Badge Styles */
-.admin-badge {
+.admin-theme .admin-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
+  gap: var(--space-1);
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.admin-badge-success {
-  background: #d1fae5;
-  color: #065f46;
+.admin-theme .admin-badge-success {
+  background: #EAF7EF;
+  color: var(--success);
 }
 
-.admin-badge-warning {
-  background: #fef3c7;
-  color: #92400e;
+.admin-theme .admin-badge-warning {
+  background: #FFF7E6;
+  color: var(--warning);
 }
 
-.admin-badge-danger {
-  background: #fee2e2;
-  color: #991b1b;
+.admin-theme .admin-badge-danger {
+  background: #FEECEC;
+  color: var(--danger);
 }
 
-.admin-badge-info {
-  background: #dbeafe;
-  color: #1e40af;
+.admin-theme .admin-badge-info {
+  background: var(--accent-100);
+  color: var(--accent);
 }
 
-.admin-badge-neutral {
-  background: #f3f4f6;
-  color: #374151;
+.admin-theme .admin-badge-neutral {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
 }
 
 /* Admin Form Styles */
-.admin-form-group {
-  margin-bottom: 1.5rem;
+.admin-theme .admin-form-group {
+  margin-bottom: var(--space-6);
 }
 
-.admin-form-label {
+.admin-theme .admin-form-label {
   display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+  margin-bottom: var(--space-2);
+  font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
-.admin-form-input,
-.admin-form-select,
-.admin-form-textarea {
+.admin-theme .admin-form-input,
+.admin-theme .admin-form-select,
+.admin-theme .admin-form-textarea,
+.admin-theme input:not([type="checkbox"]):not([type="radio"]),
+.admin-theme select,
+.admin-theme textarea {
   width: 100%;
-  padding: 0.625rem 0.875rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  color: #1f2937;
-  background: white;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
   transition: all 0.15s ease;
 }
 
-.admin-form-input:focus,
-.admin-form-select:focus,
-.admin-form-textarea:focus {
+.admin-theme .admin-form-input:focus,
+.admin-theme .admin-form-select:focus,
+.admin-theme .admin-form-textarea:focus,
+.admin-theme input:not([type="checkbox"]):not([type="radio"]):focus,
+.admin-theme select:focus,
+.admin-theme textarea:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-100);
 }
 
-.admin-form-input::placeholder {
-  color: #9ca3af;
+.admin-theme .admin-form-input::placeholder,
+.admin-theme input::placeholder,
+.admin-theme textarea::placeholder {
+  color: var(--text-tertiary);
 }
 
 /* Admin Modal Styles */
-.admin-modal-overlay {
+.admin-theme .admin-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -237,107 +300,141 @@
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
-.admin-modal {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+.admin-theme .admin-modal {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
 }
 
-.admin-modal-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+.admin-theme .admin-modal-header {
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.admin-modal-title {
-  font-size: 1.25rem;
+.admin-theme .admin-modal-title {
+  font-size: 20px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
 }
 
-.admin-modal-body {
-  padding: 1.5rem;
+.admin-theme .admin-modal-body {
+  padding: var(--space-6);
 }
 
-.admin-modal-footer {
-  padding: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+.admin-theme .admin-modal-footer {
+  padding: var(--space-6);
+  border-top: 1px solid var(--border);
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-3);
   justify-content: flex-end;
 }
 
-/* Admin Sidebar Override */
-.admin-sidebar {
-  background: #1f2937;
-  color: white;
+/* Admin Sidebar (Stripe-style) */
+.admin-theme .admin-sidebar {
+  background: var(--bg-surface);
+  color: var(--text-primary);
   height: 100vh;
   position: sticky;
   top: 0;
   overflow-y: auto;
+  border-right: 1px solid var(--border);
 }
 
-.admin-sidebar-link {
+.admin-theme .admin-sidebar-link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  color: #d1d5db;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-secondary);
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   transition: all 0.15s ease;
 }
 
-.admin-sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+.admin-theme .admin-sidebar-link:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
 }
 
-.admin-sidebar-link-active {
-  background: rgba(59, 130, 246, 0.2);
-  color: white;
+.admin-theme .admin-sidebar-link-active {
+  background: var(--accent-100);
+  color: var(--text-primary);
+  border-left: 3px solid var(--accent);
 }
 
 /* Admin Header */
-.admin-header {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 1rem 1.5rem;
+.admin-theme .admin-header {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-3) var(--space-6);
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 100;
+  height: 56px;
 }
 
-.admin-header-title {
-  font-size: 1.5rem;
+.admin-theme .admin-header-title {
+  font-size: 22px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* Owner-only visibility helper */
+.admin-theme .owner-action { display: none; }
+.admin-theme.is-owner .owner-action { display: inline-flex; }
+
+/* Topbar controls */
+.admin-theme .admin-search {
+  width: 240px;
+  max-width: 36vw;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+}
+.admin-theme .admin-search::placeholder { color: var(--text-tertiary); }
+.admin-theme .admin-search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-100); }
+
+.admin-theme .admin-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
 }
 
 /* Admin Loading State */
-.admin-loading {
+.admin-theme .admin-loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
-  color: #6b7280;
+  padding: var(--space-10);
+  color: var(--text-secondary);
 }
 
-.admin-spinner {
-  border: 3px solid #f3f4f6;
-  border-top-color: #3b82f6;
+.admin-theme .admin-spinner {
+  border: 3px solid var(--bg-subtle);
+  border-top-color: var(--accent);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -351,15 +448,15 @@
 }
 
 /* Admin Empty State */
-.admin-empty-state {
+.admin-theme .admin-empty-state {
   text-align: center;
-  padding: 3rem;
-  color: #6b7280;
+  padding: var(--space-10);
+  color: var(--text-secondary);
 }
 
-.admin-empty-icon {
+.admin-theme .admin-empty-icon {
   font-size: 3rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   opacity: 0.5;
 }
 

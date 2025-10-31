@@ -12,7 +12,7 @@ export default function AdminAreaLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="admin-area">
+    <div className="admin-area admin-theme">
       <div className="admin-container">
         {children}
       </div>
